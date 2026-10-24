@@ -1,0 +1,17 @@
+[package]
+name = "s2_tiles"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_Foundation",
+] }
+postcard = { version = "1.0", features = ["alloc"] }
+zstd = "0.13"
+sha2 = "0.10"
+serde = { version = "1.0", features = ["derive"] }
