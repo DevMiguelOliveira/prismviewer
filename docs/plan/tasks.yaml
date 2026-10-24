@@ -527,7 +527,40 @@
     - cargo check no workspace 100% verde
   status: concluida
   tentativas: 0
-  ultimo_log: 'Disparo de SAS no Winlogon via SendSAS (sas.dll), liberacao compulsoria de teclas e modificadores via InputInjector, persistencia binaria de ReconnectState com postcard e cargo check no workspace 100% verde'
 
+# ==============================================================================
+# FASE 10: SERVIÇO WINDOWS E INSTALADOR
+# ==============================================================================
+- id: F10-SVC-WINDOWS
+  fase: 10
+  titulo: Implementação do serviço Windows prysmview-svc (LocalSystem) com windows-service e recovery
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/main.rs
+    - crates/host/src/service.rs
+    - crates/host/src/lib.rs
+  depende_de: [F9-SYSTEM-SAS-REBOOT]
+  criterio_pronto:
+    - registro de ServiceMain e Handler com windows-service
+    - execucao como servico de sistema (LocalSystem) e modo standalone (--run) para depuracao
+    - politicas de recuperacao em falha e parada limpa
+    - cargo check no workspace 100% verde
+  status: pendente
+  tentativas: 0
 
-
+- id: F10-INNO-SETUP
+  fase: 10
+  titulo: Script do instalador Inno Setup 6 e desinstalador limpo (ADR 0002)
+  agente: dev-rust
+  arquivos_permitidos:
+    - installer/prysmview.iss
+    - installer/README.md
+  depende_de: [F10-SVC-WINDOWS]
+  criterio_pronto:
+    - script .iss configurando prysmview-svc e prysmview-tray
+    - diretorios Program Files e ProgramData com permissoes restritas
+    - registro e inicializacao automatica do servico Windows
+    - desinstalacao limpa com parada de servico e remocao de registros
+  status: pendente
+  tentativas: 0
