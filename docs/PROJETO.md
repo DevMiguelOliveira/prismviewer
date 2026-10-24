@@ -68,3 +68,25 @@ Interface visual inspirada no TeamViewer, em estilo limpo e funcional.
 - Consumo de banda: < 50 kbps (tela parada); < 1 Mbps (navegação de texto).
 - Suporte a DPI: 100%, 125%, 150% e 175%.
 - Tamanho do instalador: < 30 MB.
+
+---
+
+## 5. Operação, Backup e Recuperação de Desastre (Disaster Recovery)
+
+### 5.1 Infraestrutura em Nuvem (Custo Zero)
+- **Hospedagem**: Oracle Cloud Always Free (ARM Ampere A1, 4 OCPUs, 24 GB RAM, Ubuntu Server 24.04 LTS).
+- **Serviços**: Gerenciados via systemd (`prysmview-api.service` e `prysmview-relay.service`).
+- **Firewall**: UFW liberando apenas portas 22 (SSH restrito), 443 TCP (HTTPS API) e 3340 UDP (Relay iroh).
+
+### 5.2 Backup Diário e Retenção
+- **Banco de Dados**: SQLite puro sem CGO (`/var/lib/prysmview/prysmview.db`).
+- **Rotina de Backup**: Script diário `deploy/backup-sqlite.sh` executado via cron/systemd timer gerando dump comprimido com gzip (`.sql.gz`).
+- **Retenção**: Rotação automática de 30 dias.
+- **Sincronização**: Envio diário encriptado para repositório Git privado.
+
+### 5.3 Procedimento de Disaster Recovery (RTO < 30 min, RPO < 24 h)
+1. Instanciar nova VM Ubuntu Server 24.04 na Oracle Cloud.
+2. Executar script de firewall: `bash deploy/setup-ufw.sh`.
+3. Instalar binários compilados `prysmview-api` e `prysmview-relay` em `/usr/local/bin/`.
+4. Restaurar o último dump SQLite descompactando em `/var/lib/prysmview/prysmview.db` com permissão `0600`.
+5. Ativar serviços: `systemctl enable --now prysmview-api prysmview-relay`.

@@ -46,3 +46,40 @@ O fluxo de desenvolvimento e verificação de worktrees é conduzido por:
 python orchestrator.py
 ```
 A fila e histórico de cada ciclo de tarefa residem em `docs/plan/tasks.yaml`.
+
+---
+
+## 🚀 Como Executar Localmente
+
+### 1. Iniciar o Viewer (Operador)
+```bash
+cargo run -p prysmview-viewer
+```
+
+### 2. Iniciar o Host em modo Console (PDV para testes)
+```bash
+cargo run -p prysmview-host --bin prysmview-svc -- --run
+```
+
+### 3. Iniciar a Bandeja do PDV
+```bash
+cargo run -p prysmview-tray
+```
+
+### 4. Iniciar a API de Sinalização em Go
+```bash
+cd server
+go run cmd/api/main.go
+```
+
+---
+
+## 📚 Documentação do Projeto
+
+- **Manual do Operador e PDV**: [docs/MANUAL-OPERADOR.md](docs/MANUAL-OPERADOR.md)
+- **Atualização Assinada e Rollback**: [docs/atualizacao.md](docs/atualizacao.md)
+- **Instalador Inno Setup 6**: [installer/README.md](installer/README.md)
+- **Relatório de Segurança e Invasão**: [docs/testes-seguranca.md](docs/testes-seguranca.md)
+- **Especificação do Protocolo**: [docs/protocolo.md](docs/protocolo.md)
+- **Catálogo de Dependências**: [docs/dependencias.md](docs/dependencias.md)
+
