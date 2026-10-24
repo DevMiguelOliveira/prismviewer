@@ -35,7 +35,6 @@
   - docs/dependencias.md cataloga dependencias Rust e Go com licencas e motivos
   status: concluida
   tentativas: 0
-  ultimo_log: 'Gates verdes: cargo check, fmt, clippy, go vet. Documentos de base criados com sucesso.'
   ultimo_log: Documentos base concluidos e validados contra AGENTS.md
 - id: F0-ADRS
   fase: 0
@@ -52,8 +51,9 @@
   - ADR 0002 documenta escolha de instalador de custo zero (Inno Setup ou WiX)
   - ADR 0003 documenta codigo de sessao de 8 digitos, tempo limite e comparacao em
     tempo constante
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: ADRs 0001, 0002 e 0003 concluidas
 - id: F0-CI
   fase: 0
   titulo: Configurar workflows de CI para Rust e Go
