@@ -546,8 +546,9 @@
     - execucao como servico de sistema (LocalSystem) e modo standalone (--run) para depuracao
     - politicas de recuperacao em falha e parada limpa
     - cargo check no workspace 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Servico Windows prysmview-svc registrado com windows-service, suporte a LocalSystem e modo standalone (--run), liberacao compulsoria de teclas na parada e 48 testes unitarios verdes'
 
 - id: F10-INNO-SETUP
   fase: 10

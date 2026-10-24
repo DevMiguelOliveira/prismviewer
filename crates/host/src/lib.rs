@@ -10,6 +10,7 @@ pub mod input;
 pub mod ipc;
 pub mod net;
 pub mod sas;
+pub mod service;
 pub mod session_code;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
@@ -29,6 +30,10 @@ pub use net::{HostNetworkAdapter, NetworkError, PRYSM_ALPN};
 pub use sas::{
     clear_reconnect_state, load_reconnect_state, release_all_keys, request_system_reboot,
     save_reconnect_state, send_sas, ReconnectState, SasError, DEFAULT_RECONNECT_STATE_PATH,
+};
+pub use service::{
+    run_service, run_standalone, ServiceError, SERVICE_DESCRIPTION, SERVICE_DISPLAY_NAME,
+    SERVICE_NAME,
 };
 pub use session_code::{
     SessionCodeError, SessionCodeManager, MAX_SESSION_CODE_ATTEMPTS, SESSION_CODE_TTL,
