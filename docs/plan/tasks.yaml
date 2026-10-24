@@ -35,7 +35,7 @@
   - docs/dependencias.md cataloga dependencias Rust e Go com licencas e motivos
   status: concluida
   tentativas: 0
-  ultimo_log: Documentos base concluidos e validados contra AGENTS.md
+  ultimo_log: 'Documentos base concluidos e validados contra AGENTS.md'
 - id: F0-ADRS
   fase: 0
   titulo: ADRs 0001, 0002 e 0003 (transporte iroh/QUIC, instalador e modelo de consentimento)
@@ -53,7 +53,7 @@
     tempo constante
   status: concluida
   tentativas: 0
-  ultimo_log: ADRs 0001, 0002 e 0003 concluidas
+  ultimo_log: 'ADRs 0001, 0002 e 0003 concluidas'
 - id: F0-CI
   fase: 0
   titulo: Configurar workflows de CI para Rust e Go
@@ -69,7 +69,7 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Gates passam: cargo fmt, clippy, test (Rust). gofmt, vet, go test (Go). CI configs em .github/workflows/.'
-  ultimo_log: Workflows de CI Rust e Go configurados e validados
+  ultimo_log: 'Workflows de CI Rust e Go configurados e validados'
 - id: F1-S1
   fase: 1
   titulo: Spike de captura de tela via DXGI Desktop Duplication
@@ -87,7 +87,7 @@
   - docs/spikes/s1.md criado com objetivos e metas
   status: concluida
   tentativas: 0
-  ultimo_log: Spike S1 criado. Arquivos: Cargo.toml, main.rs, s1.md. Compilacao pendente em hardware real (PDV).
+  ultimo_log: 'Spike S1 criado. Arquivos: Cargo.toml, main.rs, s1.md. Compilacao pendente em hardware real (PDV).'
 - id: F1-S2
   fase: 1
   titulo: Spike de divisao e compressao de tiles 64x64 com zstd
@@ -104,7 +104,7 @@
   - docs/spikes/s2.md criado com relatorio de metrics
   status: concluida
   tentativas: 0
-  ultimo_log: Spike S2 executado em 1920x1080 tela parada: 510 tiles/frame, 8 tiles alterados, 99.9% reducao banda. Meta >90% atendida.
+  ultimo_log: 'Spike S2 executado em 1920x1080 tela parada: 510 tiles/frame, 8 tiles alterados, 99.9% reducao banda. Meta >90% atendida.'
 - id: F1-S3
   fase: 1
   titulo: Spike de conexao ponto a ponto e fallback para relay via iroh
@@ -121,7 +121,7 @@
   - docs/spikes/s3.md criado com resumo de conexoes
   status: concluida
   tentativas: 0
-  ultimo_log: Spike S3 executado: conexao direta estabelecida com handshake de protocolo. Fallback para relay implementado. Resumo gravado em s3.md.
+  ultimo_log: 'Spike S3 executado: conexao direta estabelecida com handshake de protocolo. Fallback para relay implementado. Resumo gravado em s3.md.'
 - id: F1-S4
   fase: 1
   titulo: Spike de injecao de entrada via SendInput com scan codes ABNT2
@@ -138,4 +138,52 @@
   - injeção comprovada: teclas injetadas e liberadas, state limpo, cliques e roda mouse injetados
   status: concluida
   tentativas: 0
-  ultimo_log: Spike S4 executado: teclas A, S, Enter injetadas e liberadas. Clique esquerdo e roda mouse injetados. Nenhum modificadorpreso ao final. Estado limpo confirmado.
+  ultimo_log: 'Spike S4 executado: teclas A, S, Enter injetadas e liberadas. Clique esquerdo e roda mouse injetados. Nenhum modificadorpreso ao final. Estado limpo confirmado.'
+
+# ==============================================================================
+# FASE 2: PROTOCOLO
+# ==============================================================================
+- id: F2-MENSAGENS
+  fase: 2
+  titulo: Tipos de mensagem, cabecalho PRSM e validacao de limites em crates/core
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/core/Cargo.toml
+    - crates/core/src/lib.rs
+    - crates/core/src/header.rs
+    - crates/core/src/messages.rs
+    - crates/core/src/limits.rs
+  depende_de: [F1-S1, F1-S2, F1-S3, F1-S4]
+  criterio_pronto:
+    - cabecalho com magic 'PRSM', versao u16, tipo u8, tamanho u32
+    - limites validados antes de alocacao (controle 64KB, video 8MB, input 256B, chat 4KB, file 1MB)
+    - tipos de mensagem definidos e serializacao com postcard
+  status: pendente
+  tentativas: 0
+
+- id: F2-PROPTEST
+  fase: 2
+  titulo: Testes proptest de ida e volta para todas as mensagens de protocolo
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/core/Cargo.toml
+    - crates/core/tests/proptest_roundtrip.rs
+  depende_de: [F2-MENSAGENS]
+  criterio_pronto:
+    - proptest valida serializacao e desserializacao de ida e volta para todas as mensagens
+    - cargo test --package prysmview-core passa 100% verde
+  status: pendente
+  tentativas: 0
+
+- id: F2-DOC-PROTOCOLO
+  fase: 2
+  titulo: Documentacao completa do protocolo em docs/protocolo.md
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/protocolo.md
+  depende_de: [F2-MENSAGENS]
+  criterio_pronto:
+    - docs/protocolo.md descreve streams 0 a 4, frames, handshake e seguranca
+    - aprovado contra secao 8 do AGENTS.md
+  status: pendente
+  tentativas: 0
