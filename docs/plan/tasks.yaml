@@ -676,8 +676,9 @@
     - envio de POST /api/v1/host/register com payload JSON
     - consulta de status via GET /api/v1/host/status
     - testes unitarios validando formato de assinatura compativel com Go VerifyHostSignature
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'HostSignalingClient implementado com autenticacao Ed25519 (X-Pdv-Public-Key, X-Timestamp, X-Nonce, X-Signature), anti-replay e compatibilidade comprovada com Go VerifyHostSignature via 57 testes verdes.'
 
 - id: F14-VIEWER-SIGNALING
   fase: 14

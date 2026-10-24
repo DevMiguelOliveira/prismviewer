@@ -12,6 +12,7 @@ pub mod net;
 pub mod sas;
 pub mod service;
 pub mod session_code;
+pub mod signaling;
 pub mod updater;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
@@ -38,6 +39,10 @@ pub use service::{
 };
 pub use session_code::{
     SessionCodeError, SessionCodeManager, MAX_SESSION_CODE_ATTEMPTS, SESSION_CODE_TTL,
+};
+pub use signaling::{
+    build_signed_message, to_hex, HostRegisterPayload, HostSignalingClient, PdvStatusResponse,
+    SignalingError,
 };
 pub use updater::{
     verify_package_integrity, UpdateBackupGuard, UpdateChannel, UpdateError, UpdateManifest,
