@@ -224,9 +224,9 @@
     - comparacao de blocos 64x64 com buffer anterior
     - compressao zstd nivel 1 por tile alterado
     - empacotamento em VideoFrameMessage do prysmview-core
-    - testes unitarios de deteccao e compressao verdes
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'VideoEncoder implementado com dirty tiles 64x64, compressao zstd nivel 1, integracao com VideoFrameMessage do core e 4 testes unitarios verdes'
 
 - id: F3-RATE-CONTROL
   fase: 3
