@@ -603,3 +603,22 @@
   tentativas: 0
   ultimo_log: 'Workflow release.yml configurado com Inno Setup, calculo de SHA-256 e publicacao no GitHub Releases; documentacao docs/atualizacao.md concluida'
 
+# ==============================================================================
+# FASE 12: TESTES DE INVASÃO E RESILIÊNCIA
+# ==============================================================================
+- id: F12-SECURITY-TESTS
+  fase: 12
+  titulo: Suíte de testes de invasão e conformidade com o threat model
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/core/tests/security_tests.rs
+    - docs/testes-seguranca.md
+  depende_de: [F11-RELEASE-WORKFLOW]
+  criterio_pronto:
+    - testes de invasao cobrindo DoS por overflow de payload, HMAC timing attack, sessao sem consentimento e replay
+    - relatorio docs/testes-seguranca.md cobrindo ameacas do threat model
+    - cargo test 100% verde
+  status: pendente
+  tentativas: 0
+
+
