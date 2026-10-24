@@ -659,5 +659,43 @@
   tentativas: 0
   ultimo_log: 'Documentacao final concluida: Manual do Operador (docs/MANUAL-OPERADOR.md), Disaster Recovery e operacao em docs/PROJETO.md e README.md atualizado com guia de execucao'
 
+# ==============================================================================
+# FASE 14: INTEGRAÇÃO COM A API DE SINALIZAÇÃO GO
+# ==============================================================================
+- id: F14-HOST-SIGNALING
+  fase: 14
+  titulo: Cliente HTTP de sinalização do Host com assinatura Ed25519 e anti-replay
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/signaling.rs
+    - crates/host/src/lib.rs
+  depende_de: [F13-DOCS-FINAL]
+  criterio_pronto:
+    - geracao de headers X-Pdv-Public-Key, X-Timestamp, X-Nonce e X-Signature via Ed25519
+    - envio de POST /api/v1/host/register com payload JSON
+    - consulta de status via GET /api/v1/host/status
+    - testes unitarios validando formato de assinatura compativel com Go VerifyHostSignature
+  status: pendente
+  tentativas: 0
+
+- id: F14-VIEWER-SIGNALING
+  fase: 14
+  titulo: Cliente HTTP de sinalização do Viewer para login de operador, listagem de PDVs e auditoria
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/viewer/Cargo.toml
+    - crates/viewer/src/api_client.rs
+    - crates/viewer/src/lib.rs
+  depende_de: [F14-HOST-SIGNALING]
+  criterio_pronto:
+    - login de operador com recebimento de token opaco Bearer
+    - listagem dinamica de PDVs autorizados para o operador
+    - solicitacao de sessao e envio de registro de auditoria
+    - cargo test 100% verde
+  status: pendente
+  tentativas: 0
+
+
 
 
