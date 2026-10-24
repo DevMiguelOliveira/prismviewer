@@ -1,134 +1,132 @@
-# docs/plan/tasks.yaml - Fila de tarefas do PrysmView
-# Estado e memoria persistente entre sessoes
-
-# ==============================================================================
-# FASE 0: FUNDAÇÃO
-# ==============================================================================
 - id: F0-ESTRUTURA
   fase: 0
-  titulo: Cargo workspace Rust com crates core/host/tray/viewer/relay/spikes e modulo Go server
+  titulo: Cargo workspace Rust com crates core/host/tray/viewer/relay/spikes e modulo
+    Go server
   agente: dev-rust
   arquivos_permitidos:
-    - Cargo.toml
-    - rust-toolchain.toml
-    - README.md
-    - server/go.mod
+  - Cargo.toml
+  - rust-toolchain.toml
+  - README.md
+  - server/go.mod
   depende_de: []
   criterio_pronto:
-    - Cargo.toml define workspace com membros core, host, tray, viewer, relay, spikes
-    - rust-toolchain.toml fixa versao estavel de Rust
-    - server/go.mod inicializa modulo Go para a API de sinalizacao
-    - cargo check no workspace roda sem erros
-  status: pendente
+  - Cargo.toml define workspace com membros core, host, tray, viewer, relay, spikes
+  - rust-toolchain.toml fixa versao estavel de Rust
+  - server/go.mod inicializa modulo Go para a API de sinalizacao
+  - cargo check no workspace roda sem erros
+  status: concluida
   tentativas: 0
-
+  ultimo_log: 'Gates verdes: cargo check, fmt, clippy, go vet'
 - id: F0-DOCS-BASE
   fase: 0
   titulo: Documentos base do projeto (PROJETO.md, threat-model.md, glossario.md, dependencias.md)
   agente: dev-rust
   arquivos_permitidos:
-    - docs/PROJETO.md
-    - docs/threat-model.md
-    - docs/glossario.md
-    - docs/dependencias.md
-  depende_de: [F0-ESTRUTURA]
+  - docs/PROJETO.md
+  - docs/threat-model.md
+  - docs/glossario.md
+  - docs/dependencias.md
+  depende_de:
+  - F0-ESTRUTURA
   criterio_pronto:
-    - docs/PROJETO.md reflete especificacao completa e metas
-    - docs/threat-model.md detalha ativos, ameacas e controles de PDV
-    - docs/glossario.md define termos (Host, Viewer, Relay, iroh, DXGI, DPAPI, etc.)
-    - docs/dependencias.md cataloga dependencias Rust e Go com licencas e motivos
+  - docs/PROJETO.md reflete especificacao completa e metas
+  - docs/threat-model.md detalha ativos, ameacas e controles de PDV
+  - docs/glossario.md define termos (Host, Viewer, Relay, iroh, DXGI, DPAPI, etc.)
+  - docs/dependencias.md cataloga dependencias Rust e Go com licencas e motivos
   status: pendente
   tentativas: 0
-
 - id: F0-ADRS
   fase: 0
   titulo: ADRs 0001, 0002 e 0003 (transporte iroh/QUIC, instalador e modelo de consentimento)
   agente: dev-rust
   arquivos_permitidos:
-    - docs/adr/0001-transporte-iroh-quic.md
-    - docs/adr/0002-escolha-instalador.md
-    - docs/adr/0003-codigo-sessao-consentimento.md
-  depende_de: [F0-ESTRUTURA]
+  - docs/adr/0001-transporte-iroh-quic.md
+  - docs/adr/0002-escolha-instalador.md
+  - docs/adr/0003-codigo-sessao-consentimento.md
+  depende_de:
+  - F0-ESTRUTURA
   criterio_pronto:
-    - ADR 0001 documenta decisao por iroh/QUIC comparando com WebRTC e TCP/TLS
-    - ADR 0002 documenta escolha de instalador de custo zero (Inno Setup ou WiX)
-    - ADR 0003 documenta codigo de sessao de 8 digitos, tempo limite e comparacao em tempo constante
+  - ADR 0001 documenta decisao por iroh/QUIC comparando com WebRTC e TCP/TLS
+  - ADR 0002 documenta escolha de instalador de custo zero (Inno Setup ou WiX)
+  - ADR 0003 documenta codigo de sessao de 8 digitos, tempo limite e comparacao em
+    tempo constante
   status: pendente
   tentativas: 0
-
 - id: F0-CI
   fase: 0
   titulo: Configurar workflows de CI para Rust e Go
   agente: dev-rust
   arquivos_permitidos:
-    - .github/workflows/rust.yml
-    - .github/workflows/go.yml
-  depende_de: [F0-ESTRUTURA]
+  - .github/workflows/rust.yml
+  - .github/workflows/go.yml
+  depende_de:
+  - F0-ESTRUTURA
   criterio_pronto:
-    - workflow rust.yml roda cargo fmt --check, cargo clippy -- -D warnings e cargo test
-    - workflow go.yml roda gofmt -l ., go vet ./... e testes em server/
+  - workflow rust.yml roda cargo fmt --check, cargo clippy -- -D warnings e cargo
+    test
+  - workflow go.yml roda gofmt -l ., go vet ./... e testes em server/
   status: pendente
   tentativas: 0
-
-# ==============================================================================
-# FASE 1: SPIKES DE VIABILIDADE
-# ==============================================================================
 - id: F1-S1
   fase: 1
   titulo: Spike de captura de tela via DXGI Desktop Duplication
   agente: dev-rust
   arquivos_permitidos:
-    - crates/spikes/s1_dxgi/Cargo.toml
-    - crates/spikes/s1_dxgi/src/main.rs
-    - docs/spikes/s1.md
-  depende_de: [F0-CI, F0-DOCS-BASE, F0-ADRS]
+  - crates/spikes/s1_dxgi/Cargo.toml
+  - crates/spikes/s1_dxgi/src/main.rs
+  - docs/spikes/s1.md
+  depende_de:
+  - F0-CI
+  - F0-DOCS-BASE
+  - F0-ADRS
   criterio_pronto:
-    - captura continua de 1 monitor medindo FPS e uso de CPU
-    - relatorio em docs/spikes/s1.md comprovando meta de 30 fps com CPU < 10% em 1080p
+  - captura continua de 1 monitor medindo FPS e uso de CPU
+  - relatorio em docs/spikes/s1.md comprovando meta de 30 fps com CPU < 10% em 1080p
   status: pendente
   tentativas: 0
-
 - id: F1-S2
   fase: 1
   titulo: Spike de divisao e compressao de tiles 64x64 com zstd
   agente: dev-rust
   arquivos_permitidos:
-    - crates/spikes/s2_tiles/Cargo.toml
-    - crates/spikes/s2_tiles/src/main.rs
-    - docs/spikes/s2.md
-  depende_de: [F1-S1]
+  - crates/spikes/s2_tiles/Cargo.toml
+  - crates/spikes/s2_tiles/src/main.rs
+  - docs/spikes/s2.md
+  depende_de:
+  - F1-S1
   criterio_pronto:
-    - divisao de frame em tiles 64x64 e deteccao de alteracoes
-    - relatorio em docs/spikes/s2.md comprovando reducao de banda > 90% em tela parada
+  - divisao de frame em tiles 64x64 e deteccao de alteracoes
+  - relatorio em docs/spikes/s2.md comprovando reducao de banda > 90% em tela parada
   status: pendente
   tentativas: 0
-
 - id: F1-S3
   fase: 1
   titulo: Spike de conexao ponto a ponto e fallback para relay via iroh
   agente: dev-rust
   arquivos_permitidos:
-    - crates/spikes/s3_iroh/Cargo.toml
-    - crates/spikes/s3_iroh/src/main.rs
-    - docs/spikes/s3.md
-  depende_de: [F0-CI, F0-ADRS]
+  - crates/spikes/s3_iroh/Cargo.toml
+  - crates/spikes/s3_iroh/src/main.rs
+  - docs/spikes/s3.md
+  depende_de:
+  - F0-CI
+  - F0-ADRS
   criterio_pronto:
-    - conexao entre dois processos usando chaves publicas Ed25519 como endereco
-    - teste de atravessamento de NAT e fallback de relay registrado em docs/spikes/s3.md
+  - conexao entre dois processos usando chaves publicas Ed25519 como endereco
+  - teste de atravessamento de NAT e fallback de relay registrado em docs/spikes/s3.md
   status: pendente
   tentativas: 0
-
 - id: F1-S4
   fase: 1
   titulo: Spike de injecao de entrada via SendInput com scan codes ABNT2
   agente: dev-rust
   arquivos_permitidos:
-    - crates/spikes/s4_input/Cargo.toml
-    - crates/spikes/s4_input/src/main.rs
-    - docs/spikes/s4.md
-  depende_de: [F0-CI]
+  - crates/spikes/s4_input/Cargo.toml
+  - crates/spikes/s4_input/src/main.rs
+  - docs/spikes/s4.md
+  depende_de:
+  - F0-CI
   criterio_pronto:
-    - simulacao de clique e digitacao por scan code sem prender modificadores
-    - teste de layout ABNT2 registrado em docs/spikes/s4.md
+  - simulacao de clique e digitacao por scan code sem prender modificadores
+  - teste de layout ABNT2 registrado em docs/spikes/s4.md
   status: pendente
   tentativas: 0
