@@ -173,8 +173,9 @@
   criterio_pronto:
     - proptest valida serializacao e desserializacao de ida e volta para todas as mensagens
     - cargo test --package prysmview-core passa 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: '10 testes proptest aprovados cobrindo roundtrip de controle, entrada, video, chat, arquivos e rejeicao de overflow'
 
 - id: F2-DOC-PROTOCOLO
   fase: 2

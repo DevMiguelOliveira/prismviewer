@@ -17,3 +17,6 @@ worktrees/
 Thumbs.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
+
+# Test artifacts
+*.proptest-regressions
