@@ -638,8 +638,9 @@
     - prysmview-api.service configurado com usuario prysmview e Restart=on-failure
     - backup-sqlite.sh com dump do sqlite3 e retencao de 30 dias
     - setup-ufw.sh com liberacao de portas 443 TCP e 3340 UDP
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Scripts de infraestrutura concluidos: systemd da API com hardening, backup SQLite com gzip e retencao de 30 dias e configuracao estrita de firewall UFW'
 
 - id: F13-DOCS-FINAL
   fase: 13

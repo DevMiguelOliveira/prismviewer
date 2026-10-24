@@ -1,0 +1,28 @@
+[Unit]
+Description=PrysmView Signaling & Audit API Server (Go)
+After=network.target
+
+[Service]
+Type=simple
+User=prysmview
+Group=prysmview
+WorkingDirectory=/var/lib/prysmview
+ExecStart=/usr/local/bin/prysmview-api -addr :443 -db /var/lib/prysmview/prysmview.db
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prysmview-api
+Environment=GIN_MODE=release
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/prysmview
+
+[Install]
+WantedBy=multi-user.target
