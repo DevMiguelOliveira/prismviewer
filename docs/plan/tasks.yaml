@@ -475,4 +475,56 @@
   tentativas: 0
   ultimo_log: 'Renderizacao incremental de dirty tiles 64x64 com zstd, HUD dinamico de latencia/FPS, captura de eventos de mouse e teclado ABNT2 por scan code e 11 testes verdes'
 
+# ==============================================================================
+# FASE 9: RECURSOS DE SESSÃO
+# ==============================================================================
+- id: F9-FILE-TRANSFER
+  fase: 9
+  titulo: Transferencia de arquivos em blocos de 1 MiB com verificacao SHA-256 e arquivo temporario
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/file_transfer.rs
+    - crates/host/src/lib.rs
+  depende_de: [F8-VIEWER-SESSION]
+  criterio_pronto:
+    - envio e recepcao de blocos de ate 1 MiB (FileBlockMessage)
+    - gravacao em arquivo temporario .part com verificacao de hash SHA-256 no destino
+    - descarte imediato do arquivo temporario em caso de hash divergente
+    - cargo test -p prysmview-host 100% verde
+  status: pendente
+  tentativas: 0
+
+- id: F9-CLIPBOARD-CHAT
+  fase: 9
+  titulo: Sincronizacao de clipboard (max 1 MB, desativavel) e chat de texto bidirecional
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/clipboard.rs
+    - crates/host/src/chat.rs
+    - crates/host/src/lib.rs
+  depende_de: [F9-FILE-TRANSFER]
+  criterio_pronto:
+    - clipboard limitado a 1 MB com flag de desativacao pelo PDV
+    - chat de texto seguro encapsulado no protocolo PRSM v1
+    - testes unitarios de rejeicao de payloads acima de 1 MB
+    - cargo test -p prysmview-host 100% verde
+  status: pendente
+  tentativas: 0
+
+- id: F9-SYSTEM-SAS-REBOOT
+  fase: 9
+  titulo: Ctrl+Alt+Del em LocalSystem (Winlogon SAS) e reinicio com reconexao automatica
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/sas.rs
+    - crates/host/src/lib.rs
+  depende_de: [F9-CLIPBOARD-CHAT]
+  criterio_pronto:
+    - envio de SAS (Secure Attention Sequence) no desktop Winlogon
+    - comando de reinicializacao persistindo estado para reconexao automatica
+    - cargo check no workspace 100% verde
+  status: pendente
+  tentativas: 0
+
+
 
