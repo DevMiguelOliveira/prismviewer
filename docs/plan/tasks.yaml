@@ -1,0 +1,59 @@
+# Fase 0 - Infraestrutura e CI do PrysmView
+- id: F0-ESTRUTURA
+  fase: 0
+  titulo: Estrutura inicial do projeto (Rust + Go)
+  agente: dev-rust
+  arquivos_permitidos:
+    - Cargo.toml
+    - go.mod
+    - README.md
+    - .gitignore
+  depende_de: []
+  criterio_pronto:
+    - repositorio possui Cargo.toml valido para crate raiz Rust
+    - repositorio possui go.mod valido para modulo Go
+    - README.md descreve como rodar os gates
+  status: pendente
+  tentativas: 0
+
+- id: F0-CI
+  fase: 0
+  titulo: Configurar CI com gates automáticos (fmt, clippy, test, audit, vet, govulncheck)
+  agente: dev-rust
+  arquivos_permitidos:
+    - .github/workflows/ci.yml
+    - .github/workflows/go-ci.yml
+  depende_de: [F0-ESTRUTURA]
+  criterio_pronto:
+    - workflow CI roda cargo fmt --check, clippy, test e audit
+    - workflow CI roda gofmt, vet, govulncheck e gosec
+    - gates falham intencionalmente se qualquer comando retornar nao-zero
+  status: pendente
+  tentativas: 0
+
+- id: F0-AGENTS-MD
+  fase: 0
+  titulo: Criar AGENTS.md com regras de codigo e seguranca
+  agente: dev-rust
+  arquivos_permitidos:
+    - AGENTS.md
+  depende_de: [F0-ESTRUTURA]
+  criterio_pronto:
+    - AGENTS.md lista regras de codigo e seguranca para o projeto
+    - AGENTS.md menciona proibicao de alterar arquivos fora da lista permitida
+    - AGENTS.md menciona limite de 3 tentativas por tarefa
+  status: pendente
+  tentativas: 0
+
+- id: F0-THREAT-MODEL
+  fase: 0
+  titulo: Threat model inicial para acesso remoto a PDVs
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/threat-model/threat-model.md
+  depende_de: [F0-ESTRUTURA]
+  criterio_pronto:
+    - threat-model.md lista ativos, ameaças e controles de seguranca
+    - threat-model.md menciona criptografia de canal, autenticacao e isolamento de sessao
+  status: pendente
+  tentativas: 0

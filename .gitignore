@@ -1,0 +1,19 @@
+# Build artifacts
+target/
+__pycache__/
+*.pyc
+node_modules/
+
+# Worktrees and environments
+worktrees/
+.env
+*.local
+
+# Dual agent and logs
+*.log
+.dual-agent/session.json
+
+# OS files
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
