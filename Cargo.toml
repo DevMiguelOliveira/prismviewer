@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/core",
     "crates/host",
+    "crates/tray",
     "crates/relay",
     "crates/spikes/s1_dxgi",
     "crates/spikes/s2_tiles",
