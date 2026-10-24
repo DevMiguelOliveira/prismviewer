@@ -431,3 +431,46 @@
   tentativas: 0
   ultimo_log: 'prysmview-tray implementado na sessao de usuario com dialogo de consentimento (60s countdown), exibicao de codigo de 8 digitos, cliente Named Pipe e 4 testes unitarios verdes'
 
+# ==============================================================================
+# FASE 8: VIEWER (APLICATIVO DO OPERADOR EM EGUI/EFRAME)
+# ==============================================================================
+- id: F8-VIEWER-BASE
+  fase: 8
+  titulo: Criação do binário prysmview-viewer com eframe/egui e navegação de lojas/PDVs
+  agente: dev-rust
+  arquivos_permitidos:
+    - Cargo.toml
+    - crates/viewer/Cargo.toml
+    - crates/viewer/src/main.rs
+    - crates/viewer/src/app.rs
+    - crates/viewer/src/lib.rs
+  depende_de: [F7-TRAY-CONSENT]
+  criterio_pronto:
+    - crates/viewer integrado ao Cargo workspace com eframe/egui
+    - interface estilizada com tema escuro e funcional inspirado no TeamViewer
+    - tela de login do operador e listagem pesquisável de PDVs com status online/offline
+    - modal para inserção do código de sessão de 8 dígitos
+    - cargo check no workspace 100% verde
+  status: pendente
+  tentativas: 0
+
+- id: F8-VIEWER-SESSION
+  fase: 8
+  titulo: Renderização por dirty tiles 64x64, zoom/escala, HUD de latência e captura de input
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/viewer/Cargo.toml
+    - crates/viewer/src/session.rs
+    - crates/viewer/src/canvas.rs
+    - crates/viewer/src/app.rs
+    - crates/viewer/src/lib.rs
+  depende_de: [F8-VIEWER-BASE]
+  criterio_pronto:
+    - descompressão zstd e atualização incremental de textura por tile sem redesenhar a tela inteira
+    - HUD de telemetria exibindo FPS atual, RTT em ms e taxa de quadros
+    - captura de cliques, movimentação normalizada e teclas (scan codes ABNT2)
+    - cargo test -p prysmview-viewer 100% verde
+  status: pendente
+  tentativas: 0
+
+
