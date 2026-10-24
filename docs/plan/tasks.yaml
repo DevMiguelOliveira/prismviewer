@@ -694,8 +694,9 @@
     - listagem dinamica de PDVs autorizados para o operador
     - solicitacao de sessao e envio de registro de auditoria
     - cargo test 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'ViewerApiClient implementado com login de operador (/api/v1/operator/login), Bearer token, listagem de PDVs, solicitacao de sessao e envio de auditoria com 16 testes verdes.'
 
 
 
