@@ -563,5 +563,6 @@
     - diretorios Program Files e ProgramData com permissoes restritas
     - registro e inicializacao automatica do servico Windows
     - desinstalacao limpa com parada de servico e remocao de registros
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Script Inno Setup 6 (prysmview.iss) e documentacao (README.md) implementados com instalacao de prysmview-svc e tray, ACLs restritas, recuperacao em falha e desinstalacao limpa'
