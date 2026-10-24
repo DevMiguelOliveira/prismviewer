@@ -158,8 +158,9 @@
     - cabecalho com magic 'PRSM', versao u16, tipo u8, tamanho u32
     - limites validados antes de alocacao (controle 64KB, video 8MB, input 256B, chat 4KB, file 1MB)
     - tipos de mensagem definidos e serializacao com postcard
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Header PRSM de 11 bytes, mensagens com postcard, limites estritos validados antes de alocacao e 12 testes unitarios aprovados'
 
 - id: F2-PROPTEST
   fase: 2

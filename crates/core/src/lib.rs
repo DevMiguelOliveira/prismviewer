@@ -1,13 +1,18 @@
-//! prysmview-core - Protocolo, tipos e validações sem I/O para o PrysmView.
+//! prysmview-core - Protocolo, tipos, codecs e validações sem I/O para o PrysmView.
 
-pub const PROTOCOL_MAGIC: &[u8; 4] = b"PRSM";
-pub const PROTOCOL_VERSION: u16 = 1;
+pub mod header;
+pub mod limits;
+pub mod messages;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MessageType {
-    Control = 0,
-    Video = 1,
-    Input = 2,
-    Chat = 3,
-    File = 4,
-}
+pub use header::{
+    Header, HeaderError, MessageType, CURRENT_PROTOCOL_VERSION, HEADER_SIZE, PROTOCOL_MAGIC,
+};
+pub use limits::{
+    validate_payload_len, LimitError, MAX_CHAT_PAYLOAD, MAX_CONTROL_PAYLOAD, MAX_FILE_PAYLOAD,
+    MAX_INPUT_PAYLOAD, MAX_VIDEO_PAYLOAD,
+};
+pub use messages::{
+    decode_header, decode_payload, encode_frame, ChatMessage, ClipboardMessage, ControlMessage,
+    FileBlockMessage, InputMessage, MessageCodecError, MouseButtonType, SessionPermissions,
+    TilePacket, VideoFrameMessage,
+};
