@@ -208,9 +208,9 @@
     - crates/host integrado ao Cargo workspace
     - capture.rs implementa worker DXGI em thread dedicada
     - recuperacao automatica caso a duplicacao seja perdida (desktop switch ou resolucao)
-    - cargo check no workspace passa sem erros
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'CaptureWorker DXGI integrado ao workspace em thread dedicada, com bounded channel, recuperacao automatica de DXGI_ERROR_ACCESS_LOST e testes aprovados'
 
 - id: F3-TILES-PIPELINE
   fase: 3

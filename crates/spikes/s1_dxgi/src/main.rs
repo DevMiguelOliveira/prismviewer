@@ -34,11 +34,9 @@ fn main() {
     // Thread for keyboard input to quit
     thread::spawn(move || loop {
         let mut input = String::new();
-        if io::stdin().read_line(&mut input).is_ok() {
-            if input.trim().to_lowercase() == "q" {
-                running_clone.store(false, Ordering::Relaxed);
-                break;
-            }
+        if io::stdin().read_line(&mut input).is_ok() && input.trim().to_lowercase() == "q" {
+            running_clone.store(false, Ordering::Relaxed);
+            break;
         }
         if !running_clone.load(Ordering::Relaxed) {
             break;
