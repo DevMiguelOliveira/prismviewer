@@ -451,8 +451,9 @@
     - tela de login do operador e listagem pesquisável de PDVs com status online/offline
     - modal para inserção do código de sessão de 8 dígitos
     - cargo check no workspace 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'prysmview-viewer integrado ao workspace com eframe/egui, tema escuro funcional estilo TeamViewer, catalogo pesquisavel de PDVs, modal para codigo de 8 digitos e 5 testes verdes'
 
 - id: F8-VIEWER-SESSION
   fase: 8

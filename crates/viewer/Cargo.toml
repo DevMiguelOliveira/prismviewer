@@ -1,0 +1,16 @@
+[package]
+name = "prysmview-viewer"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+prysmview-core = { path = "../core" }
+eframe = "0.29"
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"

@@ -4,6 +4,7 @@ members = [
     "crates/core",
     "crates/host",
     "crates/tray",
+    "crates/viewer",
     "crates/relay",
     "crates/spikes/s1_dxgi",
     "crates/spikes/s2_tiles",
