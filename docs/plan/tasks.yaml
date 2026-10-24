@@ -243,3 +243,39 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'RateController adaptativo (15-30 fps) implementado com descarte de frames em voo, keyframe a cada 5s e 4 testes unitarios verdes'
+
+# ==============================================================================
+# FASE 4: INJEÇÃO DE ENTRADA (MOUSE E TECLADO ABNT2)
+# ==============================================================================
+- id: F4-INPUT-INJECTOR
+  fase: 4
+  titulo: Injecao SendInput por scan code ABNT2 e coordenadas normalizadas
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/input.rs
+    - crates/host/src/lib.rs
+  depende_de: [F3-RATE-CONTROL]
+  criterio_pronto:
+    - mapeamento de coordenadas 0..65535 para resolucao real
+    - injecao de teclas estritamente por KEYEVENTF_SCANCODE
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Injetor SendInput por scan code ABNT2 com coordenadas normalizadas e rastreamento de teclas ativas implementado e testado'
+
+- id: F4-INPUT-CLEANUP
+  fase: 4
+  titulo: Soltura automatica de todas as teclas e modificadores ao encerrar sessao
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/input.rs
+    - crates/host/src/lib.rs
+  depende_de: [F4-INPUT-INJECTOR]
+  criterio_pronto:
+    - metodo release_all_keys() solta qualquer modificador ativo (Ctrl, Alt, Shift, Win)
+    - teste simulando queda de sessao com verificacao de zero teclas presas
+    - cargo test -p prysmview-host 100% verde
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'release_all() e Drop implementados liberando todas as teclas e modificadores em queda de sessao com testes aprovados'
+
