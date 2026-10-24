@@ -599,6 +599,7 @@
   criterio_pronto:
     - workflow release.yml com build de release, instalador Inno Setup e assinatura Ed25519
     - docs/atualizacao.md detalhando o processo de update e canais
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Workflow release.yml configurado com Inno Setup, calculo de SHA-256 e publicacao no GitHub Releases; documentacao docs/atualizacao.md concluida'
 

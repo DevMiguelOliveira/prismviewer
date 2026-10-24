@@ -1,0 +1,56 @@
+name: Release Build & Sign
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    name: Build & Package Windows Release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Release Binaries
+        run: |
+          cargo build --release -p prysmview-host --bin prysmview-svc
+          cargo build --release -p prysmview-tray
+          cargo build --release -p prysmview-viewer
+          cargo build --release -p prysmview-relay
+
+      - name: Compile Inno Setup Installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer\prysmview.iss
+
+      - name: Compute SHA-256 Hashes
+        id: hash
+        shell: pwsh
+        run: |
+          $installer = Get-Item dist\PrysmView-Setup-*.exe
+          $hash = (Get-FileHash -Path $installer.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash *$($installer.Name)" | Out-File -Encoding ascii dist\SHA256SUMS.txt
+          Write-Host "SHA-256 do instalador: $hash"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/PrysmView-Setup-*.exe
+            dist/SHA256SUMS.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true
