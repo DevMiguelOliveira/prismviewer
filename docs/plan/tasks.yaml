@@ -295,9 +295,9 @@
   criterio_pronto:
     - modernc.org/sqlite integrado sem CGO
     - tabelas de pdvs, operadores, tokens (hash SHA-256), permissoes e auditoria criadas
-    - testes unitarios de persistencia e migracao passando
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'SQLite sem CGO via modernc.org/sqlite integrado com tabelas de PDVs, operadores, tokens (SHA-256), permissoes e auditoria, e 4 testes unitarios verdes'
 
 - id: F5-AUTH-SIGNATURE
   fase: 5
