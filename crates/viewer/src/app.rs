@@ -1,10 +1,12 @@
-//! prysmview-viewer - Interface gráfica do operador com egui/eframe
-
+use crate::canvas::RemoteCanvas;
+use crate::session::{collect_input_events, SessionMetrics};
 use crate::{PdvItem, ViewerState};
 use eframe::egui::{self, Align, Color32, Layout, RichText, Stroke, Vec2};
 
 pub struct PrysmViewerApp {
     pub state: ViewerState,
+    pub canvas: RemoteCanvas,
+    pub metrics: SessionMetrics,
 }
 
 impl PrysmViewerApp {
@@ -47,7 +49,11 @@ impl PrysmViewerApp {
             },
         ];
 
-        Self { state }
+        Self {
+            state,
+            canvas: RemoteCanvas::default(),
+            metrics: SessionMetrics::default(),
+        }
     }
 }
 
@@ -327,6 +333,9 @@ impl PrysmViewerApp {
 
     /// Renderiza a tela de visualização e controle da sessão remota ativa.
     fn render_active_session_view(&mut self, ui: &mut egui::Ui) {
+        // Sincroniza textura da GPU com buffer de pixels do canvas remoto
+        self.canvas.sync_texture(ui.ctx());
+
         // Barra de ferramentas da sessão
         ui.horizontal(|ui| {
             if ui.button("⏹ Encerrar Sessão").clicked() {
@@ -348,12 +357,12 @@ impl PrysmViewerApp {
                         .size(12.0),
                 );
                 ui.label(
-                    RichText::new("🎞️ 30 FPS")
+                    RichText::new(format!("🎞️ {:.0} FPS", self.metrics.current_fps))
                         .color(Color32::LIGHT_BLUE)
                         .size(12.0),
                 );
                 ui.label(
-                    RichText::new("⚡ 18 ms")
+                    RichText::new(format!("⚡ {} ms", self.metrics.rtt_ms))
                         .color(Color32::LIGHT_YELLOW)
                         .size(12.0),
                 );
@@ -362,27 +371,37 @@ impl PrysmViewerApp {
 
         ui.separator();
 
-        // Canvas de visualização do display remoto (simulado nesta etapa base)
+        // Canvas de visualização do display remoto com captura de entrada
         egui::Frame::canvas(ui.style())
             .fill(Color32::BLACK)
             .show(ui, |ui| {
                 let available_size = ui.available_size();
-                let (_rect, _) =
-                    ui.allocate_exact_size(available_size, egui::Sense::click_and_drag());
+                if let Some(ref texture) = self.canvas.texture {
+                    let (rect, _response) =
+                        ui.allocate_exact_size(available_size, egui::Sense::click_and_drag());
+                    let painter = ui.painter();
+                    painter.image(
+                        texture.id(),
+                        rect,
+                        egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                        Color32::WHITE,
+                    );
 
-                ui.vertical_centered(|ui| {
-                    ui.add_space(available_size.y * 0.4);
-                    ui.label(
-                        RichText::new("🖥️ Display do PDV Conectado")
-                            .color(Color32::WHITE)
-                            .size(18.0),
-                    );
-                    ui.label(
-                        RichText::new("Stream de vídeo DXGI e injeção de entrada ativos.")
-                            .color(Color32::GRAY)
-                            .size(13.0),
-                    );
-                });
+                    // Captura e conversão de eventos para protocolo PRSM
+                    let input_state = ui.ctx().input(|i| i.clone());
+                    let _events = collect_input_events(&input_state, rect);
+                } else {
+                    let (_rect, _) =
+                        ui.allocate_exact_size(available_size, egui::Sense::click_and_drag());
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(available_size.y * 0.4);
+                        ui.label(
+                            RichText::new("🖥️ Aguardando primeiro quadro DXGI...")
+                                .color(Color32::WHITE)
+                                .size(18.0),
+                        );
+                    });
+                }
             });
     }
 }

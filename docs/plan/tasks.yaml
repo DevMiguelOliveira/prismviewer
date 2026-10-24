@@ -471,7 +471,8 @@
     - HUD de telemetria exibindo FPS atual, RTT em ms e taxa de quadros
     - captura de cliques, movimentação normalizada e teclas (scan codes ABNT2)
     - cargo test -p prysmview-viewer 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Renderizacao incremental de dirty tiles 64x64 com zstd, HUD dinamico de latencia/FPS, captura de eventos de mouse e teclado ABNT2 por scan code e 11 testes verdes'
 
 

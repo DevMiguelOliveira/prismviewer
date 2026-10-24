@@ -1,6 +1,13 @@
 //! prysmview-viewer - Núcleo de estado e tipos do aplicativo do operador
 
 pub mod app;
+pub mod canvas;
+pub mod session;
+
+pub use canvas::{CanvasError, RemoteCanvas, TILE_SIZE};
+pub use session::{
+    collect_input_events, egui_key_to_abnt2_scancode, normalize_coordinates, SessionMetrics,
+};
 
 use serde::{Deserialize, Serialize};
 
