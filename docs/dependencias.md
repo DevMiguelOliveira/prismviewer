@@ -19,6 +19,13 @@ Este documento registra as dependências iniciais do projeto conforme especifica
 | [`zeroize`](https://crates.io/crates/zeroize) | Zerar chaves, códigos e segredos da memória | Apache-2.0 / MIT | Fundamental para reduzir janela de exposição de segredos em memória. |
 | [`windows-service`](https://crates.io/crates/windows-service) | Implementação do serviço Windows `prysmview-svc` | MIT / Apache-2.0 | Facilita integração correta com SCM do Windows (inicialização, recuperação, parada). |
 | [`windows`](https://crates.io/crates/windows) | APIs Win32: DXGI, Direct3D11, SendInput, DPAPI, serviços | MIT / Apache-2.0 | Acesso nativo às APIs necessárias (captura DXGI, injeção de entrada, proteção DPAPI). |
+| [`reqwest`](https://crates.io/crates/reqwest) | Cliente HTTP assíncrono para comunicação com a API Go | MIT / Apache-2.0 | Cliente HTTP padrão da comunidade com rustls-tls e suporte a JSON. |
+| [`serde`](https://crates.io/crates/serde) | Framework de serialização e desserialização de dados | MIT / Apache-2.0 | Padrão do ecossistema Rust para JSON e outros formatos. |
+| [`serde_json`](https://crates.io/crates/serde_json) | Serialização e desserialização JSON para APIs REST | MIT / Apache-2.0 | Padrão para JSON na comunicação HTTP com a API Go. |
+| [`thiserror`](https://crates.io/crates/thiserror) | Tipagem estruturada e ergonômica de erros em bibliotecas | MIT / Apache-2.0 | Erros tipados em Rust sem alocações desnecessárias. |
+| [`tracing`](https://crates.io/crates/tracing) | Instrumentação e logging estruturado de eventos | MIT | Padrão assíncrono de observabilidade e auditoria segura. |
+| [`eframe`](https://crates.io/crates/eframe) | Framework GUI desktop baseado em egui | MIT / Apache-2.0 | Interface gráfica nativa e leve para o operador (viewer), sem webviews. |
+
 
 ## Go (sinalização e API)
 
