@@ -12,6 +12,7 @@ pub mod net;
 pub mod sas;
 pub mod service;
 pub mod session_code;
+pub mod updater;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
 pub use chat::{ChatError, ChatManager, MAX_CHAT_HISTORY, MAX_CHAT_TEXT_LEN};
@@ -37,4 +38,7 @@ pub use service::{
 };
 pub use session_code::{
     SessionCodeError, SessionCodeManager, MAX_SESSION_CODE_ATTEMPTS, SESSION_CODE_TTL,
+};
+pub use updater::{
+    verify_package_integrity, UpdateBackupGuard, UpdateChannel, UpdateError, UpdateManifest,
 };

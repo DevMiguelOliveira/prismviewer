@@ -584,8 +584,9 @@
     - suporte a canais 'stable' e 'beta'
     - backup previo e rollback automatico caso a inicializacao falhe
     - testes unitarios cobrindo validacao valida, assinatura adulterada e rollback
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Validacao de integridade SHA-256 em tempo constante e autenticidade Ed25519 implementada com UpdateBackupGuard para rollback automatico em falha e 5 testes unitarios verdes'
 
 - id: F11-RELEASE-WORKFLOW
   fase: 11

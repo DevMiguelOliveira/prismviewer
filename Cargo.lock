@@ -4900,6 +4900,7 @@ dependencies = [
 name = "prysmview-host"
 version = "0.1.0"
 dependencies = [
+ "ed25519-dalek",
  "hmac",
  "iroh",
  "postcard",
