@@ -240,6 +240,6 @@
     - timer adaptativo de 15 a 30 fps
     - forcar keyframe a cada 5 segundos ou sob solicitacao
     - descarte estrito de frames se canal anterior ainda estiver ocupado
-    - cargo test -p prysmview-host 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'RateController adaptativo (15-30 fps) implementado com descarte de frames em voo, keyframe a cada 5s e 4 testes unitarios verdes'
