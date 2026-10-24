@@ -622,4 +622,40 @@
   tentativas: 0
   ultimo_log: 'Suite de testes de invasao implementada com cobertura de DoS por overflow de payload, magic invalido, versao de protocolo incompativel e relatorio docs/testes-seguranca.md aprovado'
 
+# ==============================================================================
+# FASE 13: PREPARAÇÃO PARA PRODUÇÃO
+# ==============================================================================
+- id: F13-DEPLOY-INFRA
+  fase: 13
+  titulo: Scripts de infraestrutura deploy/ (systemd API, backup SQLite e firewall UFW)
+  agente: dev-rust
+  arquivos_permitidos:
+    - deploy/systemd/prysmview-api.service
+    - deploy/backup-sqlite.sh
+    - deploy/setup-ufw.sh
+  depende_de: [F12-SECURITY-TESTS]
+  criterio_pronto:
+    - prysmview-api.service configurado com usuario prysmview e Restart=on-failure
+    - backup-sqlite.sh com dump do sqlite3 e retencao de 30 dias
+    - setup-ufw.sh com liberacao de portas 443 TCP e 3340 UDP
+  status: pendente
+  tentativas: 0
+
+- id: F13-DOCS-FINAL
+  fase: 13
+  titulo: Manual do operador, guia de instalação no PDV e revisão final
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/MANUAL-OPERADOR.md
+    - docs/PROJETO.md
+    - README.md
+  depende_de: [F13-DEPLOY-INFRA]
+  criterio_pronto:
+    - manual de operacao do Viewer e do Tray no PDV
+    - documentacao de operacao, backup e disaster recovery atualizada em docs/PROJETO.md
+    - README.md completo com arquitetura e instrucoes de execucao
+  status: pendente
+  tentativas: 0
+
+
 
