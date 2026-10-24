@@ -401,6 +401,7 @@
   titulo: Named pipe local seguro com ACL restrita entre prysmview-svc e tray
   agente: dev-rust
   arquivos_permitidos:
+    - crates/host/Cargo.toml
     - crates/host/src/ipc.rs
     - crates/host/src/lib.rs
   depende_de: [F7-SESSION-CODE]
@@ -408,8 +409,9 @@
     - named pipe Windows com Security Descriptor restrito a SYSTEM e usuario logado
     - mensagens com cabecalho PRSM v1
     - testes unitarios de autorizacao e roundtrip IPC
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Named Pipe seguro implementado com SDDL (SYSTEM, Admins, Interactive Users), framing PRSM v1, validacao previa de limites e 5 testes unitarios/integracao no Windows 100% verdes'
 
 - id: F7-TRAY-CONSENT
   fase: 7

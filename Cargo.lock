@@ -3311,8 +3311,10 @@ version = "0.1.0"
 dependencies = [
  "hmac",
  "iroh",
+ "postcard",
  "prysmview-core",
  "rand 0.8.8",
+ "serde",
  "sha2",
  "subtle",
  "thiserror 2.0.21",
