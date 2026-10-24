@@ -525,8 +525,9 @@
     - envio de SAS (Secure Attention Sequence) no desktop Winlogon
     - comando de reinicializacao persistindo estado para reconexao automatica
     - cargo check no workspace 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Disparo de SAS no Winlogon via SendSAS (sas.dll), liberacao compulsoria de teclas e modificadores via InputInjector, persistencia binaria de ReconnectState com postcard e cargo check no workspace 100% verde'
 
 
 

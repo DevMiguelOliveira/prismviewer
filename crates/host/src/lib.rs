@@ -9,6 +9,7 @@ pub mod fps;
 pub mod input;
 pub mod ipc;
 pub mod net;
+pub mod sas;
 pub mod session_code;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
@@ -25,6 +26,10 @@ pub use ipc::{
     DEFAULT_PIPE_NAME, PIPE_SECURITY_DESCRIPTOR_SDDL,
 };
 pub use net::{HostNetworkAdapter, NetworkError, PRYSM_ALPN};
+pub use sas::{
+    clear_reconnect_state, load_reconnect_state, release_all_keys, request_system_reboot,
+    save_reconnect_state, send_sas, ReconnectState, SasError, DEFAULT_RECONNECT_STATE_PATH,
+};
 pub use session_code::{
     SessionCodeError, SessionCodeManager, MAX_SESSION_CODE_ATTEMPTS, SESSION_CODE_TTL,
 };
