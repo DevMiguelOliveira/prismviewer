@@ -33,8 +33,10 @@
   - docs/threat-model.md detalha ativos, ameacas e controles de PDV
   - docs/glossario.md define termos (Host, Viewer, Relay, iroh, DXGI, DPAPI, etc.)
   - docs/dependencias.md cataloga dependencias Rust e Go com licencas e motivos
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Gates verdes: cargo check, fmt, clippy, go vet. Documentos de base criados com sucesso.'
+  ultimo_log: Documentos base concluidos e validados contra AGENTS.md
 - id: F0-ADRS
   fase: 0
   titulo: ADRs 0001, 0002 e 0003 (transporte iroh/QUIC, instalador e modelo de consentimento)
