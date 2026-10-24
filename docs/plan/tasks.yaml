@@ -566,3 +566,38 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Script Inno Setup 6 (prysmview.iss) e documentacao (README.md) implementados com instalacao de prysmview-svc e tray, ACLs restritas, recuperacao em falha e desinstalacao limpa'
+
+# ==============================================================================
+# FASE 11: ATUALIZAÇÃO ASSINADA
+# ==============================================================================
+- id: F11-UPDATER-CORE
+  fase: 11
+  titulo: Verificação de assinatura Ed25519, download seguro e rollback automático em crates/host
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/updater.rs
+    - crates/host/src/lib.rs
+  depende_de: [F10-INNO-SETUP]
+  criterio_pronto:
+    - validacao de assinatura Ed25519 e SHA-256 do pacote de atualizacao
+    - suporte a canais 'stable' e 'beta'
+    - backup previo e rollback automatico caso a inicializacao falhe
+    - testes unitarios cobrindo validacao valida, assinatura adulterada e rollback
+  status: pendente
+  tentativas: 0
+
+- id: F11-RELEASE-WORKFLOW
+  fase: 11
+  titulo: Workflow GitHub Actions release.yml com assinatura Ed25519 e documentacao
+  agente: dev-rust
+  arquivos_permitidos:
+    - .github/workflows/release.yml
+    - docs/atualizacao.md
+  depende_de: [F11-UPDATER-CORE]
+  criterio_pronto:
+    - workflow release.yml com build de release, instalador Inno Setup e assinatura Ed25519
+    - docs/atualizacao.md detalhando o processo de update e canais
+  status: pendente
+  tentativas: 0
+
