@@ -164,7 +164,7 @@ mod tests {
         let mut canvas = RemoteCanvas::new(128, 128);
 
         // Prepara um tile 64x64 preenchido com vermelho RGBA (255, 0, 0, 255)
-        let tile_raw = vec![255, 0, 0, 255].repeat(64 * 64);
+        let tile_raw = [255, 0, 0, 255].repeat(64 * 64);
         let compressed = zstd::encode_all(tile_raw.as_slice(), 1).expect("compress zstd");
 
         let frame = VideoFrameMessage {
