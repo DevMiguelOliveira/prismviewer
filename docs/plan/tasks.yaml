@@ -335,3 +335,41 @@
   tentativas: 0
   ultimo_log: 'Endpoints Chi implementados (health, registro host Ed25519, status, login operador, lista PDVs, sessao, auditoria) e 4 suites de testes de integracao 100% verdes'
 
+# ==============================================================================
+# FASE 6: RELAY E CONECTIVIDADE
+# ==============================================================================
+- id: F6-RELAY-SERVICE
+  fase: 6
+  titulo: Configuracao do binario prysmview-relay e unit systemd para VM Oracle
+  agente: dev-rust
+  arquivos_permitidos:
+    - Cargo.toml
+    - crates/relay/Cargo.toml
+    - crates/relay/src/main.rs
+    - deploy/systemd/prysmview-relay.service
+  depende_de: [F5-API-ENDPOINTS]
+  criterio_pronto:
+    - crates/relay integrado ao workspace com binario do relay iroh
+    - deploy/systemd/prysmview-relay.service configurado com Restart=on-failure e usuario sem login
+    - cargo check no workspace passa 100% verde
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Binario prysmview-relay integrado ao workspace com descoberta iroh, escuta em 0.0.0.0:3340 e unit systemd configurada para a VM Oracle Always Free'
+
+- id: F6-NET-ADAPTER
+  fase: 6
+  titulo: Adaptador de rede iroh no host com fallback P2P para relay
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/net.rs
+    - crates/host/src/lib.rs
+  depende_de: [F6-RELAY-SERVICE]
+  criterio_pronto:
+    - crates/host/src/net.rs implementa escuta e conexao iroh QUIC com TLS 1.3
+    - handshake inicial no stream 0 com verificacao do magic 'PRSM' e versao
+    - fallback transparente para relay quando conexao P2P direta nao alcancavel
+    - cargo test -p prysmview-host passa 100% verde
+  status: pendente
+  tentativas: 0
+
