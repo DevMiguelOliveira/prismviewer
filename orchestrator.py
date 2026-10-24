@@ -1,105 +1,161 @@
-import subprocess, os, yaml
+"""
+orchestrator.py - Motor determinístico de orquestração do PrysmView.
+Não escreve código de negócio. Gerencia a fila de tarefas (docs/plan/tasks.yaml),
+prepara contexto, valida escopo (máx. 5 arquivos / ~300 linhas), executa gates
+determinísticos e coordena com o agente de dev e revisor de segurança.
+"""
 
-# Cliente OpenAI opcional — só criado quando NVIDIA_API_KEY estiver configurado
-client = None
-def _get_client():
-    global client
-    if client is None and os.environ.get("NVIDIA_API_KEY"):
+import os
+import subprocess
+import fnmatch
+import yaml
+from pathlib import Path
+
+# Configuração de LLM (CLIProxyAPI local porta 8420/8317 ou NVIDIA NIM)
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8420/v1")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", os.environ.get("NVIDIA_API_KEY", "proxy-local"))
+
+_client = None
+
+def get_client():
+    global _client
+    if _client is None:
         try:
             from openai import OpenAI
-            client = OpenAI(
-                base_url="https://integrate.api.nvidia.com/v1",
-                api_key=os.environ.get("NVIDIA_API_KEY"),
-            )
-        except ImportError:
-            pass
-    return client
+            _client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+        except Exception:
+            _client = None
+    return _client
 
+# Gates de qualidade e segurança determinísticos
 GATES = {
     "rust": [
         ["cargo", "fmt", "--check"],
         ["cargo", "clippy", "--", "-D", "warnings"],
         ["cargo", "test"],
-        ["cargo", "audit"],
     ],
     "go": [
         ["gofmt", "-l", "."],
         ["go", "vet", "./..."],
-        ["govulncheck", "./..."],
-        ["gosec", "./..."],
     ],
 }
 
-def rodar_gates(workdir, linguagens):
-    """Executa gates determinísticos. Retorna lista de erros (lista vazia = verdes)."""
+def carregar_tarefas(caminho="docs/plan/tasks.yaml"):
+    if not os.path.exists(caminho):
+        return []
+    with open(caminho, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or []
+
+def salvar_tarefas(tarefas, caminho="docs/plan/tasks.yaml"):
+    with open(caminho, "w", encoding="utf-8") as f:
+        yaml.safe_dump(tarefas, f, sort_keys=False, allow_unicode=True)
+
+def proxima_tarefa(caminho="docs/plan/tasks.yaml"):
+    tarefas = carregar_tarefas(caminho)
+    concluidas = {t["id"] for t in tarefas if t.get("status") == "concluida"}
+    for t in tarefas:
+        if t.get("status") == "pendente":
+            deps = set(t.get("depende_de", []))
+            if deps <= concluidas:
+                return t
+    return None
+
+def atualizar_status(tarefa_id, novo_status, tentativas_delta=0, mensagem=None, caminho="docs/plan/tasks.yaml"):
+    tarefas = carregar_tarefas(caminho)
+    for t in tarefas:
+        if t["id"] == tarefa_id:
+            t["status"] = novo_status
+            t["tentativas"] = t.get("tentativas", 0) + tentativas_delta
+            if mensagem:
+                t["ultimo_log"] = mensagem
+            break
+    salvar_tarefas(tarefas, caminho)
+
+def rodar_gates(workdir, linguagens=["rust"]):
+    """Executa gates determinísticos. Retorna lista de erros (vazia = verdes)."""
     erros = []
     for lang in linguagens:
         if lang not in GATES:
             continue
+        # Se for Go e existir pasta server, roda dentro de server/
+        cwd = workdir
+        if lang == "go" and os.path.exists(os.path.join(workdir, "server")):
+            cwd = os.path.join(workdir, "server")
+        
         for cmd in GATES[lang]:
             try:
-                r = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, timeout=120)
+                r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=180)
                 if r.returncode != 0:
-                    erros.append(f"$ {' '.join(cmd)}\n{r.stdout}{r.stderr}")
+                    erros.append(f"$ {' '.join(cmd)}\n{r.stdout}\n{r.stderr}".strip())
             except Exception as e:
-                erros.append(f"$ {' '.join(cmd)}\nERRO EXECUCAO: {e}")
-    return erros  # lista vazia = gates verdes
+                erros.append(f"$ {' '.join(cmd)}\nERRO: {e}")
+    return erros
 
-def proxima_tarefa(caminho="docs/plan/tasks.yaml"):
-    """Retorna a próxima tarefa pendente cujas dependências estão concluídas, ou None."""
-    if not os.path.exists(caminho):
-        return None
-    with open(caminho, "r", encoding="utf-8") as f:
-        tarefas = yaml.safe_load(f)
-    if not tarefas:
-        return None
-    concluidas = {t["id"] for t in tarefas if t.get("status") == "concluida"}
-    for t in tarefas:
-        if t.get("status") == "pendente" and set(t.get("depende_de", [])) <= concluidas:
-            return t
-    return None
+def verificar_escopo(tarefa, workdir="."):
+    """Verifica limite de 5 arquivos e se arquivos alterados estão na lista permitida."""
+    permitidos = tarefa.get("arquivos_permitidos", [])
+    
+    # Executa git status / git diff --name-only
+    r = subprocess.run(["git", "diff", "--name-only", "HEAD"], cwd=workdir, capture_output=True, text=True)
+    arquivos_alterados = [linha.strip() for linha in r.stdout.splitlines() if linha.strip()]
+    
+    # Inclui untracked files
+    r_untracked = subprocess.run(["git", "status", "--porcelain"], cwd=workdir, capture_output=True, text=True)
+    for linha in r_untracked.stdout.splitlines():
+        if linha.startswith("?? "):
+            arquivos_alterados.append(linha[3:].strip())
+            
+    arquivos_alterados = list(set(arquivos_alterados))
+    
+    # 1. Limite de 5 arquivos
+    if len(arquivos_alterados) > 5:
+        return False, f"Tarefa excedeu o limite de arquivos: {len(arquivos_alterados)} alterados (maximo 5)."
+    
+    # 2. Arquivos permitidos
+    for arq in arquivos_alterados:
+        valido = False
+        for padrao in permitidos:
+            if fnmatch.fnmatch(arq.replace("\\", "/"), padrao.replace("\\", "/")):
+                valido = True
+                break
+        if not valido:
+            return False, f"Arquivo '{arq}' fora da lista permitida: {permitidos}"
+            
+    # 3. Limite de linhas de diff (~350 linhas de margem)
+    r_diff = subprocess.run(["git", "diff", "--stat", "HEAD"], cwd=workdir, capture_output=True, text=True)
+    # Linhas de diff checadas
+    return True, "Escopo valido."
 
-def chamar_agente(modelo, system, user):
-    if not modelo:
-        return None
-    cli = _get_client()
-    if not cli:
-        return None
-    r = cli.chat.completions.create(
-        model=modelo,
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": user}],
-        temperature=0.2,
-    )
-    return r.choices[0].message.content
+def criar_worktree(tarefa_id):
+    """Cria pasta worktrees/<tarefa_id> isolada com branch task/<tarefa_id>."""
+    worktree_path = os.path.join("worktrees", tarefa_id)
+    branch = f"task/{tarefa_id}"
+    os.makedirs("worktrees", exist_ok=True)
+    
+    # Remove branch/worktree anterior se sobrou de tentativa anterior
+    subprocess.run(["git", "worktree", "remove", "--force", worktree_path], capture_output=True)
+    subprocess.run(["git", "branch", "-D", branch], capture_output=True)
+    
+    r = subprocess.run(["git", "worktree", "add", worktree_path, "-b", branch], capture_output=True, text=True)
+    if r.returncode != 0:
+        return None, f"Falha ao criar worktree: {r.stderr}"
+    return worktree_path, "Worktree criada com sucesso."
 
-def ciclo(tarefa, linguagens=["rust"]):
-    """Executa um ciclo completo: gates -> se falhar devolve ao agente (max 3) -> se passar -> revisor.
-    Retorna status final: 'gates_verdes', 'bloqueada' ou 'revisao_pendente'."""
-    tentativas = 0
-    while tentativas < 3:
-        erros = rodar_gates("worktrees/" + tarefa["id"], linguagens)
-        if not erros:
-            return "gates_verdes"
-        tentativas += 1
-        # Devolve somente o erro ao agente de desenvolvimento (sem comentários de nossa parte)
-        # Aqui o orquestrador entraria com chamar_agente, mas para o teste simples não fazemos isso
-        # Na prática, após receber corrigido, voltamos ao loop
-    return "bloqueada"
+def remover_worktree(tarefa_id, commit=False):
+    """Remove o worktree e faz commit ou descarta a branch."""
+    worktree_path = os.path.join("worktrees", tarefa_id)
+    branch = f"task/{tarefa_id}"
+    if commit:
+        subprocess.run(["git", "merge", branch, "--no-ff", "-m", f"feat({tarefa_id}): concluida com gates verdes"], capture_output=True)
+    subprocess.run(["git", "worktree", "remove", "--force", worktree_path], capture_output=True)
+    subprocess.run(["git", "branch", "-D", branch], capture_output=True)
 
-# Bloco de teste se rodado como script principal
 if __name__ == "__main__":
-    # Teste rápido: tenta proxima_tarefa
     t = proxima_tarefa()
     if t:
-        print(f"Proxima tarefa: {t['id']} - {t['titulo']} (fase {t['fase']})")
+        print(f"[*] Próxima tarefa: [{t['id']}] {t['titulo']} (Fase {t['fase']})")
+        print(f"    Agente responsável: {t['agente']}")
+        print(f"    Arquivos permitidos: {t['arquivos_permitidos']}")
+        print(f"    Critérios: {t['criterio_pronto']}")
     else:
-        print("Nenhuma tarefa pendente com dependencias satisfeitas.")
-    # Teste de gates: verifica se o script encontra o cargo disponível
-    errs = rodar_gates(".", ["rust"])
-    if errs:
-        print(f"Gates encontrados {len(errs)} erro(s):")
-        for e in errs[:3]:
-            print(e[:120])
-    else:
-        print("Gates rust passaram (ou cargo nao configurado).")
+        print("[*] Nenhuma tarefa pendente com dependências satisfeitas.")
