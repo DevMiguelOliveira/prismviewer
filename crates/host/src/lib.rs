@@ -5,9 +5,13 @@ pub mod encoder;
 pub mod fps;
 pub mod input;
 pub mod net;
+pub mod session_code;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
 pub use encoder::{EncoderError, VideoEncoder, TILE_SIZE, ZSTD_VIDEO_LEVEL};
 pub use fps::{RateController, MAX_FPS, MIN_FPS};
 pub use input::{InputInjectionError, InputInjector};
 pub use net::{HostNetworkAdapter, NetworkError, PRYSM_ALPN};
+pub use session_code::{
+    SessionCodeError, SessionCodeManager, MAX_SESSION_CODE_ATTEMPTS, SESSION_CODE_TTL,
+};

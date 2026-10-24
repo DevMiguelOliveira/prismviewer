@@ -374,3 +374,57 @@
   tentativas: 0
   ultimo_log: 'HostNetworkAdapter implementado com iroh QUIC sobre TLS 1.3, handshake no stream 0 com validacao do cabecalho PRSM e 15 testes unitarios no prysmview-host 100% verdes'
 
+# ==============================================================================
+# FASE 7: SEGURANÇA DE SESSÃO
+# ==============================================================================
+- id: F7-SESSION-CODE
+  fase: 7
+  titulo: Geracao e validacao constante-time HMAC de codigo de sessao de 8 digitos
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/Cargo.toml
+    - crates/host/src/session_code.rs
+    - crates/host/src/lib.rs
+  depende_de: [F6-NET-ADAPTER]
+  criterio_pronto:
+    - codigo numerico de 8 digitos gerado com rand::OsRng
+    - validade de 120 segundos e maximo de 3 tentativas
+    - verificacao por HMAC-SHA256 com comparacao em tempo constante via subtle::ConstantTimeEq
+    - memoria zerada com zeroize ao descartar
+    - cargo test -p prysmview-host 100% verde
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'SessionCode implementado com rand::OsRng, validade de 120s, 3 tentativas maximas, HMAC-SHA256 em tempo constante (subtle) e zeroize, com 5 testes unitarios aprovados'
+
+- id: F7-LOCAL-IPC-PIPE
+  fase: 7
+  titulo: Named pipe local seguro com ACL restrita entre prysmview-svc e tray
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/ipc.rs
+    - crates/host/src/lib.rs
+  depende_de: [F7-SESSION-CODE]
+  criterio_pronto:
+    - named pipe Windows com Security Descriptor restrito a SYSTEM e usuario logado
+    - mensagens com cabecalho PRSM v1
+    - testes unitarios de autorizacao e roundtrip IPC
+  status: pendente
+  tentativas: 0
+
+- id: F7-TRAY-CONSENT
+  fase: 7
+  titulo: prysmview-tray na sessao do usuario com janela de consentimento e encerramento
+  agente: dev-rust
+  arquivos_permitidos:
+    - Cargo.toml
+    - crates/tray/Cargo.toml
+    - crates/tray/src/main.rs
+  depende_de: [F7-LOCAL-IPC-PIPE]
+  criterio_pronto:
+    - aplicacao tray sem elevacao rodando na sessao do usuario
+    - janela de consentimento com timer regressivo de 60s
+    - indicador de sessao ativa e botao de encerramento imediato
+    - cargo check no workspace 100% verde
+  status: pendente
+  tentativas: 0
+
