@@ -279,3 +279,57 @@
   tentativas: 0
   ultimo_log: 'release_all() e Drop implementados liberando todas as teclas e modificadores em queda de sessao com testes aprovados'
 
+# ==============================================================================
+# FASE 5: SINALIZAÇÃO E IDENTIDADE (GO)
+# ==============================================================================
+- id: F5-DATABASE
+  fase: 5
+  titulo: Banco de dados SQLite sem CGO e migracoes versionadas em server/internal/db
+  agente: dev-go
+  arquivos_permitidos:
+    - server/go.mod
+    - server/go.sum
+    - server/internal/db/db.go
+    - server/internal/db/db_test.go
+  depende_de: [F4-INPUT-CLEANUP]
+  criterio_pronto:
+    - modernc.org/sqlite integrado sem CGO
+    - tabelas de pdvs, operadores, tokens (hash SHA-256), permissoes e auditoria criadas
+    - testes unitarios de persistencia e migracao passando
+  status: pendente
+  tentativas: 0
+
+- id: F5-AUTH-SIGNATURE
+  fase: 5
+  titulo: Autenticacao Ed25519 (nonce/timestamp), tokens opacos e rate limiter
+  agente: dev-go
+  arquivos_permitidos:
+    - server/internal/auth/auth.go
+    - server/internal/auth/auth_test.go
+  depende_de: [F5-DATABASE]
+  criterio_pronto:
+    - verificacao de assinatura Ed25519 com nonce e timestamp contra replay
+    - geracao de token opaco de 32 bytes e hash SHA-256
+    - rate limiter em memoria com golang.org/x/time/rate
+    - testes unitarios cobrindo replay attack e assinaturas invalidas
+  status: pendente
+  tentativas: 0
+
+- id: F5-API-ENDPOINTS
+  fase: 5
+  titulo: Endpoints HTTP Chi (registro PDV, login operador, lista PDVs, sessao, auditoria)
+  agente: dev-go
+  arquivos_permitidos:
+    - server/cmd/api/main.go
+    - server/internal/api/routes.go
+    - server/internal/api/api_test.go
+    - server/main.go
+  depende_de: [F5-AUTH-SIGNATURE]
+  criterio_pronto:
+    - router Chi com logging slog JSON e recuperacao de panics
+    - endpoints implementados e autenticados
+    - testes de integracao cobrindo todos os endpoints, assinatura invalida e token expirado
+    - go vet ./... e go test ./... passando 100% verde
+  status: pendente
+  tentativas: 0
+
