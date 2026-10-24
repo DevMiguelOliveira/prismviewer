@@ -11,7 +11,7 @@ worktrees/
 
 # Dual agent and logs
 *.log
-.dual-agent/session.json
+.dual-agent/
 
 # OS files
 Thumbs.db
