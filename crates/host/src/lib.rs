@@ -1,6 +1,8 @@
 //! prysmview-host - Componente Host do PDV para captura e controle remoto
 
 pub mod capture;
+pub mod chat;
+pub mod clipboard;
 pub mod encoder;
 pub mod file_transfer;
 pub mod fps;
@@ -10,6 +12,8 @@ pub mod net;
 pub mod session_code;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
+pub use chat::{ChatError, ChatManager, MAX_CHAT_HISTORY, MAX_CHAT_TEXT_LEN};
+pub use clipboard::{ClipboardError, ClipboardManager, MAX_CLIPBOARD_BYTES};
 pub use encoder::{EncoderError, VideoEncoder, TILE_SIZE, ZSTD_VIDEO_LEVEL};
 pub use file_transfer::{FileTransferError, FileTransferReceiver, FileTransferSender};
 pub use fps::{RateController, MAX_FPS, MIN_FPS};

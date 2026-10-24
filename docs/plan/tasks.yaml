@@ -509,8 +509,9 @@
     - chat de texto seguro encapsulado no protocolo PRSM v1
     - testes unitarios de rejeicao de payloads acima de 1 MB
     - cargo test -p prysmview-host 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Clipboard com limite de 1 MB, flag de desativacao local pelo PDV e Chat com limite de 4 KiB, historico delimitado e 11 testes unitarios 100% verdes'
 
 - id: F9-SYSTEM-SAS-REBOOT
   fase: 9
