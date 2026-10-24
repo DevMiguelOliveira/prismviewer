@@ -3309,8 +3309,10 @@ dependencies = [
 name = "prysmview-host"
 version = "0.1.0"
 dependencies = [
+ "iroh",
  "prysmview-core",
  "thiserror 2.0.21",
+ "tokio",
  "tracing",
  "windows 0.58.0",
  "zstd",

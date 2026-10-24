@@ -370,6 +370,7 @@
     - handshake inicial no stream 0 com verificacao do magic 'PRSM' e versao
     - fallback transparente para relay quando conexao P2P direta nao alcancavel
     - cargo test -p prysmview-host passa 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'HostNetworkAdapter implementado com iroh QUIC sobre TLS 1.3, handshake no stream 0 com validacao do cabecalho PRSM e 15 testes unitarios no prysmview-host 100% verdes'
 
