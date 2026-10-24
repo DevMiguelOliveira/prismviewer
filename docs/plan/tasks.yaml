@@ -331,6 +331,7 @@
     - endpoints implementados e autenticados
     - testes de integracao cobrindo todos os endpoints, assinatura invalida e token expirado
     - go vet ./... e go test ./... passando 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Endpoints Chi implementados (health, registro host Ed25519, status, login operador, lista PDVs, sessao, auditoria) e 4 suites de testes de integracao 100% verdes'
 
