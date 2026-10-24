@@ -1,9 +1,9 @@
 ---
 mode: all
 description: Auditor Senior de Seguranca, Criptografia e Threat Modeling (Zero-Trust, DPAPI, constant-time HMAC, anti-replay e limites PRSM).
-model: google/gemini-2.5-pro
+model: google/gemini-pro-latest
 options:
-  displayName: Security & Threat Auditor (Gemini 2.5 Pro)
+  displayName: Security & Threat Auditor (Gemini Pro Latest)
   id: security-auditor
 permission:
   read: allow

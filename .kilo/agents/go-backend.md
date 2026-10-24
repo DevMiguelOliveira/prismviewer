@@ -1,9 +1,9 @@
 ---
 mode: all
 description: Especialista no servidor de sinalizacao em Go (API Chi, SQLite sem CGO, autenticacao Ed25519 com nonce/timestamp, rate limit e tokens opacos).
-model: google/gemini-2.5-flash
+model: google/gemini-3.8-flash
 options:
-  displayName: Go Backend & Signaling (Gemini 2.5 Flash)
+  displayName: Go Backend & Signaling (Gemini 3.8 Flash)
   id: go-backend
 permission:
   read: allow
