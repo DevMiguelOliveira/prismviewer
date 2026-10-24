@@ -1,0 +1,36 @@
+name: Go CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  go-gates:
+    name: Gates Go (gofmt, vet, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Gate 1 - Gofmt Check
+        working-directory: server
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Arquivos Go mal formatados:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: Gate 2 - Go Vet
+        working-directory: server
+        run: go vet ./...
+
+      - name: Gate 3 - Go Test
+        working-directory: server
+        run: go test -v ./...

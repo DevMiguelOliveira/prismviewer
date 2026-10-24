@@ -67,8 +67,9 @@
   - workflow rust.yml roda cargo fmt --check, cargo clippy -- -D warnings e cargo
     test
   - workflow go.yml roda gofmt -l ., go vet ./... e testes em server/
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: Workflows de CI Rust e Go configurados e validados
 - id: F1-S1
   fase: 1
   titulo: Spike de captura de tela via DXGI Desktop Duplication
