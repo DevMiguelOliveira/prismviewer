@@ -187,5 +187,6 @@
   criterio_pronto:
     - docs/protocolo.md descreve streams 0 a 4, frames, handshake e seguranca
     - aprovado contra secao 8 do AGENTS.md
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Documento docs/protocolo.md completo detalhando cabecalho de 11 bytes, streams QUIC 0 a 4, validacao de limites e seguranca'
