@@ -491,8 +491,9 @@
     - gravacao em arquivo temporario .part com verificacao de hash SHA-256 no destino
     - descarte imediato do arquivo temporario em caso de hash divergente
     - cargo test -p prysmview-host 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Transferencia de arquivos em blocos de 1 MiB implementada com gravacao em arquivo .part, verificacao SHA-256 em tempo constante, descarte em erro e 6 testes unitarios verdes'
 
 - id: F9-CLIPBOARD-CHAT
   fase: 9
