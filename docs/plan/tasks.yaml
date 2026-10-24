@@ -190,3 +190,56 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Documento docs/protocolo.md completo detalhando cabecalho de 11 bytes, streams QUIC 0 a 4, validacao de limites e seguranca'
+
+# ==============================================================================
+# FASE 3: NÚCLEO DO HOST (CAPTURA E VÍDEO)
+# ==============================================================================
+- id: F3-DXGI-WORKER
+  fase: 3
+  titulo: Captura DXGI em thread dedicada com recriacao automatica em crates/host
+  agente: dev-rust
+  arquivos_permitidos:
+    - Cargo.toml
+    - crates/host/Cargo.toml
+    - crates/host/src/lib.rs
+    - crates/host/src/capture.rs
+  depende_de: [F2-DOC-PROTOCOLO]
+  criterio_pronto:
+    - crates/host integrado ao Cargo workspace
+    - capture.rs implementa worker DXGI em thread dedicada
+    - recuperacao automatica caso a duplicacao seja perdida (desktop switch ou resolucao)
+    - cargo check no workspace passa sem erros
+  status: pendente
+  tentativas: 0
+
+- id: F3-TILES-PIPELINE
+  fase: 3
+  titulo: Deteccao de dirty tiles 64x64 e compressao zstd nivel 1 em crates/host
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/encoder.rs
+    - crates/host/src/lib.rs
+  depende_de: [F3-DXGI-WORKER]
+  criterio_pronto:
+    - comparacao de blocos 64x64 com buffer anterior
+    - compressao zstd nivel 1 por tile alterado
+    - empacotamento em VideoFrameMessage do prysmview-core
+    - testes unitarios de deteccao e compressao verdes
+  status: pendente
+  tentativas: 0
+
+- id: F3-RATE-CONTROL
+  fase: 3
+  titulo: Controle de taxa (15-30 fps), keyframe periodico e descarte de intermediarios
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/host/src/fps.rs
+    - crates/host/src/lib.rs
+  depende_de: [F3-TILES-PIPELINE]
+  criterio_pronto:
+    - timer adaptativo de 15 a 30 fps
+    - forcar keyframe a cada 5 segundos ou sob solicitacao
+    - descarte estrito de frames se canal anterior ainda estiver ocupado
+    - cargo test -p prysmview-host 100% verde
+  status: pendente
+  tentativas: 0
