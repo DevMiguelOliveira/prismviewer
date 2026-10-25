@@ -112,7 +112,7 @@ impl Default for TrayState {
             pdv_id: "PDV-CAIXA-01".to_string(),
             is_session_active: false,
             current_operator: None,
-            current_code: Some("8492 1058".to_string()),
+            current_code: None,
             session_code_expires_in: 120,
             clipboard_enabled: true,
             file_transfer_enabled: true,
@@ -666,6 +666,13 @@ mod tests {
         assert_eq!(resp, None);
         assert!(!state.is_session_active);
         assert!(state.pending_consent.is_some());
+    }
+
+    #[test]
+    fn test_tray_state_no_code_in_idle() {
+        let state = TrayState::new();
+        assert_eq!(state.current_code, None);
+        assert!(!state.is_session_active);
     }
 
     #[test]
