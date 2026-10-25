@@ -23,7 +23,8 @@ def get_client():
     if _client is None:
         try:
             from openai import OpenAI
-            _client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+            api_key = OPENAI_API_KEY or NVIDIA_API_KEY or ""
+            _client = OpenAI(base_url=OPENAI_BASE_URL, api_key=api_key)
         except Exception:
             _client = None
     return _client

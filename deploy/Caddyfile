@@ -26,6 +26,6 @@ api.seudominio.com {
     # TLS: certificado automático via Let's Encrypt
     # Caddy escolhe automaticamente suítes fortes modernas (TLS 1.2/1.3)
     tls {
-        protocolo tls1.2 tls1.3
+        protocols tls1.2 tls1.3
     }
 }
