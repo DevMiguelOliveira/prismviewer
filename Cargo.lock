@@ -4936,6 +4936,7 @@ dependencies = [
 name = "prysmview-tray"
 version = "0.1.0"
 dependencies = [
+ "eframe",
  "prysmview-core",
  "prysmview-host",
  "thiserror 2.0.21",
