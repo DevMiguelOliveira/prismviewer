@@ -16,7 +16,39 @@ pub use session::{
 
 use serde::{Deserialize, Serialize};
 
-/// Informações cadastrais e de telemetria de um PDV na rede.
+/// Abas de navegação do console administrativo do técnico.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AdminTab {
+    Dashboard,
+    DirectConnect,
+    Stores,
+    AuditHistory,
+    Settings,
+}
+
+/// Filtro de status de conectividade para a lista de PDVs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FilterStatus {
+    All,
+    OnlineOnly,
+    OfflineOnly,
+}
+
+/// Registro histórico de auditoria de sessões executadas.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuditRecord {
+    pub id: String,
+    pub timestamp: String,
+    pub operator_name: String,
+    pub pdv_id: String,
+    pub store_name: String,
+    pub duration: String,
+    pub reason: String,
+    pub status: String,
+    pub bytes_transferred: String,
+}
+
+/// Informações cadastrais e de telemetria avançada de um PDV na rede.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PdvItem {
     pub id: String,
@@ -25,9 +57,12 @@ pub struct PdvItem {
     pub agent_version: String,
     pub public_key: String,
     pub last_seen: String,
+    pub ip_address: String,
+    pub os_info: String,
+    pub resolution: String,
 }
 
-/// Estado global e de interface do operador no Viewer.
+/// Estado global e de interface do operador no Viewer / Prysm Admin.
 #[derive(Debug, Clone)]
 pub struct ViewerState {
     pub operator_name: String,
@@ -38,12 +73,22 @@ pub struct ViewerState {
     pub is_authenticated: bool,
     pub login_error: Option<String>,
     pub search_query: String,
+    pub active_tab: AdminTab,
+    pub filter_status: FilterStatus,
+    pub selected_store: Option<String>,
     pub pdvs: Vec<PdvItem>,
     pub selected_pdv: Option<PdvItem>,
+    pub inspected_pdv: Option<PdvItem>,
     pub session_code_input: String,
+    pub direct_pdv_input: String,
+    pub direct_code_input: String,
     pub is_connecting: bool,
     pub active_session: bool,
     pub status_message: Option<String>,
+    pub audit_records: Vec<AuditRecord>,
+    pub cloud_latency_ms: u64,
+    pub target_fps: u32,
+    pub zstd_level: i32,
 }
 
 impl Default for ViewerState {
@@ -57,12 +102,22 @@ impl Default for ViewerState {
             is_authenticated: false,
             login_error: None,
             search_query: String::new(),
+            active_tab: AdminTab::Dashboard,
+            filter_status: FilterStatus::All,
+            selected_store: None,
             pdvs: Vec::new(),
             selected_pdv: None,
+            inspected_pdv: None,
             session_code_input: String::new(),
+            direct_pdv_input: String::new(),
+            direct_code_input: String::new(),
             is_connecting: false,
             active_session: false,
             status_message: None,
+            audit_records: Vec::new(),
+            cloud_latency_ms: 18,
+            target_fps: 30,
+            zstd_level: 1,
         }
     }
 }
@@ -91,20 +146,67 @@ impl ViewerState {
         self.status_message = Some("Sessão encerrada com sucesso.".to_string());
     }
 
-    /// Retorna os PDVs filtrados pelo termo de busca (nome da loja ou ID do PDV).
+    /// Retorna os PDVs filtrados por busca textual, status (online/offline) e loja selecionada.
     pub fn filter_pdvs(&self) -> Vec<&PdvItem> {
         let query = self.search_query.trim().to_lowercase();
-        if query.is_empty() {
-            self.pdvs.iter().collect()
-        } else {
-            self.pdvs
-                .iter()
-                .filter(|p| {
+        self.pdvs
+            .iter()
+            .filter(|p| {
+                // Filtro de status
+                let matches_status = match self.filter_status {
+                    FilterStatus::All => true,
+                    FilterStatus::OnlineOnly => p.is_online,
+                    FilterStatus::OfflineOnly => !p.is_online,
+                };
+                if !matches_status {
+                    return false;
+                }
+
+                // Filtro de loja
+                if let Some(ref store) = self.selected_store {
+                    if !p.store_name.eq_ignore_ascii_case(store) {
+                        return false;
+                    }
+                }
+
+                // Filtro de busca textual
+                if query.is_empty() {
+                    true
+                } else {
                     p.id.to_lowercase().contains(&query)
                         || p.store_name.to_lowercase().contains(&query)
-                })
-                .collect()
-        }
+                        || p.ip_address.contains(&query)
+                }
+            })
+            .collect()
+    }
+
+    /// Retorna o número de caixas online cadastrados.
+    pub fn online_count(&self) -> usize {
+        self.pdvs.iter().filter(|p| p.is_online).count()
+    }
+
+    /// Retorna o número de caixas offline cadastrados.
+    pub fn offline_count(&self) -> usize {
+        self.pdvs.iter().filter(|p| !p.is_online).count()
+    }
+
+    /// Retorna a lista de nomes únicos de lojas monitoradas.
+    pub fn unique_stores(&self) -> Vec<String> {
+        let mut stores: Vec<String> = self.pdvs.iter().map(|p| p.store_name.clone()).collect();
+        stores.sort();
+        stores.dedup();
+        stores
+    }
+
+    /// Seleciona um PDV para inspeção detalhada de hardware / telemetria.
+    pub fn inspect_pdv(&mut self, pdv: PdvItem) {
+        self.inspected_pdv = Some(pdv);
+    }
+
+    /// Limpa o PDV em inspeção.
+    pub fn close_inspector(&mut self) {
+        self.inspected_pdv = None;
     }
 
     /// Seleciona um PDV para iniciar fluxo de conexão e abre o modal de código.
@@ -160,6 +262,9 @@ mod tests {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pub_key_1".to_string(),
                 last_seen: "Agora".to_string(),
+                ip_address: "192.168.1.101".to_string(),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
             PdvItem {
                 id: "PDV-02".to_string(),
@@ -168,6 +273,9 @@ mod tests {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pub_key_2".to_string(),
                 last_seen: "10 min atrás".to_string(),
+                ip_address: "192.168.2.102".to_string(),
+                os_info: "Windows 10 Enterprise 22H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
             PdvItem {
                 id: "PDV-03".to_string(),
@@ -176,6 +284,9 @@ mod tests {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pub_key_3".to_string(),
                 last_seen: "Agora".to_string(),
+                ip_address: "192.168.1.103".to_string(),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
         ]
     }

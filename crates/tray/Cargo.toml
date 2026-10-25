@@ -1,9 +1,14 @@
 [package]
 name = "prysmview-tray"
+default-run = "PrysmHost"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+
+[[bin]]
+name = "PrysmHost"
+path = "src/main.rs"
 
 [dependencies]
 prysmview-core = { path = "../core" }

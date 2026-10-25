@@ -1,9 +1,14 @@
 [package]
 name = "prysmview-viewer"
+default-run = "PrysmAdmin"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+
+[[bin]]
+name = "PrysmAdmin"
+path = "src/main.rs"
 
 [dependencies]
 prysmview-core = { path = "../core" }

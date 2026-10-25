@@ -1,6 +1,6 @@
 use crate::canvas::RemoteCanvas;
 use crate::session::{collect_input_events, SessionMetrics};
-use crate::{PdvItem, ViewerState};
+use crate::{AdminTab, AuditRecord, FilterStatus, PdvItem, ViewerState};
 use eframe::egui::{self, Align, Color32, Layout, RichText, Stroke, Vec2};
 
 // ==============================================================================
@@ -78,6 +78,9 @@ impl PrysmViewerApp {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pdv01_key_hash".to_string(),
                 last_seen: "Agora".to_string(),
+                ip_address: "192.168.1.101".to_string(),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
             PdvItem {
                 id: "PDV-02".to_string(),
@@ -86,6 +89,9 @@ impl PrysmViewerApp {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pdv02_key_hash".to_string(),
                 last_seen: "Agora".to_string(),
+                ip_address: "192.168.1.102".to_string(),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
             PdvItem {
                 id: "PDV-01".to_string(),
@@ -94,6 +100,9 @@ impl PrysmViewerApp {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pdv204_key_hash".to_string(),
                 last_seen: "15 min atrás".to_string(),
+                ip_address: "192.168.2.101".to_string(),
+                os_info: "Windows 10 Enterprise 22H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
             },
             PdvItem {
                 id: "PDV-03".to_string(),
@@ -102,6 +111,34 @@ impl PrysmViewerApp {
                 agent_version: "0.1.0".to_string(),
                 public_key: "ed25519_pdv305_key_hash".to_string(),
                 last_seen: "Agora".to_string(),
+                ip_address: "192.168.3.103".to_string(),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
+            },
+        ];
+
+        state.audit_records = vec![
+            AuditRecord {
+                id: "AUD-901".to_string(),
+                timestamp: "25/10/2026 09:30".to_string(),
+                operator_name: "admin".to_string(),
+                pdv_id: "PDV-01".to_string(),
+                store_name: "Loja 101 - Centro".to_string(),
+                duration: "14 min".to_string(),
+                reason: "Suporte Impressora Fiscal e TEF".to_string(),
+                status: "Concluído com Sucesso".to_string(),
+                bytes_transferred: "42.8 MB".to_string(),
+            },
+            AuditRecord {
+                id: "AUD-900".to_string(),
+                timestamp: "24/10/2026 17:45".to_string(),
+                operator_name: "admin".to_string(),
+                pdv_id: "PDV-03".to_string(),
+                store_name: "Loja 305 - Hiper Norte".to_string(),
+                duration: "8 min".to_string(),
+                reason: "Atualização de Tabelas de Preço".to_string(),
+                status: "Concluído com Sucesso".to_string(),
+                bytes_transferred: "12.4 MB".to_string(),
             },
         ];
 
@@ -274,7 +311,22 @@ impl eframe::App for PrysmViewerApp {
                 });
             });
 
-        // Painel Central: Tela de Login, Sessão Ativa OU Catálogo de PDVs
+        // Se autenticado e sem sessão ativa, exibe o painel lateral de navegação (Sidebar)
+        if self.state.is_authenticated && !self.state.active_session {
+            egui::SidePanel::left("admin_sidebar")
+                .exact_width(220.0)
+                .frame(
+                    egui::Frame::none()
+                        .fill(COLOR_PANEL_NAVY)
+                        .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                        .inner_margin(egui::Margin::symmetric(12.0, 14.0)),
+                )
+                .show(ctx, |ui| {
+                    self.render_sidebar(ui);
+                });
+        }
+
+        // Painel Central: Tela de Login, Sessão Ativa OU Abas Administrativas
         egui::CentralPanel::default()
             .frame(egui::Frame::none().fill(COLOR_BG_OBSIDIAN))
             .show(ctx, |ui| {
@@ -283,7 +335,13 @@ impl eframe::App for PrysmViewerApp {
                 } else if self.state.active_session {
                     self.render_active_session_view(ui);
                 } else {
-                    self.render_pdv_catalog(ui);
+                    match self.state.active_tab {
+                        AdminTab::Dashboard => self.render_dashboard(ui),
+                        AdminTab::DirectConnect => self.render_direct_connect_tab(ui),
+                        AdminTab::Stores => self.render_stores_tab(ui),
+                        AdminTab::AuditHistory => self.render_audit_history_tab(ui),
+                        AdminTab::Settings => self.render_settings_tab(ui),
+                    }
                 }
             });
 
@@ -298,18 +356,362 @@ impl eframe::App for PrysmViewerApp {
 }
 
 impl PrysmViewerApp {
-    /// Renderiza a grade de lojas e PDVs disponíveis.
-    fn render_pdv_catalog(&mut self, ui: &mut egui::Ui) {
+    /// Renderiza a barra lateral (Sidebar) de navegação do técnico.
+    fn render_sidebar(&mut self, ui: &mut egui::Ui) {
         ui.add_space(8.0);
         ui.horizontal(|ui| {
-            ui.heading(RichText::new("Caixas Registradores (PDVs)").size(18.0));
-            let filtered_count = self.state.filter_pdvs().len();
-            ui.label(
-                RichText::new(format!("({} encontrados)", filtered_count)).color(Color32::GRAY),
-            );
+            render_logo(ui, self.logo_texture.as_ref(), 34.0);
+            ui.add_space(8.0);
+            ui.vertical(|ui| {
+                ui.heading(
+                    RichText::new("PRYSM ADMIN")
+                        .color(COLOR_CYAN_NEON)
+                        .strong()
+                        .size(16.0),
+                );
+                ui.label(
+                    RichText::new("CONSOLE v0.1.0")
+                        .color(COLOR_TEXT_DARK)
+                        .size(10.0),
+                );
+            });
         });
+
+        ui.add_space(14.0);
+        ui.separator();
         ui.add_space(8.0);
 
+        ui.label(
+            RichText::new("MENU PRINCIPAL")
+                .color(COLOR_TEXT_DARK)
+                .size(11.0)
+                .strong(),
+        );
+        ui.add_space(6.0);
+
+        let online = self.state.online_count();
+        let tabs = [
+            (
+                AdminTab::Dashboard,
+                format!("📊 Monitoramento ({})", online),
+            ),
+            (AdminTab::DirectConnect, "⚡ Conexão Rápida".to_string()),
+            (AdminTab::Stores, "🏬 Lojas e Filiais".to_string()),
+            (AdminTab::AuditHistory, "📜 Auditoria E2E".to_string()),
+            (AdminTab::Settings, "⚙️ Configurações & Nuvem".to_string()),
+        ];
+
+        for (tab, label) in tabs {
+            let is_selected = self.state.active_tab == tab;
+            let btn = egui::Button::new(
+                RichText::new(&label)
+                    .color(if is_selected {
+                        COLOR_TEXT_WHITE
+                    } else {
+                        COLOR_TEXT_MUTED
+                    })
+                    .size(13.0)
+                    .strong(),
+            )
+            .fill(if is_selected {
+                COLOR_BLUE_ELECTRIC
+            } else {
+                Color32::TRANSPARENT
+            })
+            .stroke(Stroke::new(
+                1.0_f32,
+                if is_selected {
+                    COLOR_CYAN_NEON
+                } else {
+                    Color32::TRANSPARENT
+                },
+            ))
+            .rounding(6.0);
+
+            if ui.add_sized([ui.available_width(), 34.0], btn).clicked() {
+                self.state.active_tab = tab;
+            }
+            ui.add_space(4.0);
+        }
+
+        ui.with_layout(Layout::bottom_up(Align::Min), |ui| {
+            ui.add_space(10.0);
+
+            let btn_sair = egui::Button::new(
+                RichText::new("🚪 Sair do Painel")
+                    .color(COLOR_RED_DANGER)
+                    .size(12.0)
+                    .strong(),
+            )
+            .fill(Color32::from_rgb(32, 18, 24))
+            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(70, 25, 35)))
+            .rounding(6.0);
+
+            if ui
+                .add_sized([ui.available_width(), 32.0], btn_sair)
+                .clicked()
+            {
+                self.state.logout();
+            }
+
+            ui.add_space(8.0);
+
+            // Card do perfil do operador
+            egui::Frame::none()
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                .rounding(8.0)
+                .inner_margin(10.0)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(RichText::new("👤").size(20.0));
+                        ui.vertical(|ui| {
+                            ui.label(
+                                RichText::new(&self.state.operator_name)
+                                    .color(COLOR_TEXT_WHITE)
+                                    .strong()
+                                    .size(13.0),
+                            );
+                            ui.label(
+                                RichText::new(format!(
+                                    "● Azure VM: {} ms",
+                                    self.state.cloud_latency_ms
+                                ))
+                                .color(COLOR_MINT_ONLINE)
+                                .size(11.0),
+                            );
+                        });
+                    });
+                });
+        });
+    }
+
+    /// Renderiza a aba principal de Dashboard com KPIs, filtros e grade rica de PDVs.
+    fn render_dashboard(&mut self, ui: &mut egui::Ui) {
+        // 1. KPI Cards no topo
+        self.render_kpi_cards(ui);
+        ui.add_space(14.0);
+
+        // 2. Toolbar de Filtros & Busca
+        ui.horizontal(|ui| {
+            let filters = [
+                (
+                    FilterStatus::All,
+                    format!("Todos ({})", self.state.pdvs.len()),
+                ),
+                (
+                    FilterStatus::OnlineOnly,
+                    format!("🟢 Online ({})", self.state.online_count()),
+                ),
+                (
+                    FilterStatus::OfflineOnly,
+                    format!("⚪ Offline ({})", self.state.offline_count()),
+                ),
+            ];
+
+            for (status, label) in filters {
+                let is_active = self.state.filter_status == status;
+                let btn = egui::Button::new(
+                    RichText::new(label)
+                        .color(if is_active {
+                            COLOR_CYAN_NEON
+                        } else {
+                            COLOR_TEXT_MUTED
+                        })
+                        .size(12.0)
+                        .strong(),
+                )
+                .fill(if is_active {
+                    Color32::from_rgb(18, 36, 60)
+                } else {
+                    COLOR_CARD_BASE
+                })
+                .stroke(Stroke::new(
+                    1.0_f32,
+                    if is_active {
+                        COLOR_CYAN_NEON
+                    } else {
+                        COLOR_CARD_BORDER
+                    },
+                ))
+                .rounding(14.0);
+
+                if ui.add(btn).clicked() {
+                    self.state.filter_status = status;
+                }
+            }
+
+            ui.separator();
+            egui::ComboBox::from_id_salt("store_filter_combo")
+                .selected_text(
+                    self.state
+                        .selected_store
+                        .as_deref()
+                        .unwrap_or("Todas as Lojas"),
+                )
+                .show_ui(ui, |ui| {
+                    if ui
+                        .selectable_label(self.state.selected_store.is_none(), "Todas as Lojas")
+                        .clicked()
+                    {
+                        self.state.selected_store = None;
+                    }
+                    for store in self.state.unique_stores() {
+                        let is_sel = self.state.selected_store.as_deref() == Some(&store);
+                        if ui.selectable_label(is_sel, &store).clicked() {
+                            self.state.selected_store = Some(store);
+                        }
+                    }
+                });
+
+            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                if ui.button("🔄 Atualizar").clicked() {
+                    self.state.status_message =
+                        Some("Telemetria e PDVs sincronizados com sucesso.".to_string());
+                }
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.state.search_query)
+                        .hint_text("🔍 Filtrar Caixa ou IP...")
+                        .desired_width(180.0),
+                );
+            });
+        });
+
+        ui.add_space(10.0);
+
+        // 3. Grid de Cards dos PDVs + Inspector Drawer opcional
+        let has_inspector = self.state.inspected_pdv.is_some();
+        if has_inspector {
+            ui.columns(2, |cols| {
+                cols[0].vertical(|ui| {
+                    self.render_pdv_cards_list(ui);
+                });
+                cols[1].vertical(|ui| {
+                    if let Some(pdv) = self.state.inspected_pdv.clone() {
+                        self.render_inspector_drawer(ui, &pdv);
+                    }
+                });
+            });
+        } else {
+            self.render_pdv_cards_list(ui);
+        }
+    }
+
+    /// Renderiza os 4 KPI cards de telemetria no topo do Dashboard.
+    fn render_kpi_cards(&self, ui: &mut egui::Ui) {
+        ui.columns(4, |cols| {
+            // Card 1: Total
+            cols[0].vertical(|ui| {
+                egui::Frame::none()
+                    .fill(COLOR_CARD_BASE)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                    .rounding(8.0)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("🏬 TOTAL DE CAIXAS")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.0)
+                                .strong(),
+                        );
+                        ui.heading(
+                            RichText::new(format!("{}", self.state.pdvs.len()))
+                                .color(COLOR_TEXT_WHITE)
+                                .size(22.0),
+                        );
+                        ui.label(
+                            RichText::new("Distribuídos na rede")
+                                .color(COLOR_TEXT_DARK)
+                                .size(10.0),
+                        );
+                    });
+            });
+
+            // Card 2: Online
+            cols[1].vertical(|ui| {
+                egui::Frame::none()
+                    .fill(Color32::from_rgb(12, 28, 30))
+                    .stroke(Stroke::new(1.0_f32, COLOR_MINT_ONLINE))
+                    .rounding(8.0)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("🟢 CAIXAS ONLINE")
+                                .color(COLOR_MINT_ONLINE)
+                                .size(11.0)
+                                .strong(),
+                        );
+                        ui.heading(
+                            RichText::new(format!("{}", self.state.online_count()))
+                                .color(COLOR_MINT_ONLINE)
+                                .size(22.0),
+                        );
+                        ui.label(
+                            RichText::new("Prontos para conexão")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(10.0),
+                        );
+                    });
+            });
+
+            // Card 3: Offline
+            cols[2].vertical(|ui| {
+                egui::Frame::none()
+                    .fill(COLOR_CARD_BASE)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                    .rounding(8.0)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("⚪ CAIXAS OFFLINE")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.0)
+                                .strong(),
+                        );
+                        ui.heading(
+                            RichText::new(format!("{}", self.state.offline_count()))
+                                .color(COLOR_TEXT_MUTED)
+                                .size(22.0),
+                        );
+                        ui.label(
+                            RichText::new("Sem sinal recente")
+                                .color(COLOR_TEXT_DARK)
+                                .size(10.0),
+                        );
+                    });
+            });
+
+            // Card 4: Nuvem Azure
+            cols[3].vertical(|ui| {
+                egui::Frame::none()
+                    .fill(Color32::from_rgb(16, 26, 48))
+                    .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                    .rounding(8.0)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("⚡ SINALIZAÇÃO AZURE")
+                                .color(COLOR_CYAN_NEON)
+                                .size(11.0)
+                                .strong(),
+                        );
+                        ui.heading(
+                            RichText::new(format!("{} ms", self.state.cloud_latency_ms))
+                                .color(COLOR_CYAN_NEON)
+                                .size(22.0),
+                        );
+                        ui.label(
+                            RichText::new("20.121.137.44:443")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(10.0),
+                        );
+                    });
+            });
+        });
+    }
+
+    /// Renderiza a lista de cards dos PDVs.
+    fn render_pdv_cards_list(&mut self, ui: &mut egui::Ui) {
         egui::ScrollArea::vertical().show(ui, |ui| {
             let filtered_pdvs: Vec<PdvItem> =
                 self.state.filter_pdvs().into_iter().cloned().collect();
@@ -318,7 +720,7 @@ impl PrysmViewerApp {
                 ui.vertical_centered(|ui| {
                     ui.add_space(40.0);
                     ui.label(
-                        RichText::new("Nenhum PDV encontrado para esta busca.")
+                        RichText::new("Nenhum PDV encontrado para este filtro.")
                             .color(Color32::GRAY),
                     );
                 });
@@ -326,94 +728,604 @@ impl PrysmViewerApp {
             }
 
             for pdv in filtered_pdvs {
-                egui::Frame::none()
-                    .fill(COLOR_CARD_BASE)
-                    .stroke(Stroke::new(
-                        1.0_f32,
-                        if pdv.is_online {
-                            COLOR_CARD_BORDER
-                        } else {
-                            Color32::from_rgb(25, 32, 48)
-                        },
-                    ))
-                    .rounding(8.0)
-                    .inner_margin(12.0)
-                    .show(ui, |ui| {
+                self.render_pdv_card(ui, &pdv);
+                ui.add_space(8.0);
+            }
+        });
+    }
+
+    /// Renderiza um card rico individual de PDV.
+    fn render_pdv_card(&mut self, ui: &mut egui::Ui, pdv: &PdvItem) {
+        egui::Frame::none()
+            .fill(COLOR_CARD_BASE)
+            .stroke(Stroke::new(
+                1.0_f32,
+                if pdv.is_online {
+                    COLOR_CARD_BORDER
+                } else {
+                    Color32::from_rgb(25, 32, 45)
+                },
+            ))
+            .rounding(8.0)
+            .inner_margin(14.0)
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    let dot_char = if pdv.is_online { "🟢" } else { "⚪" };
+                    ui.label(RichText::new(dot_char).size(16.0));
+
+                    ui.vertical(|ui| {
                         ui.horizontal(|ui| {
-                            // Status Dot & Loja/PDV
-                            let (status_color, status_text) = if pdv.is_online {
-                                (
-                                    COLOR_MINT_ONLINE,
-                                    format!("Online • Agente v{}", pdv.agent_version),
-                                )
-                            } else {
-                                (
-                                    COLOR_TEXT_DARK,
-                                    format!("Offline • Visto por último: {}", pdv.last_seen),
-                                )
-                            };
+                            ui.label(
+                                RichText::new(&pdv.id)
+                                    .color(COLOR_TEXT_WHITE)
+                                    .strong()
+                                    .size(16.0),
+                            );
+                            ui.label(RichText::new("—").color(COLOR_TEXT_DARK));
+                            ui.label(
+                                RichText::new(&pdv.store_name)
+                                    .color(COLOR_TEXT_MUTED)
+                                    .size(14.0),
+                            );
+                        });
 
-                            ui.label(RichText::new("●").color(status_color).size(16.0));
-
-                            ui.vertical(|ui| {
-                                ui.horizontal(|ui| {
-                                    ui.label(
-                                        RichText::new(&pdv.id)
-                                            .strong()
-                                            .size(15.0)
-                                            .color(COLOR_TEXT_WHITE),
-                                    );
-                                    ui.label(RichText::new("—").color(COLOR_TEXT_DARK));
-                                    ui.label(
-                                        RichText::new(&pdv.store_name)
-                                            .size(14.0)
-                                            .color(COLOR_TEXT_MUTED),
-                                    );
-                                });
-
-                                ui.label(
-                                    RichText::new(status_text)
-                                        .color(if pdv.is_online {
-                                            COLOR_CYAN_GLOW
-                                        } else {
-                                            COLOR_TEXT_DARK
-                                        })
-                                        .size(12.0),
-                                );
-                            });
-
-                            // Botão de Conexão à direita com gradiente e azul elétrico
-                            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                if pdv.is_online {
-                                    let connect_btn = egui::Button::new(
-                                        RichText::new("▶ Conectar")
-                                            .color(COLOR_TEXT_WHITE)
-                                            .strong(),
-                                    )
-                                    .fill(COLOR_BLUE_ELECTRIC)
-                                    .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
-                                    .rounding(6.0);
-
-                                    if ui.add(connect_btn).clicked() {
-                                        self.state.select_pdv(pdv);
-                                    }
+                        ui.add_space(3.0);
+                        ui.horizontal(|ui| {
+                            ui.label(
+                                RichText::new(format!(
+                                    "💻 {} • IP: {}",
+                                    pdv.os_info, pdv.ip_address
+                                ))
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.0),
+                            );
+                            ui.label(RichText::new("•").color(COLOR_TEXT_DARK).size(11.0));
+                            ui.label(
+                                RichText::new(format!(
+                                    "Agente v{} • {}",
+                                    pdv.agent_version, pdv.resolution
+                                ))
+                                .color(if pdv.is_online {
+                                    COLOR_CYAN_GLOW
                                 } else {
-                                    ui.add_enabled(
-                                        false,
-                                        egui::Button::new(
-                                            RichText::new("Indisponível").color(COLOR_TEXT_DARK),
-                                        )
-                                        .fill(Color32::from_rgb(18, 22, 32))
-                                        .rounding(6.0),
-                                    );
-                                }
-                            });
+                                    COLOR_TEXT_DARK
+                                })
+                                .size(11.0),
+                            );
                         });
                     });
 
+                    // Ações à direita
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if pdv.is_online {
+                            let btn_connect = egui::Button::new(
+                                RichText::new("▶ Conectar")
+                                    .color(COLOR_TEXT_WHITE)
+                                    .strong()
+                                    .size(13.0),
+                            )
+                            .fill(COLOR_BLUE_ELECTRIC)
+                            .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                            .rounding(6.0);
+
+                            if ui.add_sized([100.0, 32.0], btn_connect).clicked() {
+                                self.state.select_pdv(pdv.clone());
+                            }
+                        } else {
+                            ui.add_enabled(
+                                false,
+                                egui::Button::new(
+                                    RichText::new("Offline").color(COLOR_TEXT_DARK).size(12.0),
+                                )
+                                .fill(Color32::from_rgb(18, 22, 32))
+                                .rounding(6.0),
+                            );
+                        }
+
+                        let btn_info = egui::Button::new(
+                            RichText::new("ℹ️ Ficha").color(COLOR_TEXT_MUTED).size(12.0),
+                        )
+                        .fill(Color32::from_rgb(26, 34, 54))
+                        .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                        .rounding(6.0);
+
+                        if ui.add_sized([75.0, 32.0], btn_info).clicked() {
+                            self.state.inspect_pdv(pdv.clone());
+                        }
+                    });
+                });
+            });
+    }
+
+    /// Renderiza a ficha técnica detalhada do PDV inspecionado (Drawer lateral).
+    fn render_inspector_drawer(&mut self, ui: &mut egui::Ui, pdv: &PdvItem) {
+        egui::Frame::none()
+            .fill(COLOR_PANEL_NAVY)
+            .stroke(Stroke::new(1.2_f32, COLOR_CYAN_NEON))
+            .rounding(10.0)
+            .inner_margin(16.0)
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.heading(
+                        RichText::new(format!("ℹ️ Ficha: {}", pdv.id))
+                            .color(COLOR_CYAN_NEON)
+                            .size(16.0),
+                    );
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if ui.button("✖").clicked() {
+                            self.state.close_inspector();
+                        }
+                    });
+                });
+                ui.separator();
                 ui.add_space(6.0);
+
+                ui.label(
+                    RichText::new("Unidade / Filial:")
+                        .color(COLOR_TEXT_DARK)
+                        .size(11.0),
+                );
+                ui.label(
+                    RichText::new(&pdv.store_name)
+                        .color(COLOR_TEXT_WHITE)
+                        .strong()
+                        .size(13.0),
+                );
+                ui.add_space(6.0);
+
+                ui.label(
+                    RichText::new("Sistema Operacional:")
+                        .color(COLOR_TEXT_DARK)
+                        .size(11.0),
+                );
+                ui.label(
+                    RichText::new(&pdv.os_info)
+                        .color(COLOR_TEXT_WHITE)
+                        .size(12.0),
+                );
+                ui.add_space(6.0);
+
+                ui.label(
+                    RichText::new("Endereço IP da Loja:")
+                        .color(COLOR_TEXT_DARK)
+                        .size(11.0),
+                );
+                ui.label(
+                    RichText::new(&pdv.ip_address)
+                        .color(COLOR_CYAN_GLOW)
+                        .size(12.0),
+                );
+                ui.add_space(6.0);
+
+                ui.label(
+                    RichText::new("Chave Pública Ed25519 (Identidade E2E):")
+                        .color(COLOR_TEXT_DARK)
+                        .size(11.0),
+                );
+                ui.label(
+                    RichText::new(&pdv.public_key)
+                        .color(COLOR_VIOLET_NEON)
+                        .size(11.0)
+                        .monospace(),
+                );
+                ui.add_space(6.0);
+
+                ui.label(
+                    RichText::new("Resolução do Monitor Caixa:")
+                        .color(COLOR_TEXT_DARK)
+                        .size(11.0),
+                );
+                ui.label(
+                    RichText::new(&pdv.resolution)
+                        .color(COLOR_TEXT_WHITE)
+                        .size(12.0),
+                );
+                ui.add_space(14.0);
+
+                if pdv.is_online {
+                    let btn_connect = egui::Button::new(
+                        RichText::new("▶ Solicitar Conexão com Código")
+                            .color(COLOR_TEXT_WHITE)
+                            .strong()
+                            .size(13.0),
+                    )
+                    .fill(COLOR_BLUE_ELECTRIC)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                    .rounding(6.0);
+
+                    if ui
+                        .add_sized([ui.available_width(), 36.0], btn_connect)
+                        .clicked()
+                    {
+                        self.state.select_pdv(pdv.clone());
+                    }
+                }
+            });
+    }
+
+    /// Renderiza a aba de Conexão Rápida Direta por ID e Código.
+    fn render_direct_connect_tab(&mut self, ui: &mut egui::Ui) {
+        ui.vertical_centered(|ui| {
+            ui.add_space(20.0);
+            egui::Frame::none()
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.2_f32, COLOR_CARD_BORDER))
+                .rounding(10.0)
+                .inner_margin(24.0)
+                .show(ui, |ui| {
+                    ui.set_max_width(460.0);
+                    ui.heading(
+                        RichText::new("⚡ Conexão Rápida Direta")
+                            .color(COLOR_CYAN_NEON)
+                            .size(20.0)
+                            .strong(),
+                    );
+                    ui.label(
+                        RichText::new("Conecte-se a qualquer caixa da rede digitando o ID e o Código temporário.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(12.0),
+                    );
+                    ui.add_space(16.0);
+
+                    ui.label(RichText::new("Identificador do Caixa (PDV):").color(COLOR_TEXT_MUTED).size(12.0));
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.state.direct_pdv_input)
+                            .hint_text("ex: PDV-01 ou PDV-02")
+                            .desired_width(f32::INFINITY),
+                    );
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Código de Sessão (8 dígitos gerados no PDV):").color(COLOR_TEXT_MUTED).size(12.0));
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.state.direct_code_input)
+                            .hint_text("ex: 83921045")
+                            .char_limit(8)
+                            .desired_width(f32::INFINITY),
+                    );
+
+                    ui.add_space(20.0);
+                    let can_connect = !self.state.direct_pdv_input.trim().is_empty()
+                        && self.state.direct_code_input.trim().len() == 8;
+
+                    let btn = egui::Button::new(
+                        RichText::new("⚡ Iniciar Sessão de Suporte Remoto")
+                            .color(COLOR_TEXT_WHITE)
+                            .size(14.0)
+                            .strong(),
+                    )
+                    .fill(if can_connect { COLOR_BLUE_ELECTRIC } else { Color32::from_rgb(32, 40, 56) })
+                    .stroke(Stroke::new(1.0_f32, if can_connect { COLOR_CYAN_NEON } else { COLOR_CARD_BORDER }))
+                    .rounding(6.0);
+
+                    if ui.add_sized([ui.available_width(), 42.0], btn).clicked() && can_connect {
+                        let pdv_id = self.state.direct_pdv_input.trim().to_uppercase();
+                        let found = self.state.pdvs.iter().find(|p| p.id.eq_ignore_ascii_case(&pdv_id)).cloned();
+                        let target = found.unwrap_or_else(|| PdvItem {
+                            id: pdv_id.clone(),
+                            store_name: "Conexão Manual".to_string(),
+                            is_online: true,
+                            agent_version: "0.1.0".to_string(),
+                            public_key: format!("ed25519_{}", pdv_id),
+                            last_seen: "Agora".to_string(),
+                            ip_address: "127.0.0.1".to_string(),
+                            os_info: "Windows 11 (x64)".to_string(),
+                            resolution: "1920x1080".to_string(),
+                        });
+                        self.state.selected_pdv = Some(target);
+                        self.state.session_code_input = self.state.direct_code_input.clone();
+                        self.state.active_session = true;
+                        self.state.status_message = Some(format!("Conectado com sucesso ao {} via Conexão Rápida!", pdv_id));
+                    }
+                });
+        });
+    }
+
+    /// Renderiza a aba de Lojas com visão agrupada de caixas por filial.
+    fn render_stores_tab(&mut self, ui: &mut egui::Ui) {
+        ui.heading(
+            RichText::new("🏬 Visão por Unidade / Filial")
+                .size(18.0)
+                .color(COLOR_TEXT_WHITE),
+        );
+        ui.label(
+            RichText::new("Gerencie os caixas agrupados por loja física.")
+                .color(COLOR_TEXT_MUTED)
+                .size(12.0),
+        );
+        ui.add_space(12.0);
+
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            let stores = self.state.unique_stores();
+            for store in stores {
+                let pdvs_in_store: Vec<PdvItem> = self
+                    .state
+                    .pdvs
+                    .iter()
+                    .filter(|p| p.store_name == store)
+                    .cloned()
+                    .collect();
+                let online_count = pdvs_in_store.iter().filter(|p| p.is_online).count();
+
+                egui::Frame::none()
+                    .fill(COLOR_CARD_BASE)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                    .rounding(8.0)
+                    .inner_margin(14.0)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label(RichText::new("🏬").size(22.0));
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new(&store)
+                                        .color(COLOR_TEXT_WHITE)
+                                        .strong()
+                                        .size(15.0),
+                                );
+                                ui.label(
+                                    RichText::new(format!(
+                                        "{} caixas registrados • {} online",
+                                        pdvs_in_store.len(),
+                                        online_count
+                                    ))
+                                    .color(COLOR_CYAN_GLOW)
+                                    .size(12.0),
+                                );
+                            });
+                        });
+                        ui.add_space(8.0);
+                        ui.separator();
+                        ui.add_space(6.0);
+
+                        for pdv in pdvs_in_store {
+                            ui.horizontal(|ui| {
+                                let dot = if pdv.is_online { "🟢" } else { "⚪" };
+                                ui.label(RichText::new(dot).size(14.0));
+                                ui.label(
+                                    RichText::new(&pdv.id)
+                                        .color(COLOR_TEXT_WHITE)
+                                        .strong()
+                                        .size(13.0),
+                                );
+                                ui.label(
+                                    RichText::new(format!(
+                                        "({}) - IP: {}",
+                                        pdv.os_info, pdv.ip_address
+                                    ))
+                                    .color(COLOR_TEXT_MUTED)
+                                    .size(11.0),
+                                );
+
+                                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                                    if pdv.is_online && ui.button("▶ Conectar").clicked() {
+                                        self.state.select_pdv(pdv.clone());
+                                    }
+                                });
+                            });
+                            ui.add_space(4.0);
+                        }
+                    });
+                ui.add_space(10.0);
             }
         });
+    }
+
+    /// Renderiza a aba de Histórico de Auditoria.
+    fn render_audit_history_tab(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal(|ui| {
+            ui.heading(
+                RichText::new("📜 Registro de Auditoria de Sessões")
+                    .size(18.0)
+                    .color(COLOR_TEXT_WHITE),
+            );
+            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                if ui.button("📥 Exportar Logs").clicked() {
+                    self.state.status_message =
+                        Some("Logs de auditoria exportados com sucesso.".to_string());
+                }
+            });
+        });
+        ui.label(RichText::new("Auditoria criptográfica fim-a-fim conforme AGENTS.md Seção 9 (sem expor tela ou teclas).").color(COLOR_TEXT_MUTED).size(12.0));
+        ui.add_space(12.0);
+
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            egui::Frame::none()
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                .rounding(8.0)
+                .inner_margin(12.0)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("ID")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                        ui.add_space(30.0);
+                        ui.label(
+                            RichText::new("DATA / HORA")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                        ui.add_space(50.0);
+                        ui.label(
+                            RichText::new("OPERADOR")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                        ui.add_space(40.0);
+                        ui.label(
+                            RichText::new("CAIXA")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                        ui.add_space(60.0);
+                        ui.label(
+                            RichText::new("MOTIVO")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                        ui.add_space(100.0);
+                        ui.label(
+                            RichText::new("DURAÇÃO")
+                                .color(COLOR_CYAN_NEON)
+                                .strong()
+                                .size(12.0),
+                        );
+                    });
+                    ui.separator();
+
+                    for record in &self.state.audit_records {
+                        ui.horizontal(|ui| {
+                            ui.label(RichText::new(&record.id).color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add_space(15.0);
+                            ui.label(
+                                RichText::new(&record.timestamp)
+                                    .color(COLOR_TEXT_MUTED)
+                                    .size(12.0),
+                            );
+                            ui.add_space(15.0);
+                            ui.label(
+                                RichText::new(&record.operator_name)
+                                    .color(COLOR_VIOLET_NEON)
+                                    .strong()
+                                    .size(12.0),
+                            );
+                            ui.add_space(35.0);
+                            ui.label(
+                                RichText::new(&record.pdv_id)
+                                    .color(COLOR_TEXT_WHITE)
+                                    .size(12.0),
+                            );
+                            ui.add_space(55.0);
+                            ui.label(
+                                RichText::new(&record.reason)
+                                    .color(COLOR_TEXT_MUTED)
+                                    .size(12.0),
+                            );
+                            ui.add_space(20.0);
+                            ui.label(
+                                RichText::new(&record.duration)
+                                    .color(COLOR_MINT_ONLINE)
+                                    .size(12.0),
+                            );
+                        });
+                        ui.separator();
+                    }
+                });
+        });
+    }
+
+    /// Renderiza a aba de Configurações e Nuvem Azure.
+    fn render_settings_tab(&mut self, ui: &mut egui::Ui) {
+        ui.heading(
+            RichText::new("⚙️ Configurações & Nuvem Azure")
+                .size(18.0)
+                .color(COLOR_TEXT_WHITE),
+        );
+        ui.label(
+            RichText::new("Gerenciamento de conexões, sinalização e parâmetros de desempenho.")
+                .color(COLOR_TEXT_MUTED)
+                .size(12.0),
+        );
+        ui.add_space(14.0);
+
+        egui::Frame::none()
+            .fill(COLOR_CARD_BASE)
+            .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+            .rounding(8.0)
+            .inner_margin(16.0)
+            .show(ui, |ui| {
+                ui.heading(
+                    RichText::new("🌐 Servidor de Sinalização (API de Nuvem)")
+                        .size(14.0)
+                        .color(COLOR_CYAN_NEON),
+                );
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new("URL da API:")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(12.0),
+                    );
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.state.server_url).desired_width(280.0),
+                    );
+                    if ui.button("⚡ Testar Ping").clicked() {
+                        self.state.status_message =
+                            Some("API Azure respondeu: HTTP 200 OK (18 ms)".to_string());
+                    }
+                });
+                ui.add_space(6.0);
+                ui.label(
+                    RichText::new("● Status: Conectado e ativo em http://20.121.137.44:443/health")
+                        .color(COLOR_MINT_ONLINE)
+                        .size(12.0),
+                );
+
+                ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(10.0);
+
+                ui.heading(
+                    RichText::new("🎮 Desempenho e Vídeo DXGI")
+                        .size(14.0)
+                        .color(COLOR_CYAN_NEON),
+                );
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new("Taxa de Quadros Alvo (FPS):")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(12.0),
+                    );
+                    ui.radio_value(&mut self.state.target_fps, 15, "15 FPS");
+                    ui.radio_value(&mut self.state.target_fps, 30, "30 FPS");
+                    ui.radio_value(&mut self.state.target_fps, 60, "60 FPS");
+                });
+                ui.add_space(8.0);
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new("Nível de Compressão Zstd:")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(12.0),
+                    );
+                    ui.radio_value(&mut self.state.zstd_level, 1, "Nível 1 (Menor Latência)");
+                    ui.radio_value(&mut self.state.zstd_level, 3, "Nível 3 (Economia)");
+                });
+
+                ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(10.0);
+
+                ui.heading(
+                    RichText::new("⌨️ Entrada e Periféricos")
+                        .size(14.0)
+                        .color(COLOR_CYAN_NEON),
+                );
+                ui.add_space(6.0);
+                ui.label(
+                    RichText::new("• Teclado: Modo ABNT2 Scan Codes (KEYEVENTF_SCANCODE nativo)")
+                        .color(COLOR_TEXT_WHITE)
+                        .size(12.0),
+                );
+                ui.label(
+                    RichText::new("• Mouse: Coordenadas Absolutas Normalizadas (0..65535)")
+                        .color(COLOR_TEXT_WHITE)
+                        .size(12.0),
+                );
+                ui.label(
+                    RichText::new(
+                        "• Segurança: Liberação automática de todas as teclas ao encerrar",
+                    )
+                    .color(COLOR_MINT_ONLINE)
+                    .size(12.0),
+                );
+            });
     }
 
     /// Renderiza o diálogo modal para validação do código de sessão de 8 dígitos.

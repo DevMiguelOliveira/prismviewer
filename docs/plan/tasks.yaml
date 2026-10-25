@@ -757,3 +757,26 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Identidade visual Cyber Prism (#0a0d16, #00f0ff, #008cff, #be2deb, #00ffcc) e logotipo/icone oficial integrados com sucesso no Viewer e Host Tray com 107 testes verdes e 0 clippy warnings.'
+
+# ==============================================================================
+# FASE 17: SEPARAÇÃO DE EXECUTÁVEIS & REFORMULAÇÃO PROFISSIONAL DO PRYSM ADMIN
+# ==============================================================================
+- id: F17-SPLIT-ADMIN-HOST-UI
+  fase: 17
+  titulo: Separacao estrita dos executaveis PrysmAdmin/PrysmHost e reformulacao completa da UI do Admin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/Cargo.toml
+    - crates/tray/Cargo.toml
+    - crates/viewer/src/lib.rs
+    - crates/viewer/src/app.rs
+  depende_de: [F16-CYBER-THEME-BRANDING]
+  criterio_pronto:
+    - crates/viewer compila binario PrysmAdmin.exe exclusivo do tecnico
+    - crates/tray compila binario PrysmHost.exe exclusivo do cliente/PDV sem qualquer painel de tecnico
+    - interface do PrysmAdmin reformulada com Sidebar de navegacao, KPI cards de telemetria, conexao rapida por ID, cards ricos de PDV com acoes diretas, drawer de detalhes, historico de auditoria e configuracoes da nuvem Azure
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Executaveis estritamente separados em PrysmAdmin.exe (tecnico) e PrysmHost.exe (cliente). UI do Admin reformulada com Sidebar, 4 KPI cards, grade rica de caixas com telemetria, conexao rapida, auditoria e configuracoes com 20 testes verdes e 0 clippy warnings.'

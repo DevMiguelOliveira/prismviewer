@@ -5,8 +5,8 @@
 #define MyAppVersion "0.1.0"
 #define MyAppPublisher "PrysmView Team"
 #define MyAppURL "https://github.com/DevMiguelOliveira/prismviewer"
-#define MyAppExeName "prysmview-tray.exe"
-#define MyViewerExeName "prysmview-viewer.exe"
+#define MyAppExeName "PrysmHost.exe"
+#define MyViewerExeName "PrysmAdmin.exe"
 #define MySvcExeName "prysmview-svc.exe"
 
 [Setup]
@@ -44,19 +44,20 @@ Name: "{commonappdata}\PrysmView"; Permissions: system-full admins-full users-re
 Name: "{app}\assets"; Permissions: users-readexec
 
 [Files]
-; Binários do PrysmView compilados em release
+; Binários do PrysmView compilados em release (separação estrita entre Host do Cliente e Admin do Técnico)
 Source: "..\target\release\{#MySvcExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\target\release\{#MyViewerExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName} Host (PDV)"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\{#MyAppName} Viewer (Técnico)"; Filename: "{app}\{#MyViewerExeName}"
-Name: "{autodesktop}\{#MyAppName} Viewer"; Filename: "{app}\{#MyViewerExeName}"; Tasks: desktopicon
+Name: "{group}\{#MyAppName} Host (Cliente - PDV)"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName} Admin (Técnico - Suporte)"; Filename: "{app}\{#MyViewerExeName}"
+Name: "{autodesktop}\PrysmView Admin (Técnico)"; Filename: "{app}\{#MyViewerExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\PrysmView Host (Cliente)"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
-; Inicialização automática do aplicativo de bandeja no logon de qualquer usuário
-Name: "{commonstartup}\{#MyAppName} Tray"; Filename: "{app}\{#MyAppExeName}"
+; Inicialização automática do aplicativo de bandeja no logon do operador do caixa
+Name: "{commonstartup}\{#MyAppName} Host"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
 ; 1. Registra o serviço Windows prysmview-svc em LocalSystem com início automático
