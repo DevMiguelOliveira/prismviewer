@@ -825,3 +825,25 @@
   tentativas: 0
   ultimo_log: 'Tela de login do PrysmAdmin reformulada com estilo BipDesk Enterprise escuro, badge neon de monitor com raio, campos de usuario e senha com alternancia de visualizacao, checkbox de memorizacao, botao vibrante Entrar no Console e rodape Zero-Trust. 21 testes verdes, 0 clippy warnings e instalador regerado (4.48 MB).'
 
+# ==============================================================================
+# FASE 20: REFINAMENTO SENIOR DE UI/UX E RESPONSIVIDADE DO PRYSM ADMIN
+# ==============================================================================
+- id: F20-ADMIN-UIUX-RESPONSIVE-REFINE
+  fase: 20
+  titulo: Aprimoramento responsivo e intuitivo de toda a interface visual e console do Prysm Admin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/src/lib.rs
+    - crates/viewer/src/app.rs
+  depende_de: [F19-ADMIN-LOGIN-REDESIGN]
+  criterio_pronto:
+    - tela de login responsiva a redimensionamento com ScrollArea vertical, largura adaptativa e micro-interacoes refinadas
+    - KPI cards adaptativos (2 ou 4 colunas) e interativos (clicar filtra caixas automaticamente)
+    - cards de PDVs com badges pill de telemetria, hover highlight e feedback visual claro
+    - abas de Conexao Rapida com timeline visual em 3 passos, Lojas com medidor de saude e Auditoria com tabela zebrada
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Overhaul completo de UI/UX e responsividade do PrysmAdmin: tela de login adaptativa com ScrollArea e preenchimento de teste rapido; sidebar com pulso de telemetria vivo e avatar customizado; KPI cards interativos com filtro instantaneo e layout adaptativo (2x2 ou 4 colunas); cards de PDV ricos com chips de telemetria e empty state com botao de reset; Conexao Rapida com timeline visual de 3 etapas e atalhos; Lojas com badge de saude operacional; Auditoria com grid zebrado; Configuracoes agrupadas em cards de secao. 21 testes unitarios verdes, 0 clippy warnings e instalador PrysmAdmin-Setup-0.1.0.exe regerado (4.70 MB).'
+
