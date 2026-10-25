@@ -10,7 +10,17 @@ node_modules/
 # Worktrees and environments
 worktrees/
 .env
+*.env
 *.local
+
+# Segredos e bancos de dados (nunca versionar)
+*.db
+*.sqlite*
+*.sqlite3
+*.pem
+*.key
+*.bak
+secrets/
 
 # Dual agent and logs
 *.log
