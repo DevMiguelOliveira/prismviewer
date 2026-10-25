@@ -802,3 +802,26 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Setups executaveis separados gerados com sucesso: PrysmHost-Setup-0.1.0.exe (4.82 MB) para clientes/PDVs e PrysmAdmin-Setup-0.1.0.exe (4.65 MB) para tecnicos. Documentacao e hashes SHA-256 atualizados.'
+
+# ==============================================================================
+# FASE 19: REDESIGN DA TELA DE LOGIN DO PRYSM ADMIN (INSPIRADO NO BIPDESK ADMIN)
+# ==============================================================================
+- id: F19-ADMIN-LOGIN-REDESIGN
+  fase: 19
+  titulo: Redesign da tela de login do PrysmAdmin com estetica moderna escura e campos do console
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/src/lib.rs
+    - crates/viewer/src/app.rs
+  depende_de: [F18-DUAL-INSTALLER]
+  criterio_pronto:
+    - tela de login reproduz fielmente a referencia visual com card escuro, badge neon de monitor e tipografia PrysmView Admin
+    - campos NOME DE USUARIO e SENHA DE ACESSO com icones e alternancia de visualizacao de senha
+    - checkbox Lembrar meu usuario neste dispositivo e botao vibrante Entrar no Console
+    - rodape com indicador verde de Conexao Segura Criptografada (Zero-Trust)
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Tela de login do PrysmAdmin reformulada com estilo BipDesk Enterprise escuro, badge neon de monitor com raio, campos de usuario e senha com alternancia de visualizacao, checkbox de memorizacao, botao vibrante Entrar no Console e rodape Zero-Trust. 21 testes verdes, 0 clippy warnings e instalador regerado (4.48 MB).'
+

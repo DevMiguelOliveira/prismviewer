@@ -89,6 +89,8 @@ pub struct ViewerState {
     pub cloud_latency_ms: u64,
     pub target_fps: u32,
     pub zstd_level: i32,
+    pub remember_user: bool,
+    pub show_password: bool,
 }
 
 impl Default for ViewerState {
@@ -118,6 +120,8 @@ impl Default for ViewerState {
             cloud_latency_ms: 18,
             target_fps: 30,
             zstd_level: 1,
+            remember_user: true,
+            show_password: false,
         }
     }
 }
@@ -372,5 +376,18 @@ mod tests {
         assert!(!state.is_authenticated);
         assert_eq!(state.auth_token, None);
         assert_eq!(state.selected_pdv, None);
+    }
+
+    #[test]
+    fn test_login_fields_default_and_toggle() {
+        let mut state = ViewerState::new();
+        assert!(state.remember_user);
+        assert!(!state.show_password);
+
+        state.show_password = true;
+        assert!(state.show_password);
+
+        state.remember_user = false;
+        assert!(!state.remember_user);
     }
 }
