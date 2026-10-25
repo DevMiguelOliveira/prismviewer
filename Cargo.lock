@@ -4937,6 +4937,7 @@ name = "prysmview-tray"
 version = "0.1.0"
 dependencies = [
  "eframe",
+ "image",
  "prysmview-core",
  "prysmview-host",
  "thiserror 2.0.21",
@@ -4951,6 +4952,7 @@ name = "prysmview-viewer"
 version = "0.1.0"
 dependencies = [
  "eframe",
+ "image",
  "prysmview-core",
  "reqwest",
  "serde",

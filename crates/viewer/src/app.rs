@@ -3,10 +3,66 @@ use crate::session::{collect_input_events, SessionMetrics};
 use crate::{PdvItem, ViewerState};
 use eframe::egui::{self, Align, Color32, Layout, RichText, Stroke, Vec2};
 
+// ==============================================================================
+// PALETA OFICIAL CYBER PRISM (Baseada no logotipo oficial do PrysmView)
+// ==============================================================================
+pub const COLOR_BG_OBSIDIAN: Color32 = Color32::from_rgb(10, 13, 22); // #0a0d16 Fundo principal escuro
+pub const COLOR_PANEL_NAVY: Color32 = Color32::from_rgb(15, 20, 34); // #0f1422 Fundo de painéis e barras
+pub const COLOR_CARD_BASE: Color32 = Color32::from_rgb(20, 27, 45); // #141b2d Fundo de cards e containers
+pub const COLOR_CARD_BORDER: Color32 = Color32::from_rgb(32, 45, 75); // #202d4b Borda de vidro sutil
+pub const COLOR_CYAN_NEON: Color32 = Color32::from_rgb(0, 240, 255); // #00f0ff Destaque prismático ciano
+pub const COLOR_CYAN_GLOW: Color32 = Color32::from_rgb(0, 200, 235); // #00c8eb Ciano secundário
+pub const COLOR_BLUE_ELECTRIC: Color32 = Color32::from_rgb(0, 140, 255); // #008cff Azul elétrico vibrante
+pub const COLOR_VIOLET_NEON: Color32 = Color32::from_rgb(190, 45, 235); // #be2deb Magenta/violeta do prisma
+pub const COLOR_MINT_ONLINE: Color32 = Color32::from_rgb(0, 255, 204); // #00ffcc Glow de sinal e status online
+pub const COLOR_RED_DANGER: Color32 = Color32::from_rgb(255, 51, 85); // #ff3355 Vermelho de emergência
+pub const COLOR_TEXT_WHITE: Color32 = Color32::from_rgb(245, 248, 255); // #f5f8ff Texto principal
+pub const COLOR_TEXT_MUTED: Color32 = Color32::from_rgb(148, 163, 184); // #94a3b8 Texto secundário
+pub const COLOR_TEXT_DARK: Color32 = Color32::from_rgb(100, 116, 139); // #64748b Metadados discretos
+
+/// Carrega a imagem do logotipo oficial embutida no binário e gera textura GPU egui.
+fn load_brand_texture(ctx: &egui::Context) -> Option<egui::TextureHandle> {
+    let raw = include_bytes!("../../../assets/logo.png");
+    let img = image::load_from_memory(raw).ok()?.to_rgba8();
+    let (width, height) = img.dimensions();
+    let color_image = egui::ColorImage::from_rgba_unmultiplied(
+        [width as usize, height as usize],
+        &img.into_raw(),
+    );
+    Some(ctx.load_texture(
+        "prysm_brand_logo",
+        color_image,
+        egui::TextureOptions::LINEAR,
+    ))
+}
+
+/// Renderiza o logotipo oficial na interface com dimensões exatas e fallback elegante.
+pub fn render_logo(ui: &mut egui::Ui, texture: Option<&egui::TextureHandle>, size: f32) {
+    let (rect, _resp) = ui.allocate_exact_size(Vec2::new(size, size), egui::Sense::hover());
+    if let Some(tex) = texture {
+        ui.painter().image(
+            tex.id(),
+            rect,
+            egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            Color32::WHITE,
+        );
+    } else {
+        ui.painter().rect_filled(rect, 6.0, COLOR_CARD_BASE);
+        ui.painter().text(
+            rect.center(),
+            egui::Align2::CENTER_CENTER,
+            "💎",
+            egui::FontId::proportional(size * 0.55),
+            COLOR_CYAN_NEON,
+        );
+    }
+}
+
 pub struct PrysmViewerApp {
     pub state: ViewerState,
     pub canvas: RemoteCanvas,
     pub metrics: SessionMetrics,
+    pub logo_texture: Option<egui::TextureHandle>,
 }
 
 impl PrysmViewerApp {
@@ -53,114 +109,184 @@ impl PrysmViewerApp {
             state,
             canvas: RemoteCanvas::default(),
             metrics: SessionMetrics::default(),
+            logo_texture: None,
         }
     }
 }
 
 impl eframe::App for PrysmViewerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Estilização global: Dark mode elegante estilo TeamViewer
+        // Carregamento lazy da textura do logotipo oficial
+        if self.logo_texture.is_none() {
+            self.logo_texture = load_brand_texture(ctx);
+        }
+
+        // Estilização global: Dark mode Cyber Prism refinado
         let mut visuals = egui::Visuals::dark();
-        visuals.window_fill = Color32::from_rgb(24, 27, 33);
-        visuals.panel_fill = Color32::from_rgb(18, 20, 24);
+        visuals.window_fill = COLOR_CARD_BASE;
+        visuals.panel_fill = COLOR_PANEL_NAVY;
+        visuals.extreme_bg_color = COLOR_BG_OBSIDIAN;
+        visuals.override_text_color = Some(COLOR_TEXT_WHITE);
+        visuals.widgets.noninteractive.bg_fill = COLOR_CARD_BASE;
+        visuals.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, COLOR_CARD_BORDER);
+        visuals.widgets.inactive.bg_fill = COLOR_CARD_BASE;
+        visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, COLOR_CARD_BORDER);
+        visuals.widgets.hovered.bg_fill = Color32::from_rgb(26, 36, 58);
+        visuals.widgets.hovered.bg_stroke = Stroke::new(1.0_f32, COLOR_CYAN_NEON);
+        visuals.widgets.active.bg_fill = COLOR_BLUE_ELECTRIC;
+        visuals.widgets.active.bg_stroke = Stroke::new(1.5_f32, COLOR_CYAN_NEON);
+        visuals.selection.bg_fill = Color32::from_rgba_premultiplied(0, 240, 255, 45);
+        visuals.selection.stroke = Stroke::new(1.0_f32, COLOR_CYAN_NEON);
         ctx.set_visuals(visuals);
 
-        // Barra Superior (Header)
-        egui::TopBottomPanel::top("top_header").show(ctx, |ui| {
-            ui.add_space(8.0);
-            ui.horizontal(|ui| {
-                ui.heading(
-                    RichText::new("PRYSMVIEW")
-                        .color(Color32::from_rgb(0, 160, 255))
-                        .strong(),
-                );
-                ui.label(
-                    RichText::new("• Suporte Remoto PDV")
-                        .color(Color32::LIGHT_GRAY)
-                        .size(13.0),
-                );
+        // Barra Superior (Header) com logotipo e identidade visual oficial
+        egui::TopBottomPanel::top("top_header")
+            .frame(
+                egui::Frame::none()
+                    .fill(COLOR_PANEL_NAVY)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                    .inner_margin(egui::Margin::symmetric(14.0, 10.0)),
+            )
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    render_logo(ui, self.logo_texture.as_ref(), 28.0);
+                    ui.add_space(8.0);
 
-                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    if self.state.is_authenticated {
-                        if ui.button("🚪 Sair").clicked() {
-                            self.state.logout();
+                    ui.heading(
+                        RichText::new("PRYSMVIEW")
+                            .color(COLOR_CYAN_NEON)
+                            .strong()
+                            .size(18.0),
+                    );
+                    ui.label(
+                        RichText::new("• Suporte Remoto PDV")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(13.0),
+                    );
+
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if self.state.is_authenticated {
+                            let btn_sair = egui::Button::new(
+                                RichText::new("🚪 Sair").color(COLOR_TEXT_MUTED).size(12.0),
+                            )
+                            .fill(Color32::from_rgb(28, 20, 28))
+                            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(60, 30, 40)))
+                            .rounding(4.0);
+
+                            if ui.add(btn_sair).clicked() {
+                                self.state.logout();
+                            }
+
+                            ui.separator();
+
+                            // Badge pill do técnico logado com destaque violeta prismático
+                            egui::Frame::none()
+                                .fill(Color32::from_rgb(32, 16, 50))
+                                .stroke(Stroke::new(1.0_f32, COLOR_VIOLET_NEON))
+                                .rounding(12.0)
+                                .inner_margin(egui::Margin::symmetric(10.0, 4.0))
+                                .show(ui, |ui| {
+                                    ui.label(
+                                        RichText::new(format!("👤 {}", self.state.operator_name))
+                                            .color(COLOR_VIOLET_NEON)
+                                            .size(12.0)
+                                            .strong(),
+                                    );
+                                });
+
+                            ui.separator();
+
+                            let btn_atualizar = egui::Button::new(
+                                RichText::new("🔄 Atualizar")
+                                    .color(COLOR_TEXT_WHITE)
+                                    .size(12.0),
+                            )
+                            .fill(COLOR_CARD_BASE)
+                            .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                            .rounding(4.0);
+
+                            if ui.add(btn_atualizar).clicked() {
+                                self.state.status_message =
+                                    Some("Lista de PDVs atualizada com a sinalização.".to_string());
+                            }
+
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.state.search_query)
+                                    .hint_text("🔍 Buscar Loja ou PDV...")
+                                    .desired_width(220.0),
+                            );
+                        } else {
+                            egui::Frame::none()
+                                .fill(Color32::from_rgb(32, 26, 14))
+                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(180, 140, 20)))
+                                .rounding(10.0)
+                                .inner_margin(egui::Margin::symmetric(8.0, 3.0))
+                                .show(ui, |ui| {
+                                    ui.label(
+                                        RichText::new("🔒 Não Autenticado")
+                                            .color(Color32::from_rgb(255, 200, 50))
+                                            .size(11.0),
+                                    );
+                                });
                         }
-                        ui.separator();
+                    });
+                });
+            });
+
+        // Barra Inferior (Status Bar)
+        egui::TopBottomPanel::bottom("bottom_bar")
+            .frame(
+                egui::Frame::none()
+                    .fill(COLOR_PANEL_NAVY)
+                    .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                    .inner_margin(egui::Margin::symmetric(14.0, 6.0)),
+            )
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if let Some(ref msg) = self.state.status_message {
+                        ui.label(RichText::new(msg).color(COLOR_CYAN_GLOW).size(12.0));
+                    } else if self.state.active_session {
                         ui.label(
-                            RichText::new(format!("👤 {}", self.state.operator_name))
-                                .color(Color32::WHITE),
+                            RichText::new("● Sessão ativa com criptografia E2E (QUIC TLS 1.3)")
+                                .color(COLOR_MINT_ONLINE)
+                                .size(12.0),
                         );
-                        ui.separator();
-
-                        if ui.button("🔄 Atualizar").clicked() {
-                            self.state.status_message =
-                                Some("Lista de PDVs atualizada com a sinalização.".to_string());
-                        }
-
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.state.search_query)
-                                .hint_text("🔍 Buscar Loja ou PDV...")
-                                .desired_width(200.0),
+                    } else if self.state.is_authenticated {
+                        ui.label(
+                            RichText::new("Painel do Operador pronto para conexão.")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(12.0),
                         );
                     } else {
                         ui.label(
-                            RichText::new("🔒 Não Autenticado")
-                                .color(Color32::LIGHT_YELLOW)
+                            RichText::new("Aguardando login do operador.")
+                                .color(COLOR_TEXT_MUTED)
                                 .size(12.0),
                         );
                     }
+
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        ui.label(
+                            RichText::new("PrysmView v0.1.0 • R$ 0,00 • QUIC TLS 1.3")
+                                .color(COLOR_TEXT_DARK)
+                                .size(11.0),
+                        );
+                    });
                 });
             });
-            ui.add_space(8.0);
-        });
-
-        // Barra Inferior (Status Bar)
-        egui::TopBottomPanel::bottom("bottom_bar").show(ctx, |ui| {
-            ui.add_space(4.0);
-            ui.horizontal(|ui| {
-                if let Some(ref msg) = self.state.status_message {
-                    ui.label(RichText::new(msg).color(Color32::LIGHT_YELLOW).size(12.0));
-                } else if self.state.active_session {
-                    ui.label(
-                        RichText::new("Sessão ativa com criptografia E2E (QUIC TLS 1.3)")
-                            .color(Color32::GREEN)
-                            .size(12.0),
-                    );
-                } else if self.state.is_authenticated {
-                    ui.label(
-                        RichText::new("Painel do Operador pronto para conexão.")
-                            .color(Color32::GRAY)
-                            .size(12.0),
-                    );
-                } else {
-                    ui.label(
-                        RichText::new("Aguardando login do operador.")
-                            .color(Color32::GRAY)
-                            .size(12.0),
-                    );
-                }
-
-                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    ui.label(
-                        RichText::new("PrysmView v0.1.0 • R$ 0,00 • TLS 1.3")
-                            .color(Color32::DARK_GRAY)
-                            .size(11.0),
-                    );
-                });
-            });
-            ui.add_space(4.0);
-        });
 
         // Painel Central: Tela de Login, Sessão Ativa OU Catálogo de PDVs
-        egui::CentralPanel::default().show(ctx, |ui| {
-            if !self.state.is_authenticated {
-                self.render_admin_login(ui);
-            } else if self.state.active_session {
-                self.render_active_session_view(ui);
-            } else {
-                self.render_pdv_catalog(ui);
-            }
-        });
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none().fill(COLOR_BG_OBSIDIAN))
+            .show(ctx, |ui| {
+                if !self.state.is_authenticated {
+                    self.render_admin_login(ui);
+                } else if self.state.active_session {
+                    self.render_active_session_view(ui);
+                } else {
+                    self.render_pdv_catalog(ui);
+                }
+            });
 
         // Diálogo Modal: Inserção do Código de Sessão de 8 dígitos (somente quando autenticado)
         if self.state.is_authenticated
@@ -202,46 +328,72 @@ impl PrysmViewerApp {
 
             for pdv in filtered_pdvs {
                 egui::Frame::none()
-                    .fill(Color32::from_rgb(28, 32, 40))
-                    .stroke(Stroke::new(1.0_f32, Color32::from_rgb(45, 52, 65)))
-                    .rounding(6.0)
+                    .fill(COLOR_CARD_BASE)
+                    .stroke(Stroke::new(
+                        1.0_f32,
+                        if pdv.is_online {
+                            COLOR_CARD_BORDER
+                        } else {
+                            Color32::from_rgb(25, 32, 48)
+                        },
+                    ))
+                    .rounding(8.0)
                     .inner_margin(12.0)
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
                             // Status Dot & Loja/PDV
-                            let status_color = if pdv.is_online {
-                                Color32::from_rgb(46, 204, 113)
+                            let (status_color, status_text) = if pdv.is_online {
+                                (
+                                    COLOR_MINT_ONLINE,
+                                    format!("Online • Agente v{}", pdv.agent_version),
+                                )
                             } else {
-                                Color32::from_rgb(120, 120, 120)
+                                (
+                                    COLOR_TEXT_DARK,
+                                    format!("Offline • Visto por último: {}", pdv.last_seen),
+                                )
                             };
 
                             ui.label(RichText::new("●").color(status_color).size(16.0));
 
                             ui.vertical(|ui| {
                                 ui.horizontal(|ui| {
-                                    ui.label(RichText::new(&pdv.id).strong().size(15.0));
-                                    ui.label(RichText::new("—").color(Color32::DARK_GRAY));
-                                    ui.label(RichText::new(&pdv.store_name).size(14.0));
+                                    ui.label(
+                                        RichText::new(&pdv.id)
+                                            .strong()
+                                            .size(15.0)
+                                            .color(COLOR_TEXT_WHITE),
+                                    );
+                                    ui.label(RichText::new("—").color(COLOR_TEXT_DARK));
+                                    ui.label(
+                                        RichText::new(&pdv.store_name)
+                                            .size(14.0)
+                                            .color(COLOR_TEXT_MUTED),
+                                    );
                                 });
 
-                                let status_text = if pdv.is_online {
-                                    format!("Online • Agente v{}", pdv.agent_version)
-                                } else {
-                                    format!("Offline • Visto por último: {}", pdv.last_seen)
-                                };
                                 ui.label(
-                                    RichText::new(status_text).color(Color32::GRAY).size(12.0),
+                                    RichText::new(status_text)
+                                        .color(if pdv.is_online {
+                                            COLOR_CYAN_GLOW
+                                        } else {
+                                            COLOR_TEXT_DARK
+                                        })
+                                        .size(12.0),
                                 );
                             });
 
-                            // Botão de Conexão à direita
+                            // Botão de Conexão à direita com gradiente e azul elétrico
                             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                                 if pdv.is_online {
                                     let connect_btn = egui::Button::new(
-                                        RichText::new("▶ Conectar").color(Color32::WHITE).strong(),
+                                        RichText::new("▶ Conectar")
+                                            .color(COLOR_TEXT_WHITE)
+                                            .strong(),
                                     )
-                                    .fill(Color32::from_rgb(0, 122, 255))
-                                    .rounding(4.0);
+                                    .fill(COLOR_BLUE_ELECTRIC)
+                                    .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                                    .rounding(6.0);
 
                                     if ui.add(connect_btn).clicked() {
                                         self.state.select_pdv(pdv);
@@ -250,9 +402,10 @@ impl PrysmViewerApp {
                                     ui.add_enabled(
                                         false,
                                         egui::Button::new(
-                                            RichText::new("Indisponível").color(Color32::GRAY),
+                                            RichText::new("Indisponível").color(COLOR_TEXT_DARK),
                                         )
-                                        .rounding(4.0),
+                                        .fill(Color32::from_rgb(18, 22, 32))
+                                        .rounding(6.0),
                                     );
                                 }
                             });
@@ -275,29 +428,38 @@ impl PrysmViewerApp {
             .collapsible(false)
             .resizable(false)
             .anchor(egui::Align2::CENTER_CENTER, Vec2::ZERO)
-            .fixed_size(Vec2::new(380.0, 240.0))
+            .fixed_size(Vec2::new(390.0, 250.0))
+            .frame(
+                egui::Frame::window(ctx.style().as_ref())
+                    .fill(COLOR_CARD_BASE)
+                    .stroke(Stroke::new(1.2_f32, COLOR_CYAN_NEON))
+                    .rounding(10.0)
+                    .inner_margin(egui::Margin::same(18.0)),
+            )
             .show(ctx, |ui| {
-                ui.add_space(8.0);
+                ui.add_space(4.0);
                 ui.label(
                     RichText::new(format!("PDV Alvo: {} ({})", pdv.id, pdv.store_name))
                         .strong()
-                        .size(14.0),
+                        .size(15.0)
+                        .color(COLOR_CYAN_NEON),
                 );
                 ui.add_space(4.0);
                 ui.label(
                     RichText::new(
                         "Solicite ao operador no caixa o código de 8 dígitos exibido na tela.",
                     )
-                    .color(Color32::LIGHT_GRAY)
+                    .color(COLOR_TEXT_MUTED)
                     .size(12.0),
                 );
 
-                ui.add_space(16.0);
+                ui.add_space(14.0);
                 ui.vertical_centered(|ui| {
                     ui.label(
                         RichText::new("CÓDIGO DE SESSÃO (8 DÍGITOS)")
                             .size(11.0)
-                            .color(Color32::GRAY),
+                            .color(COLOR_TEXT_DARK)
+                            .strong(),
                     );
 
                     let mut code = self.state.session_code_input.clone();
@@ -305,7 +467,8 @@ impl PrysmViewerApp {
                         egui::TextEdit::singleline(&mut code)
                             .font(egui::TextStyle::Heading)
                             .char_limit(8)
-                            .desired_width(180.0),
+                            .desired_width(190.0)
+                            .text_color(COLOR_CYAN_NEON),
                     );
 
                     if response.changed() {
@@ -315,12 +478,12 @@ impl PrysmViewerApp {
                     ui.add_space(6.0);
                     ui.label(
                         RichText::new("⏱ Válido por 120 segundos • Máximo 3 tentativas")
-                            .color(Color32::GRAY)
+                            .color(COLOR_VIOLET_NEON)
                             .size(11.0),
                     );
                 });
 
-                ui.add_space(20.0);
+                ui.add_space(18.0);
                 ui.horizontal(|ui| {
                     if ui.button("Cancelar").clicked() {
                         self.state.close_modal();
@@ -331,18 +494,26 @@ impl PrysmViewerApp {
                         let btn = egui::Button::new(
                             RichText::new("Conectar")
                                 .color(if can_connect {
-                                    Color32::WHITE
+                                    COLOR_TEXT_WHITE
                                 } else {
-                                    Color32::DARK_GRAY
+                                    COLOR_TEXT_DARK
                                 })
                                 .strong(),
                         )
                         .fill(if can_connect {
-                            Color32::from_rgb(46, 204, 113)
+                            COLOR_BLUE_ELECTRIC
                         } else {
-                            Color32::from_rgb(60, 60, 60)
+                            Color32::from_rgb(32, 38, 52)
                         })
-                        .rounding(4.0);
+                        .stroke(Stroke::new(
+                            1.0_f32,
+                            if can_connect {
+                                COLOR_CYAN_NEON
+                            } else {
+                                COLOR_CARD_BORDER
+                            },
+                        ))
+                        .rounding(6.0);
 
                         if ui.add_enabled(can_connect, btn).clicked() {
                             self.state.active_session = true;
@@ -361,7 +532,15 @@ impl PrysmViewerApp {
 
         // Barra de ferramentas da sessão
         ui.horizontal(|ui| {
-            if ui.button("⏹ Encerrar Sessão").clicked() {
+            let btn_encerrar = egui::Button::new(
+                RichText::new("⏹ Encerrar Sessão")
+                    .color(COLOR_TEXT_WHITE)
+                    .strong(),
+            )
+            .fill(COLOR_RED_DANGER)
+            .rounding(4.0);
+
+            if ui.add(btn_encerrar).clicked() {
                 self.state.clear_session();
                 return;
             }
@@ -369,24 +548,27 @@ impl PrysmViewerApp {
             ui.separator();
             if let Some(ref pdv) = self.state.selected_pdv {
                 ui.label(
-                    RichText::new(format!("Conectado: {} - {}", pdv.id, pdv.store_name)).strong(),
+                    RichText::new(format!("Conectado: {} - {}", pdv.id, pdv.store_name))
+                        .color(COLOR_TEXT_WHITE)
+                        .strong(),
                 );
             }
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 ui.label(
                     RichText::new("🔒 QUIC TLS 1.3")
-                        .color(Color32::GREEN)
-                        .size(12.0),
+                        .color(COLOR_MINT_ONLINE)
+                        .size(12.0)
+                        .strong(),
                 );
                 ui.label(
                     RichText::new(format!("🎞️ {:.0} FPS", self.metrics.current_fps))
-                        .color(Color32::LIGHT_BLUE)
+                        .color(COLOR_CYAN_NEON)
                         .size(12.0),
                 );
                 ui.label(
                     RichText::new(format!("⚡ {} ms", self.metrics.rtt_ms))
-                        .color(Color32::LIGHT_YELLOW)
+                        .color(COLOR_BLUE_ELECTRIC)
                         .size(12.0),
                 );
             });
@@ -431,39 +613,40 @@ impl PrysmViewerApp {
     /// Renderiza a tela de login do operador / administrador.
     fn render_admin_login(&mut self, ui: &mut egui::Ui) {
         ui.vertical_centered(|ui| {
-            ui.add_space(ui.available_height() * 0.12);
+            ui.add_space(ui.available_height() * 0.08);
 
             egui::Frame::window(ui.style())
-                .fill(Color32::from_rgb(26, 30, 38))
-                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(42, 48, 60)))
-                .rounding(8.0)
-                .inner_margin(egui::Margin::same(26.0))
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.2_f32, COLOR_CARD_BORDER))
+                .rounding(10.0)
+                .inner_margin(egui::Margin::same(28.0))
                 .show(ui, |ui| {
                     ui.set_max_width(380.0);
 
                     ui.vertical_centered(|ui| {
-                        ui.label(RichText::new("🔐").size(34.0));
-                        ui.add_space(4.0);
+                        render_logo(ui, self.logo_texture.as_ref(), 76.0);
+                        ui.add_space(10.0);
                         ui.heading(
                             RichText::new("Painel do Técnico")
-                                .color(Color32::from_rgb(0, 160, 255))
-                                .size(22.0)
+                                .color(COLOR_CYAN_NEON)
+                                .size(24.0)
                                 .strong(),
                         );
+                        ui.add_space(2.0);
                         ui.label(
                             RichText::new("PrysmView • Suporte Remoto Centralizado")
-                                .color(Color32::LIGHT_GRAY)
+                                .color(COLOR_TEXT_MUTED)
                                 .size(12.0),
                         );
                     });
 
-                    ui.add_space(20.0);
+                    ui.add_space(22.0);
 
                     // Campo: Servidor de Sinalização
                     ui.label(
                         RichText::new("🌐 Servidor de Sinalização (API):")
                             .size(12.0)
-                            .color(Color32::GRAY),
+                            .color(COLOR_TEXT_MUTED),
                     );
                     ui.add(
                         egui::TextEdit::singleline(&mut self.state.server_url)
@@ -477,7 +660,7 @@ impl PrysmViewerApp {
                     ui.label(
                         RichText::new("👤 ID do Operador / Técnico:")
                             .size(12.0)
-                            .color(Color32::GRAY),
+                            .color(COLOR_TEXT_MUTED),
                     );
                     ui.add(
                         egui::TextEdit::singleline(&mut self.state.login_operator_id)
@@ -491,7 +674,7 @@ impl PrysmViewerApp {
                     ui.label(
                         RichText::new("🔑 Senha de Acesso:")
                             .size(12.0)
-                            .color(Color32::GRAY),
+                            .color(COLOR_TEXT_MUTED),
                     );
                     let pwd_response = ui.add(
                         egui::TextEdit::singleline(&mut self.state.login_password)
@@ -503,7 +686,7 @@ impl PrysmViewerApp {
                         ui.add_space(8.0);
                         ui.label(
                             RichText::new(format!("⚠️ {}", err))
-                                .color(Color32::LIGHT_RED)
+                                .color(COLOR_RED_DANGER)
                                 .size(12.0),
                         );
                     }
@@ -513,14 +696,16 @@ impl PrysmViewerApp {
                     let enter_pressed =
                         pwd_response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                     let btn_login = ui.add_sized(
-                        [ui.available_width(), 38.0],
+                        [ui.available_width(), 40.0],
                         egui::Button::new(
                             RichText::new("Entrar no Painel")
-                                .color(Color32::WHITE)
+                                .color(COLOR_TEXT_WHITE)
                                 .size(14.0)
                                 .strong(),
                         )
-                        .fill(Color32::from_rgb(0, 120, 215)),
+                        .fill(COLOR_BLUE_ELECTRIC)
+                        .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                        .rounding(6.0),
                     );
 
                     if btn_login.clicked() || enter_pressed {
@@ -528,17 +713,16 @@ impl PrysmViewerApp {
                         if op_id.is_empty() {
                             self.state.login_error = Some("Informe o ID do Operador".to_string());
                         } else {
-                            // Gera token Bearer de sessão autenticada do operador
                             let token = format!("token_{}", op_id);
                             self.state.login_success(&op_id, token);
                         }
                     }
 
-                    ui.add_space(14.0);
+                    ui.add_space(16.0);
                     ui.vertical_centered(|ui| {
                         ui.label(
-                            RichText::new("🛡️ Criptografia E2E TLS 1.3 • Auditoria SHA-256")
-                                .color(Color32::DARK_GRAY)
+                            RichText::new("🛡️ Criptografia E2E QUIC TLS 1.3 • Hash SHA-256")
+                                .color(COLOR_TEXT_DARK)
                                 .size(11.0),
                         );
                     });

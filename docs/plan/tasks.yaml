@@ -735,7 +735,25 @@
   tentativas: 0
   ultimo_log: 'Interface grafica do Host estilo TeamViewer Host implementada com ID do PDV, codigo de sessao de 8 digitos, indicador de status verde, banner de sessao ativa e botao de encerramento imediato via Named Pipe com 5 testes verdes.'
 
-
-
-
-
+# ==============================================================================
+# FASE 16: IDENTIDADE VISUAL CYBER PRISM & LOGO OFICIAL
+# ==============================================================================
+- id: F16-CYBER-THEME-BRANDING
+  fase: 16
+  titulo: Identidade visual Cyber Prism e integracao da logo/icone oficial no Viewer e Host Tray
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/Cargo.toml
+    - crates/viewer/src/app.rs
+    - crates/tray/Cargo.toml
+    - crates/tray/src/main.rs
+  depende_de: [F15-HOST-TRAY-UI]
+  criterio_pronto:
+    - paleta Cyber Prism aplicada em todo o tema e componentes
+    - logotipo oficial incorporado e exibido com nitidez no login, cabecalhos e janela
+    - estilizacao senior com cards de vidro, bordas de neon cyan/blue, badges pill e estados interativos
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Identidade visual Cyber Prism (#0a0d16, #00f0ff, #008cff, #be2deb, #00ffcc) e logotipo/icone oficial integrados com sucesso no Viewer e Host Tray com 107 testes verdes e 0 clippy warnings.'
