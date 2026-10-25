@@ -25,7 +25,13 @@ func setupTestServer(t *testing.T) (*db.DB, http.Handler) {
 	tracker := auth.NewNonceTracker()
 	limiter := auth.NewIPRateLimiter()
 
-	router := NewRouter(database, tracker, limiter)
+	// Gera chave de assinatura de tickets para os testes
+	_, signingKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("falha ao gerar chave de assinatura: %v", err)
+	}
+
+	router := NewRouter(database, tracker, limiter, signingKey)
 	return database, router
 }
 
@@ -203,6 +209,116 @@ func TestOperatorLoginAndPermissionFlow(t *testing.T) {
 	if auditW.Code != http.StatusCreated {
 		t.Fatalf("esperava 201 Created na auditoria, obteve %d: %s", auditW.Code, auditW.Body.String())
 	}
+}
+
+func TestSessionTicketEmissionAndValidation(t *testing.T) {
+	database, router := setupTestServer(t)
+	defer database.Close()
+
+	// Cria operador e PDV
+	op := db.Operator{
+		ID:        "op-ticket-1",
+		Name:      "Tecnico Ticket",
+		CreatedAt: time.Now(),
+	}
+	_ = database.CreateOperator(op)
+
+	pdvPubKey := "pubkey-pdv-ticket-01"
+	_ = database.RegisterPDV(db.PDV{
+		PublicKey:    pdvPubKey,
+		StoreName:    "Loja Ticket",
+		POSNumber:    1,
+		AgentVersion: "1.0.0",
+		Status:       "online",
+		LastSeen:     time.Now(),
+	})
+
+	// Concede permissao
+	_ = database.GrantPermission("op-ticket-1", pdvPubKey)
+
+	// Login do operador
+	loginPayload := []byte(`{"operator_id":"op-ticket-1","password":"mock"}`)
+	loginReq := httptest.NewRequest("POST", "/api/v1/operator/login", bytes.NewReader(loginPayload))
+	loginW := httptest.NewRecorder()
+	router.ServeHTTP(loginW, loginReq)
+
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("esperava 200 OK no login, obteve %d: %s", loginW.Code, loginW.Body.String())
+	}
+
+	var loginRes struct {
+		Token string `json:"token"`
+	}
+	_ = json.Unmarshal(loginW.Body.Bytes(), &loginRes)
+	token := loginRes.Token
+	if len(token) != 64 {
+		t.Fatalf("token opaco invalido: %s", token)
+	}
+
+	// Solicita ticket
+	ticketReq := []byte(fmt.Sprintf(`{"pdv_public_key":"%s","machine_id":"pdv-maquina-01","reason":"chamado aberto"}`, pdvPubKey))
+	ticketReqHTTP := httptest.NewRequest("POST", "/api/v1/session/ticket", bytes.NewReader(ticketReq))
+	ticketReqHTTP.Header.Set("Authorization", "Bearer "+token)
+	ticketW := httptest.NewRecorder()
+	router.ServeHTTP(ticketW, ticketReqHTTP)
+
+	if ticketW.Code != http.StatusCreated {
+		t.Fatalf("esperava 201 Created na emissao de ticket, obteve %d: %s", ticketW.Code, ticketW.Body.String())
+	}
+
+	var ticketResp struct {
+		Ticket struct {
+			TicketID    string    `json:"ticket_id"`
+			MachineID   string    `json:"machine_id"`
+			TechnicianID string   `json:"technician_id"`
+			Groups      []string  `json:"groups"`
+			NotBefore   time.Time `json:"not_before"`
+			ExpiresAt   time.Time `json:"expires_at"`
+			Nonce       string    `json:"nonce"`
+			Signature   string    `json:"signature"`
+		} `json:"ticket"`
+		Message string `json:"message"`
+	}
+	_ = json.Unmarshal(ticketW.Body.Bytes(), &ticketResp)
+
+	// Valida campos do ticket
+	if ticketResp.Ticket.TicketID == "" {
+		t.Fatal("ticket_id vazio")
+	}
+	if ticketResp.Ticket.MachineID != "pdv-maquina-01" {
+		t.Errorf("machine_id incorreto: %s", ticketResp.Ticket.MachineID)
+	}
+	if ticketResp.Ticket.TechnicianID != "op-ticket-1" {
+		t.Errorf("technician_id incorreto: %s", ticketResp.Ticket.TechnicianID)
+	}
+	if ticketResp.Ticket.Signature == "" {
+		t.Fatal("assinatura vazia")
+	}
+	if ticketResp.Ticket.Nonce == "" {
+		t.Fatal("nonce vazio")
+	}
+	// Validade maxima de 30 minutos
+	duracao := ticketResp.Ticket.ExpiresAt.Sub(ticketResp.Ticket.NotBefore)
+	if duracao > 30*time.Minute {
+		t.Errorf("validade do ticket excede 30 minutos: %v", duracao)
+	}
+	if duracao <= 0 {
+		t.Fatal("expires_at deve ser depois de not_before")
+	}
+
+	// Valida a assinatura Ed25519 do ticket
+	// A validacao completa da assinatura e feita pelo host offline.
+	// Aqui apenas verificamos que a assinatura tem 64 bytes (128 hex)
+	sigBytes, err := hex.DecodeString(ticketResp.Ticket.Signature)
+	if err != nil {
+		t.Fatalf("assinatura nao e hex valido: %v", err)
+	}
+	if len(sigBytes) != 64 {
+		t.Errorf("assinatura tem %d bytes, esperado 64", len(sigBytes))
+	}
+
+	t.Logf("Ticket emitido com sucesso: id=%s maquina=%s tecnico=%s exp=%v",
+		ticketResp.Ticket.TicketID, ticketResp.Ticket.MachineID, ticketResp.Ticket.TechnicianID, ticketResp.Ticket.ExpiresAt)
 }
 
 func TestExpiredTokenRejection(t *testing.T) {

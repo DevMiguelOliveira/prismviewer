@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/ed25519"
+	"crypto/rand"
 	"context"
 	"flag"
 	"log/slog"
@@ -45,7 +47,15 @@ func main() {
 	tracker := auth.NewNonceTracker()
 	limiter := auth.NewIPRateLimiter()
 
-	router := api.NewRouter(database, tracker, limiter)
+	// Gera par de chaves Ed25519 para assinatura de tickets de sessão.
+	// Em produção, esta chave deve ser carregada de um segredo protegido (não gerada em cada reinício).
+	_, ticketSigningKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		slog.Error("Falha ao gerar chave de assinatura de tickets", "erro", err.Error())
+		os.Exit(1)
+	}
+
+	router := api.NewRouter(database, tracker, limiter, ticketSigningKey)
 
 	listenAddr := ":8080"
 	if port := os.Getenv("PORT"); port != "" {

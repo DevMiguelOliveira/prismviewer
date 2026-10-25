@@ -1,12 +1,15 @@
 package api
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -16,16 +19,21 @@ import (
 )
 
 type Server struct {
-	db      *db.DB
-	tracker *auth.NonceTracker
-	limiter *auth.IPRateLimiter
+	db                *db.DB
+	tracker           *auth.NonceTracker
+	limiter           *auth.IPRateLimiter
+	ticketSigningKey  ed25519.PrivateKey
+	ticketStore       map[string]bool // ticket_id -> usado (uso unico)
+	ticketStoreMu     sync.Mutex
 }
 
-func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRateLimiter) http.Handler {
+func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRateLimiter, signingKey ed25519.PrivateKey) http.Handler {
 	s := &Server{
-		db:      database,
-		tracker: tracker,
-		limiter: limiter,
+		db:             database,
+		tracker:        tracker,
+		limiter:        limiter,
+		ticketSigningKey: signingKey,
+		ticketStore:    make(map[string]bool),
 	}
 
 	r := chi.NewRouter()
@@ -53,6 +61,7 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 
 			r.Get("/operator/pdvs", s.handleListPDVs)
 			r.Post("/session/request", s.handleSessionRequest)
+			r.Post("/session/ticket", s.handleSessionTicket)
 			r.Post("/session/audit", s.handleSessionAudit)
 		})
 	})
@@ -249,6 +258,33 @@ type SessionRequestPayload struct {
 	Reason       string `json:"reason"`
 }
 
+/// Ticket de sessão assinado com Ed25519, emitido pelo servidor de sinalização.
+/// Contém machine_id, technician_id, grupos, not_before, expires_at (max 30 min),
+/// nonce e ticket_id. Validado offline pelo host.
+type SessionTicket struct {
+	TicketID       string    `json:"ticket_id"`
+	MachineID      string    `json:"machine_id"`
+	TechnicianID   string    `json:"technician_id"`
+	Groups         []string  `json:"groups"`
+	NotBefore      time.Time `json:"not_before"`
+	ExpiresAt      time.Time `json:"expires_at"`
+	Nonce          string    `json:"nonce"`
+	Signature      string    `json:"signature"` // hex Ed25519 sobre os campos acima
+}
+
+/// Payload de solicitação de ticket (chamado pelo host/operador).
+type SessionTicketRequest struct {
+	PDVPublicKey string `json:"pdv_public_key"`
+	MachineID    string `json:"machine_id"`
+	Reason       string `json:"reason"`
+}
+
+/// Resposta de emissão de ticket.
+type SessionTicketResponse struct {
+	Ticket SessionTicket `json:"ticket"`
+	Message string       `json:"message"`
+}
+
 func (s *Server) handleSessionRequest(w http.ResponseWriter, r *http.Request) {
 	operatorID := r.Header.Get("X-Operator-ID")
 
@@ -276,8 +312,104 @@ func (s *Server) handleSessionRequest(w http.ResponseWriter, r *http.Request) {
 		"authorized": true,
 		"operator":   operatorID,
 		"pdv":        req.PDVPublicKey,
-		"message":    "Sessao autorizada. Prossiga com o handshake iroh.",
+		"message":    "Sessao autorizada. Solicite um ticket via /api/v1/session/ticket antes de conectar.",
 	})
+}
+
+func (s *Server) handleSessionTicket(w http.ResponseWriter, r *http.Request) {
+	operatorID := r.Header.Get("X-Operator-ID")
+
+	var req SessionTicketRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "JSON invalido", http.StatusBadRequest)
+		return
+	}
+
+	if req.PDVPublicKey == "" || req.MachineID == "" {
+		http.Error(w, "pdv_public_key e machine_id obrigatorios", http.StatusBadRequest)
+		return
+	}
+
+	allowed, err := s.db.CheckPermission(operatorID, req.PDVPublicKey)
+	if err != nil {
+		http.Error(w, "Erro ao consultar permissoes", http.StatusInternalServerError)
+		return
+	}
+
+	if !allowed {
+		slog.Warn("Operador sem permissao para solicitar ticket", "operator", operatorID, "pdv", req.PDVPublicKey)
+		http.Error(w, "Permissao negada para este PDV", http.StatusForbidden)
+		return
+	}
+
+	// Gera ticket com validade maxima de 30 minutos
+	now := time.Now()
+	expiresAt := now.Add(30 * time.Minute)
+	nonce := auth.GenerateOpaqueTokenNonce()
+	ticketID := auth.GenerateOpaqueTokenNonce()
+
+	ticket := SessionTicket{
+		TicketID:    ticketID,
+		MachineID:   req.MachineID,
+		TechnicianID: operatorID,
+		Groups:      []string{"suporte"},
+		NotBefore:   now,
+		ExpiresAt:   expiresAt,
+		Nonce:       nonce,
+	}
+
+	// Assina o ticket (sem o campo signature)
+	toSign := map[string]interface{}{
+		"ticket_id":   ticket.TicketID,
+		"machine_id":  ticket.MachineID,
+		"technician_id": ticket.TechnicianID,
+		"groups":      ticket.Groups,
+		"not_before":  ticket.NotBefore.UTC().Format(time.RFC3339),
+		"expires_at":  ticket.ExpiresAt.UTC().Format(time.RFC3339),
+		"nonce":       ticket.Nonce,
+	}
+	payloadBytes, err := json.Marshal(toSign)
+	if err != nil {
+		http.Error(w, "Erro ao montar ticket", http.StatusInternalServerError)
+		return
+	}
+	sig := ed25519.Sign(s.ticketSigningKey, payloadBytes)
+	ticket.Signature = hex.EncodeToString(sig)
+
+	// Registra ticket para uso unico
+	s.ticketStoreMu.Lock()
+	s.ticketStore[ticketID] = false
+	s.ticketStoreMu.Unlock()
+
+	slog.Info("Ticket de sessao emitido", "operator", operatorID, "machine", req.MachineID, "ticket_id", ticketID, "expires_at", expiresAt)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(SessionTicketResponse{
+		Ticket:  ticket,
+		Message: "Ticket emitido. Valido por 30 minutos e de uso unico.",
+	})
+}
+
+/// Marca um ticket como usado (consulta pelo host após validação offline).
+func (s *Server) markTicketUsed(ticketID string) bool {
+	s.ticketStoreMu.Lock()
+	defer s.ticketStoreMu.Unlock()
+	if used, ok := s.ticketStore[ticketID]; ok && !used {
+		s.ticketStore[ticketID] = true
+		return true
+	}
+	return false
+}
+
+/// Verifica se um ticket ainda não foi usado (consulta de revogação/uso único).
+func (s *Server) isTicketValid(ticketID string) bool {
+	s.ticketStoreMu.Lock()
+	defer s.ticketStoreMu.Unlock()
+	if used, ok := s.ticketStore[ticketID]; ok {
+		return !used
+	}
+	return false // ticket desconhecido é inválido
 }
 
 type AuditPayload struct {

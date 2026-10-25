@@ -129,6 +129,17 @@ func GenerateOpaqueToken() (string, string, error) {
 	return tokenHex, tokenHash, nil
 }
 
+// GenerateOpaqueTokenNonce gera um nonce aleatório de 32 bytes em hex (64 caracteres),
+// usado em tickets de sessão para prevenir replay.
+func GenerateOpaqueTokenNonce() string {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		// Em caso de falha crítica de entropia, retorna um valor baseado em tempo (fallback fraco, mas não deve acontecer)
+		return fmt.Sprintf("%x", time.Now().UnixNano())
+	}
+	return hex.EncodeToString(bytes)
+}
+
 // HashSHA256 calcula o hash SHA-256 de uma string e retorna em formato hex.
 func HashSHA256(data string) string {
 	h := sha256.Sum256([]byte(data))
