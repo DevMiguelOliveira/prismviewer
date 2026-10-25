@@ -698,6 +698,42 @@
   tentativas: 0
   ultimo_log: 'ViewerApiClient implementado com login de operador (/api/v1/operator/login), Bearer token, listagem de PDVs, solicitacao de sessao e envio de auditoria com 16 testes verdes.'
 
+# ==============================================================================
+# FASE 15: INTERFACES VISUAIS (LOGIN DO TÉCNICO & TEAMVIEWER HOST NO CLIENTE)
+# ==============================================================================
+- id: F15-VIEWER-ADMIN-LOGIN
+  fase: 15
+  titulo: Tela de login e painel de autenticação do técnico no Viewer (egui)
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/viewer/src/app.rs
+    - crates/viewer/src/lib.rs
+  depende_de: [F14-VIEWER-SIGNALING]
+  criterio_pronto:
+    - tela de login centralizada com URL da API, ID do operador e senha mascarada
+    - alternancia reativa entre tela de login e painel de PDVs
+    - botao de logout e mensagem de erro em caso de falha
+    - cargo test e clippy 100% verde
+  status: pendente
+  tentativas: 0
+
+- id: F15-HOST-TRAY-UI
+  fase: 15
+  titulo: Interface gráfica do Host no PDV estilo TeamViewer Host (egui)
+  agente: dev-rust
+  arquivos_permitidos:
+    - crates/tray/Cargo.toml
+    - crates/tray/src/main.rs
+  depende_de: [F15-VIEWER-ADMIN-LOGIN]
+  criterio_pronto:
+    - janela compacta estilo TeamViewer Host com ID do PDV e Código de 8 dígitos
+    - indicador de status verde 'Pronto para conectar (Conexão Segura E2E)'
+    - banner de sessão ativa com cronômetro e botão de encerramento imediato
+    - integracao bidirecional com o Named Pipe do prysmview-svc
+  status: pendente
+  tentativas: 0
+
+
 
 
 
