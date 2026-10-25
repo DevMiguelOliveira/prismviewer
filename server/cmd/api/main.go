@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,6 +16,12 @@ import (
 )
 
 func main() {
+	var dbFlag string
+	var addrFlag string
+	flag.StringVar(&dbFlag, "db", "", "Caminho para o banco de dados SQLite")
+	flag.StringVar(&addrFlag, "addr", "", "Endereco de escuta do servidor HTTP")
+	flag.Parse()
+
 	// Logging em formato JSON para operacao em producao sem dados sensiveis
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -22,7 +29,9 @@ func main() {
 	slog.SetDefault(logger)
 
 	dbPath := os.Getenv("PRYSMVIEW_DB_PATH")
-	if dbPath == "" {
+	if dbFlag != "" {
+		dbPath = dbFlag
+	} else if dbPath == "" {
 		dbPath = "prysmview.db"
 	}
 
@@ -38,13 +47,16 @@ func main() {
 
 	router := api.NewRouter(database, tracker, limiter)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	listenAddr := ":8080"
+	if port := os.Getenv("PORT"); port != "" {
+		listenAddr = ":" + port
+	}
+	if addrFlag != "" {
+		listenAddr = addrFlag
 	}
 
 	server := &http.Server{
-		Addr:         ":" + port,
+		Addr:         listenAddr,
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -56,7 +68,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		slog.Info("Servidor de sinalizacao PrysmView iniciado", "porta", port, "banco", dbPath)
+		slog.Info("Servidor de sinalizacao PrysmView iniciado", "addr", listenAddr, "banco", dbPath)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("Erro no servidor HTTP", "erro", err.Error())
 			os.Exit(1)
