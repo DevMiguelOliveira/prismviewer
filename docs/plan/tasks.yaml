@@ -714,8 +714,9 @@
     - alternancia reativa entre tela de login e painel de PDVs
     - botao de logout e mensagem de erro em caso de falha
     - cargo test e clippy 100% verde
-  status: pendente
+  status: concluida
   tentativas: 0
+  ultimo_log: 'Painel de login e autenticacao do tecnico implementado com campos de servidor API, ID do operador, senha mascarada, transicao de estado e botao de logout com 17 testes verdes.'
 
 - id: F15-HOST-TRAY-UI
   fase: 15

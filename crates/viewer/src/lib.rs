@@ -32,6 +32,11 @@ pub struct PdvItem {
 pub struct ViewerState {
     pub operator_name: String,
     pub auth_token: Option<String>,
+    pub server_url: String,
+    pub login_operator_id: String,
+    pub login_password: String,
+    pub is_authenticated: bool,
+    pub login_error: Option<String>,
     pub search_query: String,
     pub pdvs: Vec<PdvItem>,
     pub selected_pdv: Option<PdvItem>,
@@ -44,8 +49,13 @@ pub struct ViewerState {
 impl Default for ViewerState {
     fn default() -> Self {
         Self {
-            operator_name: "Operador Suporte".to_string(),
+            operator_name: "Técnico".to_string(),
             auth_token: None,
+            server_url: "http://20.121.137.44:443".to_string(),
+            login_operator_id: "admin".to_string(),
+            login_password: String::new(),
+            is_authenticated: false,
+            login_error: None,
             search_query: String::new(),
             pdvs: Vec::new(),
             selected_pdv: None,
@@ -60,6 +70,25 @@ impl Default for ViewerState {
 impl ViewerState {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Autentica o operador com sucesso e transiciona para o painel de PDVs.
+    pub fn login_success(&mut self, operator_id: &str, token: String) {
+        self.operator_name = operator_id.to_string();
+        self.auth_token = Some(token);
+        self.is_authenticated = true;
+        self.login_error = None;
+        self.login_password.clear();
+        self.status_message = Some(format!("Conectado como {}", operator_id));
+    }
+
+    /// Encerra a sessão do operador e retorna para a tela de login.
+    pub fn logout(&mut self) {
+        self.auth_token = None;
+        self.is_authenticated = false;
+        self.selected_pdv = None;
+        self.active_session = false;
+        self.status_message = Some("Sessão encerrada com sucesso.".to_string());
     }
 
     /// Retorna os PDVs filtrados pelo termo de busca (nome da loja ou ID do PDV).
@@ -210,5 +239,27 @@ mod tests {
         assert!(!state.active_session);
         assert_eq!(state.selected_pdv, None);
         assert_eq!(state.status_message.as_deref(), Some("Sessão finalizada."));
+    }
+
+    #[test]
+    fn test_login_success_and_logout() {
+        let mut state = ViewerState::new();
+        assert!(!state.is_authenticated);
+        assert_eq!(state.auth_token, None);
+
+        state.login_success("admin_master", "token_xyz".to_string());
+        assert!(state.is_authenticated);
+        assert_eq!(state.operator_name, "admin_master");
+        assert_eq!(state.auth_token.as_deref(), Some("token_xyz"));
+        assert!(state
+            .status_message
+            .as_ref()
+            .unwrap()
+            .contains("admin_master"));
+
+        state.logout();
+        assert!(!state.is_authenticated);
+        assert_eq!(state.auth_token, None);
+        assert_eq!(state.selected_pdv, None);
     }
 }
