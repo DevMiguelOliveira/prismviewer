@@ -4,8 +4,9 @@
 #define MyAppName "PrysmView"
 #define MyAppVersion "0.1.0"
 #define MyAppPublisher "PrysmView Team"
-#define MyAppURL "https://github.com/prysmview/prysmview"
+#define MyAppURL "https://github.com/DevMiguelOliveira/prismviewer"
 #define MyAppExeName "prysmview-tray.exe"
+#define MyViewerExeName "prysmview-viewer.exe"
 #define MySvcExeName "prysmview-svc.exe"
 
 [Setup]
@@ -34,17 +35,25 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
 [Dirs]
 ; Diretório de dados com permissões restritas (apenas SYSTEM e Administradores têm controle total)
 Name: "{commonappdata}\PrysmView"; Permissions: system-full admins-full users-readexec
+Name: "{app}\assets"; Permissions: users-readexec
 
 [Files]
-; Binários do Host compilados em release
+; Binários do PrysmView compilados em release
 Source: "..\target\release\{#MySvcExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\release\{#MyViewerExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName} Bandeja"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName} Host (PDV)"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName} Viewer (Técnico)"; Filename: "{app}\{#MyViewerExeName}"
+Name: "{autodesktop}\{#MyAppName} Viewer"; Filename: "{app}\{#MyViewerExeName}"; Tasks: desktopicon
 Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 ; Inicialização automática do aplicativo de bandeja no logon de qualquer usuário
 Name: "{commonstartup}\{#MyAppName} Tray"; Filename: "{app}\{#MyAppExeName}"

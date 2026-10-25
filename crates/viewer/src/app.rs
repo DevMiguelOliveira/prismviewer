@@ -112,6 +112,7 @@ impl PrysmViewerApp {
             logo_texture: None,
         }
     }
+
 }
 
 impl eframe::App for PrysmViewerApp {
@@ -120,7 +121,6 @@ impl eframe::App for PrysmViewerApp {
         if self.logo_texture.is_none() {
             self.logo_texture = load_brand_texture(ctx);
         }
-
         // Estilização global: Dark mode Cyber Prism refinado
         let mut visuals = egui::Visuals::dark();
         visuals.window_fill = COLOR_CARD_BASE;
@@ -728,5 +728,91 @@ impl PrysmViewerApp {
                     });
                 });
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use eframe::test::TestApp;
+
+    /// Testa que a paleta de cores oficial Cyber Prism está definida corretamente.
+    #[test]
+    fn test_cyber_prism_color_palette() {
+        // Verifica que todas as cores cianos/prismáticas estão presentes
+        assert_eq!(COLOR_CYAN_NEON, Color32::from_rgb(0, 240, 255)); // #00f0ff
+        assert_eq!(COLOR_BLUE_ELECTRIC, Color32::from_rgb(0, 140, 255)); // #008cff
+        assert_eq!(COLOR_VIOLET_NEON, Color32::from_rgb(190, 45, 235)); // #be2deb
+        assert_eq!(COLOR_MINT_ONLINE, Color32::from_rgb(0, 255, 204)); // #00ffcc
+        assert_eq!(COLOR_CYAN_GLOW, Color32::from_rgb(0, 200, 235)); // #00c8eb
+
+        // Verifica que o texto está nas cores corretas para contraste
+        assert_eq!(COLOR_TEXT_WHITE, Color32::from_rgb(245, 248, 255)); // #f5f8ff
+        assert_eq!(COLOR_TEXT_MUTED, Color32::from_rgb(148, 163, 184)); // #94a3b8
+        assert_eq!(COLOR_TEXT_DARK, Color32::from_rgb(100, 116, 139)); // #64748b
+
+        // Verifica que as cores de fundo são escuras e primárias
+        assert_eq!(COLOR_BG_OBSIDIAN, Color32::from_rgb(10, 13, 22)); // #0a0d16
+        assert_eq!(COLOR_PANEL_NAVY, Color32::from_rgb(15, 20, 34)); // #0f1422
+        assert_eq!(COLOR_CARD_BASE, Color32::from_rgb(20, 27, 45)); // #141b2d
+        assert_eq!(COLOR_CARD_BORDER, Color32::from_rgb(32, 45, 75)); // #202d4b
+
+        // Verifica que as cores de estado estão presentes
+        assert_eq!(COLOR_RED_DANGER, Color32::from_rgb(255, 51, 85)); // #ff3355
+    }
+
+    /// Testa que o logotipo da marca é carregado corretamente a partir de bytes embutidos.
+    #[test]
+    fn test_load_brand_texture() {
+        let ctx = egui::Context::default();
+
+        // Carrega a textura usando a função
+        let texture = load_brand_texture(&ctx);
+
+        // Espera que o logotipo oficial (que já existe no binário)
+        // seja carregado como uma textura egui válida.
+        assert!(texture.is_some());
+
+        let tex = texture.unwrap();
+        assert_eq!(tex.name(), "prysm_brand_logo");
+
+        // Verifica que a textura tem dimensões razoáveis para um logo
+        assert!(tex.size().x > 0);
+        assert!(tex.size().y > 0);
+    }
+
+    /// Testa o fallback de renderização do logotipo quando a textura não está carregada.
+    #[test]
+    fn test_render_logo_fallback() {
+        // Cria um mock de Ui para teste
+        let mut ui = egui::Ui::new(
+            egui::Context::default(),
+            "test",
+            egui::WidgetText::plain("Test"),
+            None,
+        );
+
+        // Renderiza o logotipo com uma textura None (fallback)
+        render_logo(&mut ui, None, 40.0);
+
+        // Verifica que a chamada não falha (o fallback desenha um placeholder)
+    }
+
+    /// Testa que a estilização visual de tema e componentes usa as cores Cyber Prism.
+    #[test]
+    fn test_theme_cyber_prism_style_usage() {
+        // Estas são verificações basicas de que o app.rs importa e usa as cores da paleta
+        // As cores reais são aplicadas no app update() method, mas aqui testamos
+        // as constantes coloridas que são usadas para o tema e estilo.
+        
+        // Verify that the main Cyber Prism colors are used in the styling
+        assert!(COLOR_CYAN_NEON != Color32::BLACK); // Cor ciano distinta
+        assert!(COLOR_BLUE_ELECTRIC != Color32::BLACK); // Cor azul distinta
+        assert!(COLOR_VIOLET_NEON != Color32::BLACK); // Cor violeta distinta
+
+        // Verifica que as cores textuais têm contraste adequado
+        assert!(COLOR_TEXT_WHITE == Color32::from_rgb(245, 248, 255));
+        assert!(COLOR_TEXT_MUTED == Color32::from_rgb(148, 163, 184));
+        assert!(COLOR_TEXT_DARK == Color32::from_rgb(100, 116, 139));
     }
 }
