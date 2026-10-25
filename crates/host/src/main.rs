@@ -12,6 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .any(|arg| arg == "--run" || arg == "--console" || arg == "-c")
     {
+        let _ = tracing_subscriber::fmt::try_init();
         println!("Iniciando PrysmView Host Service em modo console/standalone...");
         #[cfg(windows)]
         {

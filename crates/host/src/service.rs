@@ -108,6 +108,11 @@ fn run_service_lifecycle() -> Result<(), windows_service::Error> {
 
     // Executa a carga útil do host
     if let Ok(runtime) = tokio::runtime::Runtime::new() {
+        let running_clone = running.clone();
+        runtime.spawn(async move {
+            run_ipc_server_loop(running_clone).await;
+        });
+
         runtime.block_on(async {
             while running.load(Ordering::SeqCst) {
                 tokio::time::sleep(Duration::from_millis(500)).await;
@@ -132,11 +137,66 @@ fn run_service_lifecycle() -> Result<(), windows_service::Error> {
     Ok(())
 }
 
+#[cfg(windows)]
+async fn run_ipc_server_loop(running: Arc<AtomicBool>) {
+    use crate::ipc::{create_secure_pipe_server, recv_ipc_message, DEFAULT_PIPE_NAME};
+    use tracing::{error, info, warn};
+
+    while running.load(Ordering::Relaxed) {
+        let server = match create_secure_pipe_server(DEFAULT_PIPE_NAME) {
+            Ok(s) => s,
+            Err(e) => {
+                error!("Falha ao instanciar NamedPipeServer: {e}");
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                continue;
+            }
+        };
+
+        info!(
+            "Servidor Named Pipe aguardando conexão da bandeja em {}",
+            DEFAULT_PIPE_NAME
+        );
+        if let Err(e) = server.connect().await {
+            warn!("Erro ao aguardar conexão do cliente IPC: {e}");
+            continue;
+        }
+
+        info!("Bandeja (prysmview-tray) conectada com sucesso ao serviço!");
+        let mut server = server;
+
+        while running.load(Ordering::Relaxed) {
+            match recv_ipc_message(&mut server).await {
+                Ok(msg) => {
+                    info!("Mensagem IPC recebida da bandeja: {:?}", msg);
+                }
+                Err(crate::ipc::IpcError::ConnectionClosed) => {
+                    info!("Bandeja desconectou do Named Pipe.");
+                    break;
+                }
+                Err(e) => {
+                    warn!("Conexão IPC com a bandeja encerrada: {e}");
+                    break;
+                }
+            }
+        }
+    }
+}
+
 /// Executa o host em modo interativo / console para depuração e testes.
 pub fn run_standalone() -> Result<(), ServiceError> {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
+
+    let running = Arc::new(AtomicBool::new(true));
+
+    #[cfg(windows)]
+    {
+        let running_clone = running.clone();
+        runtime.spawn(async move {
+            run_ipc_server_loop(running_clone).await;
+        });
+    }
 
     runtime.block_on(async {
         tracing::info!(
@@ -147,6 +207,7 @@ pub fn run_standalone() -> Result<(), ServiceError> {
         // Aguarda sinal de interrupção (Ctrl+C)
         let _ = tokio::signal::ctrl_c().await;
 
+        running.store(false, Ordering::SeqCst);
         tracing::info!("Sinal de interrupção recebido. Encerrando host e liberando entradas...");
         println!("Encerrando host e liberando entradas...");
         crate::sas::release_all_keys();
