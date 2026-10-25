@@ -192,3 +192,41 @@ func TestAuditLogPersistence(t *testing.T) {
 		t.Fatalf("erro ao gravar auditoria: %v", err)
 	}
 }
+
+func TestAuditChainIntegrity(t *testing.T) {
+	database := setupTestDB(t)
+	defer database.Close()
+
+	// Cria 3 registros de auditoria encadeados
+	records := []AuditRecord{
+		{OperatorID: "op-1", PDVPublicKey: "pdv-1", StartTime: time.Now().Add(-3 * time.Minute), EndTime: time.Now().Add(-2 * time.Minute), Reason: "Chamado 1", ConsentResult: "aceito", BytesTransferred: 1000},
+		{OperatorID: "op-2", PDVPublicKey: "pdv-2", StartTime: time.Now().Add(-2 * time.Minute), EndTime: time.Now().Add(-1 * time.Minute), Reason: "Chamado 2", ConsentResult: "recusado", BytesTransferred: 0},
+		{OperatorID: "op-1", PDVPublicKey: "pdv-1", StartTime: time.Now().Add(-1 * time.Minute), EndTime: time.Now(), Reason: "Chamado 3", ConsentResult: "aceito", BytesTransferred: 2000},
+	}
+
+	for _, r := range records {
+		if err := database.LogAudit(r); err != nil {
+			t.Fatalf("erro ao gravar auditoria: %v", err)
+		}
+	}
+
+	// Cadeia deve estar valida
+	brokenID, err := database.VerifyAuditChain()
+	if err != nil {
+		t.Fatalf("erro ao verificar cadeia: %v", err)
+	}
+	if brokenID != 0 {
+		t.Fatalf("cadeia esta quebrada no registro %d, mas deveria estar valida", brokenID)
+	}
+
+	// Adulteracao direta no banco (simulando atacante)
+	if _, err := database.conn.Exec("UPDATE auditoria SET reason = 'Chamado 1 ADULTERADO' WHERE id = 1"); err != nil {
+		t.Fatalf("erro ao adulterar registro: %v", err)
+	}
+
+	// A cadeia deve estar quebrada agora
+	brokenID, err = database.VerifyAuditChain()
+	if err == nil || brokenID != 1 {
+		t.Fatalf("esperava deteccao de adulteracao no registro 1, obteve brokenID=%d err=%v", brokenID, err)
+	}
+}

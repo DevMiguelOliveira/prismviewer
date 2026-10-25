@@ -1,7 +1,9 @@
 package db
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -32,12 +34,15 @@ type Operator struct {
 type AuditRecord struct {
 	ID               int64     `json:"id"`
 	OperatorID       string    `json:"operator_id"`
+	TicketID         string    `json:"ticket_id"` // vincula ao ticket de sessao (S-05)
 	PDVPublicKey     string    `json:"pdv_public_key"`
 	StartTime        time.Time `json:"start_time"`
 	EndTime          time.Time `json:"end_time"`
 	Reason           string    `json:"reason"`
 	ConsentResult    string    `json:"consent_result"`
 	BytesTransferred int64     `json:"bytes_transferred"`
+	PrevHash         string    `json:"prev_hash"`  // hash do registro anterior (cadeia)
+	RecordHash       string    `json:"record_hash"` // hash deste registro (cadeia de integridade)
 }
 
 // Open inicializa a conexão SQLite sem CGO e aplica o schema versionado.
@@ -104,12 +109,15 @@ func (d *DB) migrate() error {
 	CREATE TABLE IF NOT EXISTS auditoria (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		operator_id TEXT NOT NULL,
+		ticket_id TEXT,
 		pdv_public_key TEXT NOT NULL,
 		start_time DATETIME NOT NULL,
 		end_time DATETIME NOT NULL,
 		reason TEXT NOT NULL,
 		consent_result TEXT NOT NULL,
-		bytes_transferred INTEGER NOT NULL
+		bytes_transferred INTEGER NOT NULL,
+		prev_hash TEXT NOT NULL,
+		record_hash TEXT NOT NULL
 	);
 	`
 	_, err := d.conn.Exec(schema)
@@ -216,10 +224,79 @@ func (d *DB) ValidateToken(tokenHash string) (string, error) {
 }
 
 func (d *DB) LogAudit(r AuditRecord) error {
+	// Busca o hash do ultimo registro para encadear (append-only)
+	var prevHash string
+	row := d.conn.QueryRow("SELECT record_hash FROM auditoria ORDER BY id DESC LIMIT 1")
+	if err := row.Scan(&prevHash); err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	// Calcula o hash deste registro com base no anterior e no conteúdo
+	r.PrevHash = prevHash
+	r.RecordHash = d.computeAuditHash(prevHash, r)
+
 	query := `
-	INSERT INTO auditoria (operator_id, pdv_public_key, start_time, end_time, reason, consent_result, bytes_transferred)
-	VALUES (?, ?, ?, ?, ?, ?, ?);
+	INSERT INTO auditoria (operator_id, ticket_id, pdv_public_key, start_time, end_time, reason, consent_result, bytes_transferred, prev_hash, record_hash)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`
-	_, err := d.conn.Exec(query, r.OperatorID, r.PDVPublicKey, r.StartTime, r.EndTime, r.Reason, r.ConsentResult, r.BytesTransferred)
+	_, err := d.conn.Exec(query, r.OperatorID, r.TicketID, r.PDVPublicKey, r.StartTime, r.EndTime, r.Reason, r.ConsentResult, r.BytesTransferred, r.PrevHash, r.RecordHash)
 	return err
+}
+
+// computeAuditHash calcula SHA-256(prev_hash + conteudo do registro) para encadear os registros.
+func (d *DB) computeAuditHash(prevHash string, r AuditRecord) string {
+	h := sha256.New()
+	h.Write([]byte(prevHash))
+	h.Write([]byte(r.OperatorID))
+	h.Write([]byte(r.TicketID))
+	h.Write([]byte(r.PDVPublicKey))
+	h.Write([]byte(r.StartTime.Format(time.RFC3339)))
+	h.Write([]byte(r.EndTime.Format(time.RFC3339)))
+	h.Write([]byte(r.Reason))
+	h.Write([]byte(r.ConsentResult))
+	h.Write([]byte(fmt.Sprintf("%d", r.BytesTransferred)))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// VerifyAuditChain percorre todos os registros de auditoria e verifica se a cadeia de hash esta intacta.
+// Retorna o ID do primeiro registro que quebrar a cadeia, ou 0 se estiver tudo valido.
+func (d *DB) VerifyAuditChain() (int64, error) {
+	rows, err := d.conn.Query("SELECT id, operator_id, ticket_id, pdv_public_key, start_time, end_time, reason, consent_result, bytes_transferred, prev_hash, record_hash FROM auditoria ORDER BY id ASC")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	var prevHash string
+	for rows.Next() {
+		var id int64
+		var r AuditRecord
+		if err := rows.Scan(&id, &r.OperatorID, &r.TicketID, &r.PDVPublicKey, &r.StartTime, &r.EndTime, &r.Reason, &r.ConsentResult, &r.BytesTransferred, &r.PrevHash, &r.RecordHash); err != nil {
+			return 0, err
+		}
+
+		// O primeiro registro tem prev_hash vazio; os demais devem encadear
+		if id == 1 {
+			if r.PrevHash != "" {
+				return id, fmt.Errorf("primeiro registro deve ter prev_hash vazio")
+			}
+		} else {
+			if r.PrevHash != prevHash {
+				return id, fmt.Errorf("cadeia quebrada: registro %d tem prev_hash %s, esperado %s", id, r.PrevHash, prevHash)
+			}
+		}
+
+		// Recalcula o hash esperado e compara
+		expectedHash := d.computeAuditHash(r.PrevHash, r)
+		if expectedHash != r.RecordHash {
+			return id, fmt.Errorf("hash invalido no registro %d: esperado %s, obtido %s", id, expectedHash, r.RecordHash)
+		}
+
+		prevHash = r.RecordHash
+	}
+
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+	return 0, nil
 }
