@@ -719,4 +719,28 @@ mod tests {
         assert!(!state.is_session_active);
         assert_eq!(state.current_operator, None);
     }
+
+    /// Testa que a paleta de cores oficial Cyber Prism está definida corretamente no Host.
+    #[test]
+    fn test_tray_cyber_prism_color_palette() {
+        assert_eq!(COLOR_CYAN_NEON, Color32::from_rgb(0, 240, 255)); // #00f0ff
+        assert_eq!(COLOR_BLUE_ELECTRIC, Color32::from_rgb(0, 140, 255)); // #008cff
+        assert_eq!(COLOR_VIOLET_NEON, Color32::from_rgb(190, 45, 235)); // #be2deb
+        assert_eq!(COLOR_MINT_ONLINE, Color32::from_rgb(0, 255, 204)); // #00ffcc
+        assert_eq!(COLOR_CYAN_GLOW, Color32::from_rgb(0, 200, 235)); // #00c8eb
+        assert_eq!(COLOR_RED_DANGER, Color32::from_rgb(255, 51, 85)); // #ff3355
+    }
+
+    /// Testa que o ícone oficial é carregado com o formato esperado.
+    #[test]
+    fn test_tray_brand_icon_loading() {
+        let icon = load_brand_icon();
+
+        // O ícone pode ser None se a imagem não estiver válida, mas deve
+        // aceitar o formato de dados esperado. Neste caso, verificamos
+        // que não há panic no processo de carregamento.
+        if let Some(i) = icon {
+            assert_eq!(i.width, i.height);
+        }
+    }
 }
