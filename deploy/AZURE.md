@@ -21,7 +21,7 @@ No Portal da Azure, acesse sua Máquina Virtual > **Networking (Rede)** > **Inbo
 
 | Prioridade | Nome da Regra | Porta | Protocolo | Origem | Ação | Descrição |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1000** | `Allow-SSH` | `22` | TCP | Qualquer | Permitir | Acesso administrativo remoto |
+| **1000** | `Allow-SSH` | `22` | TCP | IP do administrador | Permitir | Acesso administrativo remoto — **restringir a IP fixo do admin antes de produzir** |
 | **1010** | `Allow-HTTP` | `80` | TCP | Qualquer | Permitir | Descoberta / Let's Encrypt |
 | **1020** | `Allow-HTTPS` | `443` | TCP | Qualquer | Permitir | API de Sinalização do PrysmView |
 | **1030** | `Allow-Relay-QUIC` | `3340` | UDP | Qualquer | Permitir | Tráfego P2P Relay (iroh/QUIC) |
@@ -93,7 +93,7 @@ Resposta esperada:
 
 ## 6. Configuração de Domínio e HTTPS Automático (Caddy)
 
-Para expor a API publicamente com certificado TLS (Let's Encrypt) automático e gratuito:
+Para expor a API publicamente com certificado TLS (Let's Encrypt) automático e gratuito, instale o Caddy e configure o Caddyfile com redirecionamento HTTP→HTTPS, cabeçalho HSTS e terminação TLS:
 
 ```bash
 # Instale o Caddy
@@ -104,15 +104,46 @@ sudo apt-get update
 sudo apt-get install caddy -y
 
 # Configure o Caddyfile (/etc/caddy/Caddyfile)
-sudo tee /etc/caddy/Caddyfile > /dev/null <<EOF
+sudo tee /etc/caddy/Caddyfile > /dev/null <<'EOF'
+# HTTP para HTTPS redirect
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+# HTTPS com terminação TLS (Let's Encrypt automático)
 api.seudominio.com {
-    reverse_proxy 127.0.0.1:8080
+    # HSTS: navegadores forçam HTTPS por 1 ano, inclui subdomínios, pré-carregamento
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Remove identificador do servidor de cabeçalhos de resposta
+    header / Server ""
+
+    # Reverse proxy para a API Go em localhost:8080 (HTTP puro internamente)
+    reverse_proxy 127.0.0.1:8080 {
+        header_up Host {upstream_hostport}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Port {server_port}
+    }
+
+    # Certificado automático via Let's Encrypt
+    tls {
+        protocolo tls1.2 tls1.3
+    }
 }
 EOF
+
+# Ajuste o servico systemd da API para ouvir em 127.0.0.1:8080 (Caddy encerra TLS em :443)
+sudo sed -i 's/-addr :443/-addr :8080/' /etc/systemd/system/prysmview-api.service
+sudo systemctl daemon-reload
+sudo systemctl restart prysmview-api
 
 # Reinicie o Caddy
 sudo systemctl restart caddy
 ```
+
+> **Nota:** Para obter nota A no SSL Labs, é necessário um domínio real com certificado Let's Encrypt emitido pelo Caddy. A configuração acima já inclui HSTS, redirect permanente e suítes TLS modernas (TLS 1.2/1.3).
 
 ---
 
