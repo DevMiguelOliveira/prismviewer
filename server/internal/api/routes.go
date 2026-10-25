@@ -42,6 +42,7 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(auth.RateLimitMiddleware(limiter))
+	r.Use(securityHeadersMiddleware)
 
 	// Health check
 	r.Get("/health", s.handleHealth)
@@ -447,4 +448,17 @@ func (s *Server) handleSessionAudit(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "auditoria gravada com sucesso"})
+}
+
+// securityHeadersMiddleware adiciona cabecalhos de seguranca a todas as respostas (S-11).
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		next.ServeHTTP(w, r)
+	})
 }

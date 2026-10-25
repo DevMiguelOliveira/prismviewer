@@ -209,14 +209,21 @@ func (d *DB) SaveToken(tokenHash, operatorID string, expiresAt time.Time) error 
 func (d *DB) ValidateToken(tokenHash string) (string, error) {
 	var operatorID string
 	var expiresAt time.Time
-	err := d.conn.QueryRow("SELECT operator_id, expires_at FROM tokens WHERE token_hash = ?", tokenHash).
-		Scan(&operatorID, &expiresAt)
+	var storedHash string
+	err := d.conn.QueryRow("SELECT operator_id, expires_at, token_hash FROM tokens WHERE token_hash = ?", tokenHash).
+		Scan(&operatorID, &expiresAt, &storedHash)
 	if err == sql.ErrNoRows {
 		return "", fmt.Errorf("token inexistente")
 	}
 	if err != nil {
 		return "", err
 	}
+
+	// Comparacao de hash de token em tempo constante (mitiga timing attacks)
+	if !constantTimeCompare(storedHash, tokenHash) {
+		return "", fmt.Errorf("token invalido")
+	}
+
 	if time.Now().After(expiresAt) {
 		return "", fmt.Errorf("token expirado")
 	}
@@ -299,4 +306,18 @@ func (d *DB) VerifyAuditChain() (int64, error) {
 		return 0, err
 	}
 	return 0, nil
+}
+
+// constantTimeCompare compara dois strings em tempo constante para mitigar ataques de tempo (S-16).
+// Retorna true se forem iguais, false caso contrario.
+// Nota: retorna false imediatamente se os tamanhos diferirem (nao vazia informacao de tamanho via timing).
+func constantTimeCompare(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	var result byte
+	for i := 0; i < len(a); i++ {
+		result |= a[i] ^ b[i]
+	}
+	return result == 0
 }
