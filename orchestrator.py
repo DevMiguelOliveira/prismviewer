@@ -13,10 +13,8 @@ from pathlib import Path
 
 # Configuração de LLM (CLIProxyAPI local porta 8420/8317 ou NVIDIA NIM)
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:8420/v1")
-OPENAI_API_KEY = os.environ.get(
-    "OPENAI_API_KEY",
-    os.environ.get("NVIDIA_API_KEY", "REMOVED_SECRET")
-)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY")
 
 _client = None
 
