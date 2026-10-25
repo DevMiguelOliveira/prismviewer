@@ -1,5 +1,7 @@
 # Build artifacts
 target/
+deploy/*.tar.gz
+deploy/*.zip
 __pycache__/
 *.pyc
 node_modules/
