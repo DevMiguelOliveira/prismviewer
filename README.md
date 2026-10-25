@@ -32,12 +32,21 @@ O PrysmView utiliza uma linguagem visual inspirada no seu logotipo oficial prism
 
 ---
 
-## 📦 Download do Instalador Oficial
+## 📦 Download dos Instaladores Oficiais (Distintos)
 
-- **Executável Setup Standalone:** [`dist/PrysmView-Setup-0.1.0.exe`](dist/PrysmView-Setup-0.1.0.exe)
-- **Tamanho:** **5.19 MB** (limite NFR: < 30 MB)
-- **SHA-256:** `77AA94B3F7942F15FC2F4A4927FCB529E4D265533DF52B8CDCF941252E12314F`
-- **Conteúdo Incluso:** Serviço Windows `prysmview-svc.exe`, Aplicativo Host no PDV `prysmview-tray.exe`, Aplicativo do Técnico `prysmview-viewer.exe`, e inicialização no logon.
+O PrysmView possui instaladores 100% separados para o cliente e para a equipe de suporte:
+
+### 1. 🏪 PrysmView Host (Instalador para o Caixa / PDV)
+- **Executável Setup:** [`dist/PrysmHost-Setup-0.1.0.exe`](dist/PrysmHost-Setup-0.1.0.exe)
+- **Tamanho:** **4.82 MB** (limite NFR: < 30 MB)
+- **SHA-256:** `F7D796D674243A863ABF9C8681FE4033994041AF8478A82C74CC789BC32F5F1E`
+- **Conteúdo Incluso:** Serviço Windows em segundo plano (`prysmview-svc.exe`), Interface de bandeja do PDV estilo TeamViewer Host (`PrysmHost.exe`) e inicialização automática. **Não contém nenhum recurso administrativo.**
+
+### 2. 🛠️ PrysmView Admin (Instalador para o Técnico / Suporte TI)
+- **Executável Setup:** [`dist/PrysmAdmin-Setup-0.1.0.exe`](dist/PrysmAdmin-Setup-0.1.0.exe)
+- **Tamanho:** **4.65 MB** (limite NFR: < 30 MB)
+- **SHA-256:** `7CCA1712DECA13916175A1567CF8B1A15CBD3701F84EB5AF3F349B37F35D175D`
+- **Conteúdo Incluso:** Console administrativo completo (`PrysmAdmin.exe`) com Sidebar, Dashboard, 4 KPI cards de telemetria, Conexão Rápida direta por ID, agrupamento por lojas, registros de auditoria e configurações da nuvem Azure.
 
 ---
 

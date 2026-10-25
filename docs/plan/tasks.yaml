@@ -780,3 +780,25 @@
   status: concluida
   tentativas: 0
   ultimo_log: 'Executaveis estritamente separados em PrysmAdmin.exe (tecnico) e PrysmHost.exe (cliente). UI do Admin reformulada com Sidebar, 4 KPI cards, grade rica de caixas com telemetria, conexao rapida, auditoria e configuracoes com 20 testes verdes e 0 clippy warnings.'
+
+# ==============================================================================
+# FASE 18: INSTALADORES DISTINTOS (PRYSM HOST SETUP & PRYSM ADMIN SETUP)
+# ==============================================================================
+- id: F18-DUAL-INSTALLER
+  fase: 18
+  titulo: Geracao de setups executaveis separados para o Host do PDV e para o Admin do Tecnico
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - installer/prysm-host.iss
+    - installer/prysm-admin.iss
+    - installer/README.md
+    - README.md
+  depende_de: [F17-SPLIT-ADMIN-HOST-UI]
+  criterio_pronto:
+    - prysm-host.iss compila PrysmHost-Setup-0.1.0.exe com servico prysmview-svc e PrysmHost.exe sem incluir o Admin
+    - prysm-admin.iss compila PrysmAdmin-Setup-0.1.0.exe com PrysmAdmin.exe sem incluir servico ou Host
+    - documentacao README e installer/README atualizados
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Setups executaveis separados gerados com sucesso: PrysmHost-Setup-0.1.0.exe (4.82 MB) para clientes/PDVs e PrysmAdmin-Setup-0.1.0.exe (4.65 MB) para tecnicos. Documentacao e hashes SHA-256 atualizados.'

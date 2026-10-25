@@ -1,51 +1,52 @@
-# Instalador Windows — PrysmView (Inno Setup 6)
+# Instaladores Windows — PrysmView (Inno Setup 6)
 
-Em conformidade com a decisão arquitetural **ADR 0002** e a **Fase 10** da especificação `AGENTS.md`.
+Em conformidade com a decisão arquitetural **ADR 0002**, a **Fase 10** e a **Fase 18** da especificação `AGENTS.md`.
 
-## 1. Visão Geral
-
-O instalador do PrysmView empacota e configura os componentes necessários para a operação em caixas de loja (PDVs) rodando Windows 10 e Windows 11:
-
-1. **`prysmview-svc.exe`**: Serviço Windows em `LocalSystem` com inicialização automática (`SERVICE_AUTO_START`) e recuperação automática em falha (`Restart=on-failure`).
-2. **`prysmview-tray.exe`**: Aplicativo da bandeja do sistema (sem elevação de privilégios) executado na sessão interativa do usuário para gerenciamento de consentimento e encerramento de sessão.
-3. **Diretório seguro de dados**: `C:\ProgramData\PrysmView` configurado com permissões restritas (apenas `SYSTEM` e Administradores possuem permissão de gravação).
+O PrysmView disponibiliza **dois instaladores totalmente distintos e especializados**:
 
 ---
 
-## 2. Como Gerar o Instalador
+## 1. PrysmView Host Setup (Cliente / Caixa PDV)
 
-### Pré-requisitos
-- Compilador Rust configurado (`cargo`).
-- **Inno Setup 6** instalado (disponível gratuitamente em [jrsoftware.org](https://jrsoftware.org/isdl.php)).
+- **Arquivo:** `dist/PrysmHost-Setup-0.1.0.exe` (~4.8 MB)
+- **Script:** `installer/prysm-host.iss`
+- **Destino:** Computadores de caixa e PDVs nas lojas físicas.
+- **Componentes instalados:**
+  1. **`prysmview-svc.exe`**: Serviço Windows em `LocalSystem` com inicialização automática (`SERVICE_AUTO_START`) e recuperação automática em falha (`Restart=on-failure`).
+  2. **`PrysmHost.exe`**: Aplicativo da bandeja do sistema (sem elevação de privilégios) executado na sessão interativa do operador do caixa para exibição do ID, código de 8 dígitos, gerenciamento de consentimento e encerramento de emergência.
+  3. **Diretório seguro de dados**: `C:\ProgramData\PrysmView` configurado com permissões restritas (apenas `SYSTEM` e Administradores possuem permissão de gravação).
+- **Segurança:** **NÃO contém** e **NÃO instala** nenhum executável de administração ou acesso a outros caixas.
 
-### Passo a passo
-1. Compile os binários do Host e da Bandeja em modo de otimização `release`:
-   ```powershell
-   cargo build --release -p prysmview-host --bin prysmview-svc
-   cargo build --release -p prysmview-tray
-   ```
-
-2. Compile o pacote instalador com o utilitário de linha de comando `iscc`:
-   ```powershell
-   & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer\prysmview.iss
-   ```
-
-3. O arquivo final compilado será gerado em:
-   `dist\PrysmView-Setup-0.1.0.exe` (tamanho esperado abaixo de 15 MB, cumprindo o teto de 30 MB).
+### Instalação Silenciosa em Massa no PDV
+```powershell
+.\PrysmHost-Setup-0.1.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+```
 
 ---
 
-## 3. Instalação e Desinstalação Automatizada (PDVs)
+## 2. PrysmView Admin Setup (Técnico / Suporte TI)
 
-Para implantação em massa em parques de PDVs sem intervenção humana:
+- **Arquivo:** `dist/PrysmAdmin-Setup-0.1.0.exe` (~4.6 MB)
+- **Script:** `installer/prysm-admin.iss`
+- **Destino:** Computadores e notebooks da equipe técnica e central de suporte.
+- **Componentes instalados:**
+  1. **`PrysmAdmin.exe`**: Console administrativo completo com Sidebar de navegação, 4 KPI cards de telemetria, grade de caixas com dados de hardware/SO/IP, Conexão Rápida direta por ID, agrupamento por lojas, histórico de auditoria e configurações da nuvem Azure.
+  2. Atalho criado na Área de Trabalho e no Menu Iniciar: *"PrysmView Admin"*.
+- **Segurança:** **NÃO instala** serviço Windows em background nem aplicativo de host.
 
-### Instalação Silenciosa
+---
+
+## 3. Como Compilar os Instaladores
+
 ```powershell
-.\PrysmView-Setup-0.1.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-```
+# 1. Compilar os binários em modo release
+cargo build --release -p prysmview-host --bin prysmview-svc
+cargo build --release -p prysmview-tray --bin PrysmHost
+cargo build --release -p prysmview-viewer --bin PrysmAdmin
 
-### Desinstalação Silenciosa
-```powershell
-& "C:\Program Files\PrysmView\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+# 2. Gerar o Instalador do Host (Cliente / PDV)
+& "C:\Users\luism\AppData\Local\Programs\Inno Setup 6\ISCC.exe" installer\prysm-host.iss
+
+# 3. Gerar o Instalador do Admin (Técnico)
+& "C:\Users\luism\AppData\Local\Programs\Inno Setup 6\ISCC.exe" installer\prysm-admin.iss
 ```
-A desinstalação para o serviço Windows, remove o registro do SCM, finaliza o processo da bandeja e limpa os arquivos temporários do diretório de dados de forma limpa.
