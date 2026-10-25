@@ -1,56 +1,94 @@
-name: Release Build & Sign
+name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
-  build-release:
-    name: Build & Package Windows Release
+  release:
+    name: Build, sign and publish release
     runs-on: windows-latest
-    permissions:
-      contents: write
-
+    environment: release
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
         with:
-          components: rustfmt, clippy
+          fetch-depth: 0
 
-      - name: Setup Inno Setup
-        run: choco install innosetup --no-progress -y
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
-      - name: Build Release Binaries
+      - name: Build release binaries
         run: |
-          cargo build --release -p prysmview-host --bin prysmview-svc
-          cargo build --release -p prysmview-tray
-          cargo build --release -p prysmview-viewer
-          cargo build --release -p prysmview-relay
+          cargo build --release --locked
+          cargo test --release --locked
 
-      - name: Compile Inno Setup Installer
+      - name: Package installer (Inno Setup)
+        # Requer Inno Setup 6 instalado no runner Windows.
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer\prysmview.iss
-
-      - name: Compute SHA-256 Hashes
-        id: hash
+          iscc installer/prysmview.iss
         shell: pwsh
-        run: |
-          $installer = Get-Item dist\PrysmView-Setup-*.exe
-          $hash = (Get-FileHash -Path $installer.FullName -Algorithm SHA256).Hash.ToLower()
-          "$hash *$($installer.Name)" | Out-File -Encoding ascii dist\SHA256SUMS.txt
-          Write-Host "SHA-256 do instalador: $hash"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Generate signed update manifest
+        # Assina o manifesto Ed25519 com a chave privada guardada em segredo do GitHub.
+        # O público está embutido no binário do host (crates/host/src/updater.rs).
+        run: |
+          $manifestPath = "$env:GITHUB_WORKSPACE\prysmview-manifest.json"
+          $sigPath = "$env:GITHUB_WORKSPACE\prysmview-manifest.sig"
+          $privKeyHex = "${{ secrets.UPDATE_SIGNING_KEY }}"
+          $version = "${{ github.release.tag_name }}"
+          $packageFile = Get-ChildItem dist\*.exe | Select-Object -First 1
+          $packageHash = (Get-FileHash -Path $packageFile.FullName -Algorithm SHA256).Hash
+          $packageSize = (Get-Item $packageFile.FullName).Length
+          $platform = "windows-x64"
+          $expiresAt = (Get-Date).AddDays(90).ToUniversalTime().ToString("o")
+
+          # Monta o manifesto (sem assinatura)
+          $manifestToSign = @{
+            version = $version
+            channel = "stable"
+            package_url = "${{ github.release.html_url }}/$($packageFile.Name)"
+            package_sha256 = $packageHash.ToLower()
+            package_size = $packageSize
+            platform = $platform
+            expires_at = $expiresAt
+          } | ConvertTo-Json -Depth 5
+
+          # Assina com Ed25519 (via openssl ou script python)
+          python -c "
+import json, sys, hashlib
+from nacl import signing
+from nacl.encoding import HexEncoder
+
+sk_hex = '''$privKeyHex'''
+sk = signing.SigningKey(sk_hex, encoder=HexEncoder)
+payload = json.dumps($manifestToSign, separators=(',', ':')).encode()
+sig = sk.sign(payload)
+with open(r'$manifestPath', 'w') as f:
+    json.dump($manifestToSign, f, indent=2)
+with open(r'$sigPath', 'wb') as f:
+    f.write(sig.signature)
+          "
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2.0.0
         with:
           files: |
-            dist/PrysmView-Setup-*.exe
-            dist/SHA256SUMS.txt
-          draft: false
-          prerelease: false
+            dist/*.exe
+            prysmview-manifest.json
+            prysmview-manifest.sig
           generate_release_notes: true
+
+      - name: Publish checksums
+        run: |
+          Get-FileHash dist/*.exe -Algorithm SHA256 | Format-Table -AutoSize
+          Get-FileHash prysmview-manifest.json -Algorithm SHA256 | Format-Table -AutoSize
+          Get-FileHash prysmview-manifest.sig -Algorithm SHA256 | Format-Table -AutoSize
