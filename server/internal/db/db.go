@@ -14,6 +14,7 @@ type DB struct {
 
 type PDV struct {
 	PublicKey    string    `json:"public_key"`
+	DisplayID    string    `json:"display_id"` // ID curto de exibicao (ex: PDV-01), unico no banco
 	StoreName    string    `json:"store_name"`
 	POSNumber    int       `json:"pos_number"`
 	AgentVersion string    `json:"agent_version"`
@@ -69,6 +70,7 @@ func (d *DB) migrate() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS pdvs (
 		public_key TEXT PRIMARY KEY,
+		display_id TEXT UNIQUE, -- ID curto de exibicao, unico no banco (S-07)
 		store_name TEXT NOT NULL,
 		pos_number INTEGER NOT NULL,
 		agent_version TEXT NOT NULL,
@@ -116,23 +118,24 @@ func (d *DB) migrate() error {
 
 func (d *DB) RegisterPDV(p PDV) error {
 	query := `
-	INSERT INTO pdvs (public_key, store_name, pos_number, agent_version, status, last_seen)
-	VALUES (?, ?, ?, ?, ?, ?)
+	INSERT INTO pdvs (public_key, display_id, store_name, pos_number, agent_version, status, last_seen)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(public_key) DO UPDATE SET
+		display_id = excluded.display_id,
 		store_name = excluded.store_name,
 		pos_number = excluded.pos_number,
 		agent_version = excluded.agent_version,
 		status = excluded.status,
 		last_seen = excluded.last_seen;
 	`
-	_, err := d.conn.Exec(query, p.PublicKey, p.StoreName, p.POSNumber, p.AgentVersion, p.Status, p.LastSeen)
+	_, err := d.conn.Exec(query, p.PublicKey, p.DisplayID, p.StoreName, p.POSNumber, p.AgentVersion, p.Status, p.LastSeen)
 	return err
 }
 
 func (d *DB) GetPDV(pubKey string) (*PDV, error) {
-	row := d.conn.QueryRow("SELECT public_key, store_name, pos_number, agent_version, status, last_seen FROM pdvs WHERE public_key = ?", pubKey)
+	row := d.conn.QueryRow("SELECT public_key, display_id, store_name, pos_number, agent_version, status, last_seen FROM pdvs WHERE public_key = ?", pubKey)
 	var p PDV
-	err := row.Scan(&p.PublicKey, &p.StoreName, &p.POSNumber, &p.AgentVersion, &p.Status, &p.LastSeen)
+	err := row.Scan(&p.PublicKey, &p.DisplayID, &p.StoreName, &p.POSNumber, &p.AgentVersion, &p.Status, &p.LastSeen)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

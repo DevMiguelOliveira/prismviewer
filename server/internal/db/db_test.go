@@ -49,6 +49,58 @@ func TestPDVRegistrationAndLookup(t *testing.T) {
 	}
 }
 
+func TestPDVDisplayIDUniqueness(t *testing.T) {
+	database := setupTestDB(t)
+	defer database.Close()
+
+	// Primeiro PDV com display_id
+	pdv1 := PDV{
+		PublicKey:    "key-display-1",
+		DisplayID:    "PDV-01",
+		StoreName:    "Loja A",
+		POSNumber:    1,
+		AgentVersion: "0.1.0",
+		Status:       "online",
+		LastSeen:     time.Now(),
+	}
+	if err := database.RegisterPDV(pdv1); err != nil {
+		t.Fatalf("erro ao registrar PDV 1: %v", err)
+	}
+
+	// Segundo PDV com mesmo display_id deve falhar (unicidade)
+	pdv2 := PDV{
+		PublicKey:    "key-display-2",
+		DisplayID:    "PDV-01", // mesmo display_id do PDV 1
+		StoreName:    "Loja B",
+		POSNumber:    2,
+		AgentVersion: "0.1.0",
+		Status:       "online",
+		LastSeen:     time.Now(),
+	}
+	if err := database.RegisterPDV(pdv2); err == nil {
+		t.Fatal("esperava erro de unicidade para display_id duplicado, mas obteve sucesso")
+	}
+
+	// Segundo PDV com display_id diferente deve funcionar
+	pdv3 := PDV{
+		PublicKey:    "key-display-3",
+		DisplayID:    "PDV-02",
+		StoreName:    "Loja C",
+		POSNumber:    3,
+		AgentVersion: "0.1.0",
+		Status:       "online",
+		LastSeen:     time.Now(),
+	}
+	if err := database.RegisterPDV(pdv3); err != nil {
+		t.Fatalf("erro ao registrar PDV 3 com display_id unico: %v", err)
+	}
+
+	got3, err := database.GetPDV("key-display-3")
+	if err != nil || got3.DisplayID != "PDV-02" {
+		t.Fatalf("display_id nao persistido corretamente: %+v err=%v", got3, err)
+	}
+}
+
 func TestOperatorPermissionsAndListing(t *testing.T) {
 	database := setupTestDB(t)
 	defer database.Close()
