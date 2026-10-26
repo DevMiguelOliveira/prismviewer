@@ -82,6 +82,33 @@ function syncVersionUI() {
   }
 }
 
+function getInitialTechnicians() {
+  const defaultList = [
+    { id: "TECH-01", name: "Administrador Geral", username: "admin", email: "admin@prysmview.com", role: "Administrador TI", permissions: ["Acesso Remoto E2E", "Controle Total", "Arquivos", "Auditoria"], status: "Ativo", lastActive: "Agora" },
+    { id: "TECH-02", name: "Carlos Eduardo Silva", username: "carlos.silva", email: "carlos.silva@empresa.com", role: "N2 - Especialista Remoto", permissions: ["Acesso Remoto E2E", "Controle Total", "Arquivos"], status: "Ativo", lastActive: "Hoje, 11:20" },
+    { id: "TECH-03", name: "Mariana Souza Lima", username: "mariana.lima", email: "mariana.lima@empresa.com", role: "N1 - Suporte Balcão", permissions: ["Acesso Remoto E2E", "Controle Total"], status: "Ativo", lastActive: "Hoje, 09:45" },
+    { id: "TECH-04", name: "Rafael Mendes", username: "rafael.mendes", email: "rafael.mendes@empresa.com", role: "N3 - Engenharia / Infra", permissions: ["Acesso Remoto E2E", "Controle Total", "Arquivos", "Auditoria"], status: "Inativo", lastActive: "2 dias atrás" }
+  ];
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('prysm_technicians');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    }
+  } catch (e) {}
+  return defaultList;
+}
+
+function saveTechnicians(list) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('prysm_technicians', JSON.stringify(list));
+    }
+  } catch (e) {}
+}
+
 // Estado Global da Aplicação
 const state = {
   activeTab: 'dashboard',
@@ -94,6 +121,9 @@ const state = {
   drawerCollapsed: true,
   currentPage: 1,
   pageSize: 10, // Densidade otimizada: 10 por página com paginação instantânea
+
+  // Equipe de técnicos e operadores autorizados
+  technicians: getInitialTechnicians(),
 
   // Versão instalada ativa (persistida via IPC e localStorage)
   installedVersion: getInitialInstalledVersion(),
@@ -572,7 +602,10 @@ function switchTab(tabName) {
   if (tabName === 'dashboard') renderDashboard();
   if (tabName === 'audit') renderAuditTable();
   if (tabName === 'stores') renderStoresGrid();
-  if (tabName === 'settings') syncVersionUI();
+  if (tabName === 'settings') {
+    syncVersionUI();
+    renderTechniciansTable();
+  }
 }
 
 // =============================================================================
@@ -754,6 +787,109 @@ window.selectPdvForInspection = selectPdvForInspection;
 window.filterByStore = filterByStore;
 window.showToast = showToast;
 window.ThemeManager = ThemeManager;
+
+// =============================================================================
+// GESTÃO DE TÉCNICOS & OPERADORES
+// =============================================================================
+function renderTechniciansTable() {
+  const tbody = document.getElementById('techniciansTableBody');
+  if (!tbody) return;
+
+  if (state.technicians.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+          Nenhum técnico cadastrado no momento.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = state.technicians.map(t => {
+    const statusBadge = t.status === 'Ativo'
+      ? `<span class="badge-status online"><span class="badge-dot green"></span> Ativo</span>`
+      : `<span class="badge-status offline">Inativo</span>`;
+
+    const permsHtml = t.permissions.map(p => `<span class="tele-chip" style="font-size: 11px;">${p}</span>`).join(' ');
+
+    const actionToggle = t.username === 'admin'
+      ? `<span style="font-size: 11.5px; color: var(--text-muted);">Conta Master</span>`
+      : `<button class="btn-secondary" style="padding: 3px 8px; font-size: 11px; height: 26px;" onclick="toggleTechStatus('${t.id}')">
+           ${t.status === 'Ativo' ? 'Desativar' : 'Ativar'}
+         </button>
+         <button class="btn-icon-ghost" style="color: #f87171; width: 26px; height: 26px;" title="Remover Técnico" onclick="deleteTech('${t.id}')">
+           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+         </button>`;
+
+    const initials = t.name.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+    return `
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="user-avatar-circle" style="width: 26px; height: 26px; font-size: 11px; font-weight: 700;">
+              ${initials}
+            </div>
+            <div>
+              <strong style="color: var(--text-primary); font-size: 13px;">${t.name}</strong>
+              <div style="font-size: 11px; color: var(--text-muted);">Último acesso: ${t.lastActive}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">@${t.username}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted);">${t.email}</div>
+        </td>
+        <td><span class="tele-chip highlight" style="font-size: 11.5px;">${t.role}</span></td>
+        <td><div style="display: flex; flex-wrap: wrap; gap: 4px;">${permsHtml}</div></td>
+        <td>${statusBadge}</td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 4px; align-items: center;">
+            ${actionToggle}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.toggleTechStatus = function(techId) {
+  const tech = state.technicians.find(t => t.id === techId);
+  if (!tech || tech.username === 'admin') return;
+  tech.status = tech.status === 'Ativo' ? 'Inativo' : 'Ativo';
+  saveTechnicians(state.technicians);
+  renderTechniciansTable();
+  showToast(`Status do técnico ${tech.name} alterado para ${tech.status}.`);
+};
+
+window.deleteTech = function(techId) {
+  const tech = state.technicians.find(t => t.id === techId);
+  if (!tech || tech.username === 'admin') return;
+  if (!confirm(`Deseja realmente remover o acesso do técnico ${tech.name} (@${tech.username})?`)) return;
+  state.technicians = state.technicians.filter(t => t.id !== techId);
+  saveTechnicians(state.technicians);
+  renderTechniciansTable();
+  showToast(`Técnico ${tech.name} removido com sucesso.`);
+};
+
+function openNewTechModal() {
+  const modal = document.getElementById('newTechModal');
+  if (!modal) return;
+  const form = document.getElementById('formNewTech');
+  if (form) form.reset();
+  modal.classList.add('active');
+  const firstInput = document.getElementById('techFullNameInput');
+  if (firstInput) firstInput.focus();
+}
+
+function closeNewTechModal() {
+  const modal = document.getElementById('newTechModal');
+  if (modal) modal.classList.remove('active');
+}
+
+window.openNewTechModal = openNewTechModal;
+window.closeNewTechModal = closeNewTechModal;
 
 // =============================================================================
 // INICIALIZAÇÃO E EVENT LISTENERS RESILIENTES
@@ -1251,9 +1387,178 @@ function initApp() {
     };
   }
 
+  // =========================================================================
+  // DROPDOWN DE PERFIL DO USUÁRIO & MENU DE CONFIGURAÇÕES
+  // =========================================================================
+  const userProfileBtn = document.getElementById('userProfileBtn');
+  const userProfileWrapper = document.getElementById('userProfileWrapper');
+  const userProfileMenu = document.getElementById('userProfileMenu');
+
+  if (userProfileBtn && userProfileMenu) {
+    userProfileBtn.onclick = (e) => {
+      e.stopPropagation();
+      const isOpen = userProfileMenu.classList.contains('active');
+      if (isOpen) {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+      } else {
+        userProfileMenu.classList.add('active');
+        if (userProfileWrapper) userProfileWrapper.classList.add('menu-open');
+      }
+    };
+
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (userProfileWrapper && !userProfileWrapper.contains(e.target)) {
+        userProfileMenu.classList.remove('active');
+        userProfileWrapper.classList.remove('menu-open');
+      }
+    });
+
+    const menuItemSettings = document.getElementById('menuItemSettings');
+    if (menuItemSettings) {
+      menuItemSettings.onclick = () => {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+        switchTab('settings');
+        const allBtn = document.querySelector('.settings-tab-btn[data-settings-section="all"]');
+        if (allBtn) allBtn.click();
+      };
+    }
+
+    const menuItemTechnicians = document.getElementById('menuItemTechnicians');
+    if (menuItemTechnicians) {
+      menuItemTechnicians.onclick = () => {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+        switchTab('settings');
+        const techTabBtn = document.querySelector('.settings-tab-btn[data-settings-section="technicians"]');
+        if (techTabBtn) techTabBtn.click();
+        const card = document.getElementById('cardTechnicians');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth' });
+          card.style.borderColor = 'var(--accent-cyan)';
+          setTimeout(() => { card.style.borderColor = 'var(--border-subtle)'; }, 2000);
+        }
+      };
+    }
+
+    const menuItemNewTech = document.getElementById('menuItemNewTech');
+    if (menuItemNewTech) {
+      menuItemNewTech.onclick = () => {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+        openNewTechModal();
+      };
+    }
+
+    const menuItemProfile = document.getElementById('menuItemProfile');
+    if (menuItemProfile) {
+      menuItemProfile.onclick = () => {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+        switchTab('settings');
+        const profileTabBtn = document.querySelector('.settings-tab-btn[data-settings-section="profile"]');
+        if (profileTabBtn) profileTabBtn.click();
+        const card = document.getElementById('cardProfile');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth' });
+          card.style.borderColor = 'var(--accent-cyan)';
+          setTimeout(() => { card.style.borderColor = 'var(--border-subtle)'; }, 2000);
+        }
+      };
+    }
+
+    const menuItemLogout = document.getElementById('menuItemLogout');
+    if (menuItemLogout) {
+      menuItemLogout.onclick = () => {
+        userProfileMenu.classList.remove('active');
+        if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
+        const btnLogout = document.getElementById('btnLogout');
+        if (btnLogout) btnLogout.click();
+      };
+    }
+  }
+
+  // =========================================================================
+  // MODAL DE CADASTRO DE NOVO TÉCNICO
+  // =========================================================================
+  const btnOpenNewTechModal = document.getElementById('btnOpenNewTechModal');
+  const btnCloseNewTechModal = document.getElementById('btnCloseNewTechModal');
+  const btnCancelNewTech = document.getElementById('btnCancelNewTech');
+  const formNewTech = document.getElementById('formNewTech');
+
+  if (btnOpenNewTechModal) btnOpenNewTechModal.onclick = openNewTechModal;
+  if (btnCloseNewTechModal) btnCloseNewTechModal.onclick = closeNewTechModal;
+  if (btnCancelNewTech) btnCancelNewTech.onclick = closeNewTechModal;
+
+  if (formNewTech) {
+    formNewTech.onsubmit = (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById('techFullNameInput').value.trim();
+      const username = document.getElementById('techUsernameInput').value.trim().toLowerCase();
+      const email = document.getElementById('techEmailInput').value.trim();
+      const role = document.getElementById('techRoleSelect').value;
+      const password = document.getElementById('techPasswordInput').value;
+
+      if (!fullName || !username || !email || !password) {
+        showToast('Preencha todos os campos obrigatórios do técnico.');
+        return;
+      }
+
+      if (password.length < 6) {
+        showToast('A senha inicial deve conter pelo menos 6 caracteres.');
+        return;
+      }
+
+      if (state.technicians.some(t => t.username === username)) {
+        showToast(`O usuário "${username}" já está cadastrado.`);
+        return;
+      }
+
+      const permissions = [];
+      if (document.getElementById('permRemoteAccess')?.checked) permissions.push('Acesso Remoto E2E');
+      if (document.getElementById('permInputControl')?.checked) permissions.push('Controle Total');
+      if (document.getElementById('permFileTransfer')?.checked) permissions.push('Arquivos');
+      if (document.getElementById('permViewAudit')?.checked) permissions.push('Auditoria');
+
+      const newTech = {
+        id: `TECH-0${state.technicians.length + 1}`,
+        name: fullName,
+        username,
+        email,
+        role,
+        permissions,
+        status: 'Ativo',
+        lastActive: 'Nunca'
+      };
+
+      state.technicians.push(newTech);
+      saveTechnicians(state.technicians);
+      renderTechniciansTable();
+
+      // Registro de auditoria corporativo
+      const now = new Date();
+      state.auditRecords.unshift({
+        id: `AUD-${Math.floor(920 + Math.random() * 50)}`,
+        timestamp: `Hoje ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        operator: document.getElementById('headerOperatorName')?.textContent || "admin",
+        pdv: "PrysmAdmin",
+        store: "Console Central",
+        reason: `Cadastro de novo técnico: ${username} (${role})`,
+        duration: "01s",
+        status: "Concluída"
+      });
+
+      closeNewTechModal();
+      showToast(`Técnico ${fullName} (@${username}) cadastrado com sucesso!`);
+    };
+  }
+
   // Render inicial
   renderDashboard();
   syncVersionUI();
+  renderTechniciansTable();
 }
 
 // Inicia imediatamente se o DOM já estiver pronto, ou escuta DOMContentLoaded

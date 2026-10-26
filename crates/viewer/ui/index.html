@@ -70,15 +70,55 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
       </button>
 
-      <div class="user-badge-dropdown" title="Perfil do Administrador">
-        <div class="user-avatar-dot-wrap">
-          <div class="user-avatar-circle">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <div class="user-profile-wrapper" id="userProfileWrapper">
+        <div class="user-badge-dropdown" id="userProfileBtn" title="Menu do Usuário & Configurações">
+          <div class="user-avatar-dot-wrap">
+            <div class="user-avatar-circle">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <span class="user-online-dot"></span>
           </div>
-          <span class="user-online-dot"></span>
+          <span class="user-name-text" id="headerOperatorName">admin</span>
+          <svg class="chevron-icon" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
-        <span class="user-name-text" id="headerOperatorName">admin</span>
-        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+
+        <!-- Menu Dropdown de Perfil & Configurações -->
+        <div class="user-profile-dropdown-menu" id="userProfileMenu">
+          <div class="profile-menu-header">
+            <div class="user-avatar-circle" style="width: 32px; height: 32px;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="profile-menu-details">
+              <div class="profile-menu-name" id="menuAdminName">Administrador</div>
+              <div class="profile-menu-role">Perfil Master • N3 Suporte</div>
+              <div class="profile-menu-badge"><span class="badge-dot green"></span> Sessão Ativa</div>
+            </div>
+          </div>
+          <div class="profile-menu-divider"></div>
+          <div class="profile-menu-items">
+            <button class="profile-menu-item" id="menuItemSettings">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Configurações Gerais</span>
+            </button>
+            <button class="profile-menu-item" id="menuItemTechnicians">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Gestão de Técnicos</span>
+            </button>
+            <button class="profile-menu-item highlight-action" id="menuItemNewTech">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              <span>+ Cadastrar Novo Técnico</span>
+            </button>
+            <button class="profile-menu-item" id="menuItemProfile">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Meu Perfil de Atendimento</span>
+            </button>
+          </div>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item logout" id="menuItemLogout">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Encerrar Sessão</span>
+          </button>
+        </div>
       </div>
 
       <div class="window-controls-group">
@@ -387,6 +427,10 @@
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span>Perfil do Operador</span>
             </button>
+            <button class="settings-tab-btn" data-settings-section="technicians">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Gestão de Técnicos</span>
+            </button>
             <button class="settings-tab-btn" data-settings-section="security">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
               <span>Segurança Zero-Trust</span>
@@ -499,6 +543,42 @@
 
               <label class="form-label">Motivo Padrão de Chamado:</label>
               <input type="text" class="form-input" id="cfgDefaultReason" value="Suporte Técnico & Manutenção Preventiva" style="max-width: 100%;">
+            </div>
+          </div>
+
+          <!-- SEÇÃO: GESTÃO DE TÉCNICOS & OPERADORES -->
+          <div class="settings-card" id="cardTechnicians" data-settings-group="technicians">
+            <div class="card-title-row" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <h4>Equipe de Suporte & Técnicos Autorizados</h4>
+              </div>
+              <button class="btn-primary" id="btnOpenNewTechModal" style="padding: 6px 12px; font-size: 12px; gap: 6px;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>+ Novo Técnico</span>
+              </button>
+            </div>
+
+            <p class="card-desc-text">
+              Gerencie a equipe de suporte autorizada a realizar conexões remotas, transferência de arquivos e suporte aos caixas e estações.
+            </p>
+
+            <div class="table-container" style="margin-top: 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden;">
+              <table class="fleet-table" style="width: 100%; margin: 0;">
+                <thead>
+                  <tr>
+                    <th>Técnico</th>
+                    <th>Usuário / E-mail</th>
+                    <th>Nível / Cargo</th>
+                    <th>Permissões</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="techniciansTableBody">
+                  <!-- Injetado via app.js -->
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -838,6 +918,87 @@
       <button class="btn-primary" id="btnModalAuthorize" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 13.5px; margin-top: 4px;">
         Validar Código & Iniciar Sessão
       </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL DE CADASTRO DE NOVO TÉCNICO
+       ========================================================================= -->
+  <div class="modal-overlay" id="newTechModal">
+    <div class="modal-box" style="max-width: 520px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="user-avatar-circle" style="width: 28px; height: 28px;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          </div>
+          <h3 style="font-size: 16.5px; font-weight: 700; color: var(--text-primary); margin: 0;">Cadastrar Novo Técnico</h3>
+        </div>
+        <button class="btn-icon-ghost" id="btnCloseNewTechModal" title="Fechar">✕</button>
+      </div>
+
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
+        Cadastre os dados de acesso do técnico ou operador para atuação no console e atendimento aos PDVs.
+      </p>
+
+      <form id="formNewTech" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Nome Completo:</label>
+            <input type="text" class="form-input" id="techFullNameInput" placeholder="Ex: Lucas Ferreira" required style="width: 100%;">
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Usuário / Login:</label>
+            <input type="text" class="form-input" id="techUsernameInput" placeholder="Ex: lucas.suporte" required style="width: 100%;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">E-mail Corporativo:</label>
+            <input type="email" class="form-input" id="techEmailInput" placeholder="lucas@empresa.com.br" required style="width: 100%;">
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Cargo / Especialidade:</label>
+            <select class="form-select" id="techRoleSelect" style="width: 100%; height: 36px; background: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); padding: 0 8px;">
+              <option value="N1 - Suporte Balcão">N1 - Suporte Balcão</option>
+              <option value="N2 - Especialista Remoto" selected>N2 - Especialista Remoto</option>
+              <option value="N3 - Engenharia / Infra">N3 - Engenharia / Infra</option>
+              <option value="Administrador TI">Administrador TI</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Senha Inicial / Credencial de Acesso:</label>
+          <input type="password" class="form-input" id="techPasswordInput" placeholder="Mínimo 6 caracteres" required style="width: 100%;">
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 12px; margin-bottom: 6px; display: block;">Permissões de Atendimento:</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--bg-card); padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="permRemoteAccess" checked> Acesso Remoto E2E
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="permInputControl" checked> Controle Teclado/Mouse
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="permFileTransfer" checked> Transferência Arquivos
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="permViewAudit"> Ver Logs Auditoria
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-secondary" id="btnCancelNewTech" style="padding: 8px 16px;">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnSaveNewTech" style="padding: 8px 20px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Cadastrar Técnico</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
