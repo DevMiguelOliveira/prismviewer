@@ -80,7 +80,17 @@
           <div class="code-display-box" id="displayCodeContainer">
             <span class="code-text" id="displaySessionCode">Aguardando chamada...</span>
           </div>
-          <div class="code-expiry-note" id="codeExpiryNote" style="display: none;">
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn-copy-action" id="btnGenerateCode" style="flex: 1; justify-content: center; height: 32px;" title="Gerar código de 8 dígitos para acesso temporário">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Gerar Código de Acesso</span>
+            </button>
+            <button class="btn-copy-action" id="btnCopySessionCode" style="height: 32px; padding: 0 10px;" title="Copiar Código de 8 Dígitos">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span id="copyCodeFeedbackText">Copiar</span>
+            </button>
+          </div>
+          <div class="code-expiry-note" id="codeExpiryNote" style="display: none; margin-top: 8px;">
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span id="codeExpiryCountdown">Expira em 120s • Máximo 3 tentativas</span>
           </div>

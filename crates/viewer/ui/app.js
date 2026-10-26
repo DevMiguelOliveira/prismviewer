@@ -109,6 +109,46 @@ function saveTechnicians(list) {
   } catch (e) {}
 }
 
+function getInitialPdvs() {
+  const defaultList = [
+    { id: "PDV-CAIXA-01", storeName: "PC Teste - Caixa Principal", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_pdv01_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.100", osInfo: "Windows 11 Pro / 10", resolution: "1920x1080 @ 60Hz", notes: "Computador de Teste / PDV Caixa 01 com agente PrysmHost instalado." },
+    { id: "DESK-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host01_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Financeiro: Impressora HP LaserJet. Monitor duplo. Ramal 4022." },
+    { id: "DESK-02", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host02_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Faturamento: Certificado A1. Leitor biométrico USB." },
+    { id: "DESK-03", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host05_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Controladoria: Acesso restrito a relatórios e ERP central." },
+    { id: "SRV-01", storeName: "Filial Sul - Escritório", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host04_key_hash", lastSeen: "15 min atrás", ipAddress: "192.168.2.101", osInfo: "Windows 10 Enterprise 22H2", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Arquivos: Manutenção preventiva agendada." },
+    { id: "SRV-02", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host06_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.102", osInfo: "Windows Server 2022", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Banco de Dados Local: Réplica contingência." },
+    { id: "NOTE-03", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host03_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Notebook Gestão: VPN corporativa habilitada. Wi-Fi 6." },
+    { id: "NOTE-04", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host07_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.104", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Supervisão de Turno: Atendimento a chamados de balcão." },
+    { id: "TERM-01", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host08_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.101", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Expedição 1: Leitor de código de barras Zebra USB." },
+    { id: "TERM-02", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host09_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.102", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Triagem e Recebimento: Impressora térmica de etiquetas." },
+    { id: "TERM-03", storeName: "Centro de Distribuição", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host10_key_hash", lastSeen: "42 min atrás", ipAddress: "192.168.4.103", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Conferência Doca 3: Cabo de rede desconectado para troca de switch." },
+    { id: "LOG-01", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host11_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Despacho Rápido: Integração com balança rodoviária serial." },
+    { id: "LOG-02", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host12_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Rastreamento e Frotas: Monitoramento de entregas ao vivo." },
+    { id: "TERM-04", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host13_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 01: Terminal de autoatendimento integrado." },
+    { id: "TERM-05", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host14_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.112", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 02: Impressora fiscal e leitor biométrico." },
+    { id: "BALCAO-01", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host15_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Balcão de Serviços Sul: Atendimento presencial." },
+    { id: "BALCAO-02", storeName: "Unidade Norte - Operações", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host16_key_hash", lastSeen: "2 horas atrás", ipAddress: "192.168.3.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Terminal Reserva Norte: Desligado no encerramento de turno." }
+  ];
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('prysm_pdvs');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    }
+  } catch (e) {}
+  return defaultList;
+}
+
+function savePdvs(list) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('prysm_pdvs', JSON.stringify(list));
+    }
+  } catch (e) {}
+}
+
 // Estado Global da Aplicação
 const state = {
   activeTab: 'dashboard',
@@ -134,24 +174,7 @@ const state = {
   activeChannel: 'stable',
   lastCheckTime: 'Hoje, 12:45',
   
-  pdvs: [
-    { id: "DESK-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host01_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Financeiro: Impressora HP LaserJet. Monitor duplo. Ramal 4022." },
-    { id: "DESK-02", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host02_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Faturamento: Certificado A1. Leitor biométrico USB." },
-    { id: "DESK-03", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host05_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Controladoria: Acesso restrito a relatórios e ERP central." },
-    { id: "SRV-01", storeName: "Filial Sul - Escritório", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host04_key_hash", lastSeen: "15 min atrás", ipAddress: "192.168.2.101", osInfo: "Windows 10 Enterprise 22H2", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Arquivos: Manutenção preventiva agendada." },
-    { id: "SRV-02", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host06_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.102", osInfo: "Windows Server 2022", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Banco de Dados Local: Réplica contingência." },
-    { id: "NOTE-03", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host03_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Notebook Gestão: VPN corporativa habilitada. Wi-Fi 6." },
-    { id: "NOTE-04", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host07_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.104", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Supervisão de Turno: Atendimento a chamados de balcão." },
-    { id: "TERM-01", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host08_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.101", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Expedição 1: Leitor de código de barras Zebra USB." },
-    { id: "TERM-02", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host09_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.102", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Triagem e Recebimento: Impressora térmica de etiquetas." },
-    { id: "TERM-03", storeName: "Centro de Distribuição", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host10_key_hash", lastSeen: "42 min atrás", ipAddress: "192.168.4.103", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Conferência Doca 3: Cabo de rede desconectado para troca de switch." },
-    { id: "LOG-01", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host11_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Despacho Rápido: Integração com balança rodoviária serial." },
-    { id: "LOG-02", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host12_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Rastreamento e Frotas: Monitoramento de entregas ao vivo." },
-    { id: "TERM-04", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host13_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 01: Terminal de autoatendimento integrado." },
-    { id: "TERM-05", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host14_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.112", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 02: Impressora fiscal e leitor biométrico." },
-    { id: "BALCAO-01", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host15_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Balcão de Serviços Sul: Atendimento presencial." },
-    { id: "BALCAO-02", storeName: "Unidade Norte - Operações", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host16_key_hash", lastSeen: "2 horas atrás", ipAddress: "192.168.3.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Terminal Reserva Norte: Desligado no encerramento de turno." }
-  ],
+  pdvs: getInitialPdvs(),
 
   auditRecords: [
     { id: "AUD-901", timestamp: "Hoje 10:14", operator: "admin", pdv: "DESK-01", store: "Matriz", reason: "Suporte e Configuração de Impressora", duration: "12m 40s", status: "Concluída" },
@@ -888,8 +911,25 @@ function closeNewTechModal() {
   if (modal) modal.classList.remove('active');
 }
 
+function openNewDeviceModal() {
+  const modal = document.getElementById('newDeviceModal');
+  if (!modal) return;
+  const form = document.getElementById('formNewDevice');
+  if (form) form.reset();
+  modal.classList.add('active');
+  const firstInput = document.getElementById('devIdInput');
+  if (firstInput) firstInput.focus();
+}
+
+function closeNewDeviceModal() {
+  const modal = document.getElementById('newDeviceModal');
+  if (modal) modal.classList.remove('active');
+}
+
 window.openNewTechModal = openNewTechModal;
 window.closeNewTechModal = closeNewTechModal;
+window.openNewDeviceModal = openNewDeviceModal;
+window.closeNewDeviceModal = closeNewDeviceModal;
 
 // =============================================================================
 // INICIALIZAÇÃO E EVENT LISTENERS RESILIENTES
@@ -1222,7 +1262,28 @@ function initApp() {
         showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
         return;
       }
-      showToast(`Conectando a ${pdvId}...`);
+
+      // Se o dispositivo ainda não estiver na lista da frota, vincula automaticamente
+      const normalizedId = pdvId.toUpperCase();
+      if (!state.pdvs.some(p => p.id.toUpperCase() === normalizedId)) {
+        const newDevice = {
+          id: normalizedId,
+          storeName: "Dispositivo Conectado Diretamente",
+          isOnline: true,
+          agentVersion: "0.1.0",
+          publicKey: `ed25519_${pdvId.toLowerCase()}_key_hash`,
+          lastSeen: "Agora",
+          ipAddress: pdvId.includes('.') ? pdvId : "192.168.1.100",
+          osInfo: "Windows 11 / 10",
+          resolution: "1920x1080 @ 60Hz",
+          notes: `Conexão direta estabelecida com código de sessão (${code}).`
+        };
+        state.pdvs.unshift(newDevice);
+        savePdvs(state.pdvs);
+        renderDashboard();
+      }
+
+      showToast(`Código validado com sucesso! Conectando via TLS 1.3 a ${pdvId}...`);
     };
   }
 
@@ -1552,6 +1613,72 @@ function initApp() {
 
       closeNewTechModal();
       showToast(`Técnico ${fullName} (@${username}) cadastrado com sucesso!`);
+    };
+  }
+
+  // =========================================================================
+  // MODAL DE CADASTRO DE NOVO DISPOSITIVO (PDV)
+  // =========================================================================
+  const btnOpenNewDeviceModal = document.getElementById('btnOpenNewDeviceModal');
+  const btnCloseNewDeviceModal = document.getElementById('btnCloseNewDeviceModal');
+  const btnCancelNewDevice = document.getElementById('btnCancelNewDevice');
+  const formNewDevice = document.getElementById('formNewDevice');
+
+  if (btnOpenNewDeviceModal) btnOpenNewDeviceModal.onclick = openNewDeviceModal;
+  if (btnCloseNewDeviceModal) btnCloseNewDeviceModal.onclick = closeNewDeviceModal;
+  if (btnCancelNewDevice) btnCancelNewDevice.onclick = closeNewDeviceModal;
+
+  if (formNewDevice) {
+    formNewDevice.onsubmit = (e) => {
+      e.preventDefault();
+      const devId = document.getElementById('devIdInput').value.trim().toUpperCase();
+      const devStore = document.getElementById('devStoreInput').value.trim();
+      const devIp = document.getElementById('devIpInput').value.trim();
+      const devStatus = document.getElementById('devStatusSelect').value;
+      const devNotes = document.getElementById('devNotesInput').value.trim();
+
+      if (!devId || !devStore || !devIp) {
+        showToast('Preencha todos os campos obrigatórios do dispositivo.');
+        return;
+      }
+
+      if (state.pdvs.some(p => p.id === devId)) {
+        showToast(`O dispositivo com ID "${devId}" já existe no sistema.`);
+        return;
+      }
+
+      const newDevice = {
+        id: devId,
+        storeName: devStore,
+        isOnline: devStatus === 'online',
+        agentVersion: "0.1.0",
+        publicKey: `ed25519_${devId.toLowerCase()}_key_hash`,
+        lastSeen: devStatus === 'online' ? "Agora" : "Recém cadastrado",
+        ipAddress: devIp,
+        osInfo: "Windows 11 / 10",
+        resolution: "1920x1080 @ 60Hz",
+        notes: devNotes || `Dispositivo ${devId} cadastrado via console.`
+      };
+
+      state.pdvs.unshift(newDevice);
+      savePdvs(state.pdvs);
+      renderDashboard();
+
+      // Registro no histórico de auditoria
+      const now = new Date();
+      state.auditRecords.unshift({
+        id: `AUD-${Math.floor(920 + Math.random() * 50)}`,
+        timestamp: `Hoje ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        operator: document.getElementById('headerOperatorName')?.textContent || "admin",
+        pdv: devId,
+        store: devStore,
+        reason: `Cadastro manual de novo dispositivo: ${devId} (${devIp})`,
+        duration: "01s",
+        status: "Concluída"
+      });
+
+      closeNewDeviceModal();
+      showToast(`Dispositivo ${devId} adicionado com sucesso à frota!`);
     };
   }
 

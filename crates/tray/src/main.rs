@@ -90,9 +90,15 @@ pub struct TrayState {
 
 impl Default for TrayState {
     fn default() -> Self {
+        let comp_name = std::env::var("COMPUTERNAME").unwrap_or_default();
+        let pdv_id = if !comp_name.is_empty() {
+            format!("PDV-CAIXA-01 ({comp_name})")
+        } else {
+            "PDV-CAIXA-01".to_string()
+        };
         Self {
             is_connected_to_service: false,
-            pdv_id: "PDV-CAIXA-01".to_string(),
+            pdv_id,
             is_session_active: false,
             current_operator: None,
             current_code: None,

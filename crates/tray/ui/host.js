@@ -180,6 +180,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Botão Gerar Código Temporário
+  const btnGenCode = document.getElementById('btnGenerateCode');
+  if (btnGenCode) {
+    btnGenCode.addEventListener('click', () => {
+      const randomDigits = Math.floor(10000000 + Math.random() * 90000000).toString();
+      hostState.currentCode = randomDigits;
+      hostState.sessionCodeExpiresIn = 120;
+      
+      if (codeTimerInterval) clearInterval(codeTimerInterval);
+      codeTimerInterval = setInterval(() => {
+        if (hostState.sessionCodeExpiresIn > 0) {
+          hostState.sessionCodeExpiresIn--;
+          const el = document.getElementById('codeExpiryCountdown');
+          if (el) el.textContent = `Expira em ${hostState.sessionCodeExpiresIn}s • Máximo 3 tentativas`;
+        } else {
+          clearInterval(codeTimerInterval);
+          hostState.currentCode = null;
+          renderState();
+        }
+      }, 1000);
+
+      renderState();
+      sendIpcMessage('session_code_generated', { code: randomDigits, expiresIn: 120 });
+    });
+  }
+
+  // Botão Copiar Código de Sessão
+  const btnCopyCode = document.getElementById('btnCopySessionCode');
+  if (btnCopyCode) {
+    btnCopyCode.addEventListener('click', () => {
+      if (!hostState.currentCode && btnGenCode) {
+        btnGenCode.click();
+      }
+      setTimeout(() => {
+        const codeToCopy = hostState.currentCode || '';
+        if (codeToCopy) {
+          navigator.clipboard.writeText(codeToCopy).then(() => {
+            btnCopyCode.classList.add('copied');
+            const feedback = document.getElementById('copyCodeFeedbackText');
+            if (feedback) feedback.textContent = 'Copiado!';
+            setTimeout(() => {
+              btnCopyCode.classList.remove('copied');
+              if (feedback) feedback.textContent = 'Copiar';
+            }, 2000);
+          });
+        }
+      }, 50);
+    });
+  }
+
   // Botão Encerrar Sessão Imediatamente
   const btnTerminate = document.getElementById('btnTerminateSession');
   if (btnTerminate) {

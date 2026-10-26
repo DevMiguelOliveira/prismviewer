@@ -247,7 +247,11 @@
           </div>
 
           <div class="toolbar-right-controls">
-            <div class="results-count" id="resultsCountLabel">16 de 16 clientes</div>
+            <button class="btn-primary" id="btnOpenNewDeviceModal" style="padding: 4px 10px; height: 28px; font-size: 11.5px; gap: 5px;" title="Cadastrar nova máquina ou PDV na lista">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Cadastrar Dispositivo</span>
+            </button>
+            <div class="results-count" id="resultsCountLabel">17 de 17 clientes</div>
             
             <div class="view-mode-toggle">
               <button class="view-toggle-btn active" id="btnViewCards" title="Visualização em Cards">
@@ -996,6 +1000,67 @@
           <button type="submit" class="btn-primary" id="btnSaveNewTech" style="padding: 8px 20px;">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
             <span>Cadastrar Técnico</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL DE CADASTRO DE NOVO DISPOSITIVO (PDV / ESTAÇÃO REMOTA)
+       ========================================================================= -->
+  <div class="modal-overlay" id="newDeviceModal">
+    <div class="modal-box" style="max-width: 520px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="user-avatar-circle" style="width: 28px; height: 28px; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan);">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          </div>
+          <h3 style="font-size: 16.5px; font-weight: 700; color: var(--text-primary); margin: 0;">Cadastrar Dispositivo / PDV</h3>
+        </div>
+        <button class="btn-icon-ghost" id="btnCloseNewDeviceModal" title="Fechar">✕</button>
+      </div>
+
+      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
+        Adicione uma máquina de teste, caixa de loja ou terminal corporativo para gerenciamento e acesso direto.
+      </p>
+
+      <form id="formNewDevice" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">ID do Dispositivo / Hostname:</label>
+            <input type="text" class="form-input" id="devIdInput" placeholder="Ex: PDV-CAIXA-01 ou PC-TESTE" required style="width: 100%;">
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Grupo / Loja / Unidade:</label>
+            <input type="text" class="form-input" id="devStoreInput" placeholder="Ex: PC Teste - Loja Centro" required style="width: 100%;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Endereço IP / Host Local:</label>
+            <input type="text" class="form-input" id="devIpInput" placeholder="Ex: 192.168.1.150 ou localhost" required style="width: 100%;">
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Status Inicial:</label>
+            <select class="form-select" id="devStatusSelect" style="width: 100%; height: 36px; background: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); padding: 0 8px;">
+              <option value="online" selected>Online (Pronto para conexão)</option>
+              <option value="offline">Offline (Em espera)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Observações / Detalhes do Hardware:</label>
+          <input type="text" class="form-input" id="devNotesInput" placeholder="Ex: Computador de teste com PrysmHost instalado." style="width: 100%;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn-secondary" id="btnCancelNewDevice" style="padding: 8px 16px;">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnSaveNewDevice" style="padding: 8px 20px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Cadastrar Dispositivo</span>
           </button>
         </div>
       </form>
