@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PrysmView - Acesso Remoto & Gestão de Dispositivos</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('prysm_theme');
+        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        if (saved === 'light' || (saved === 'auto' && prefersLight) || (!saved && prefersLight)) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -36,6 +49,12 @@
         <div class="pulse-dot"></div>
         <span id="headerLatencyText">18 ms • Conexão Segura</span>
       </div>
+
+      <!-- Botão de Alternância de Tema Claro / Escuro -->
+      <button class="btn-icon-ghost" id="btnThemeToggle" title="Alternar Modo Escuro / Claro (Alt+T)">
+        <svg id="themeIconSun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg id="themeIconMoon" style="display: none;" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
 
       <button class="btn-icon-ghost" id="btnRefresh" title="Sincronizar Dispositivos">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
@@ -273,7 +292,71 @@
           
           <div style="margin-bottom: 4px;">
             <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Configurações Globais & Perfil de Suporte</h2>
-            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Gerenciamento de conexões iroh QUIC, perfil de atendimento, políticas Zero-Trust e otimização DXGI.</p>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Gerenciamento de aparência visual, conexões iroh QUIC, perfil de atendimento e políticas Zero-Trust.</p>
+          </div>
+
+          <!-- Card de Aparência: Tema Escuro / Claro / Automático -->
+          <div class="settings-card" id="cardThemeSettings">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <h4>Aparência & Tema da Interface (Modo Escuro / Claro)</h4>
+            </div>
+
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+              Selecione o estilo visual de sua preferência ou sincronize automaticamente com o modo de cores do Windows 10/11.
+            </p>
+
+            <div class="theme-selector-grid">
+              <!-- Opção 1: Modo Escuro -->
+              <div class="theme-option-card selected" data-theme-mode="dark">
+                <div class="theme-preview-box dark">
+                  <div class="preview-sidebar"></div>
+                  <div class="preview-content">
+                    <div class="preview-bar accent"></div>
+                    <div class="preview-bar"></div>
+                    <div class="preview-bar"></div>
+                  </div>
+                </div>
+                <div class="theme-option-info">
+                  <input type="radio" name="uiTheme" value="dark" checked>
+                  <span class="theme-option-title">Modo Escuro</span>
+                </div>
+                <span class="theme-option-desc">Cyber Slate / Obsidian. Reduz fadiga visual em turnos longos.</span>
+              </div>
+
+              <!-- Opção 2: Modo Claro -->
+              <div class="theme-option-card" data-theme-mode="light">
+                <div class="theme-preview-box light">
+                  <div class="preview-sidebar"></div>
+                  <div class="preview-content">
+                    <div class="preview-bar accent"></div>
+                    <div class="preview-bar"></div>
+                    <div class="preview-bar"></div>
+                  </div>
+                </div>
+                <div class="theme-option-info">
+                  <input type="radio" name="uiTheme" value="light">
+                  <span class="theme-option-title">Modo Claro</span>
+                </div>
+                <span class="theme-option-desc">Fluent Light. Alto contraste e máxima clareza para ambientes iluminados.</span>
+              </div>
+
+              <!-- Opção 3: Automático -->
+              <div class="theme-option-card" data-theme-mode="auto">
+                <div class="theme-preview-box auto">
+                  <div class="preview-sidebar"></div>
+                  <div class="preview-content">
+                    <div class="preview-bar accent"></div>
+                    <div class="preview-bar"></div>
+                  </div>
+                </div>
+                <div class="theme-option-info">
+                  <input type="radio" name="uiTheme" value="auto">
+                  <span class="theme-option-title">Automático (Sistema)</span>
+                </div>
+                <span class="theme-option-desc">Sincroniza automaticamente com a preferência do Windows.</span>
+              </div>
+            </div>
           </div>
 
           <!-- Card 1: Identificação do Técnico -->
@@ -540,7 +623,7 @@
 
         <div class="settings-card" style="padding: 0; overflow: hidden; margin-top: 10px;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead style="background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-subtle);">
+            <thead style="background: var(--bg-input); border-bottom: 1px solid var(--border-subtle);">
               <tr>
                 <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">ID</th>
                 <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">DATA/HORA</th>

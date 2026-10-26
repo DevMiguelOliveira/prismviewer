@@ -395,9 +395,129 @@ function closeModal() {
 }
 
 // =============================================================================
+// GERENCIADOR DE TEMA VISUAL (MODO ESCURO / CLARO / AUTO)
+// =============================================================================
+const ThemeManager = {
+  storageKey: 'prysm_theme',
+
+  getSavedTheme() {
+    return localStorage.getItem(this.storageKey) || 'dark';
+  },
+
+  getSystemTheme() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  },
+
+  resolveEffectiveTheme(mode) {
+    if (mode === 'auto') {
+      return this.getSystemTheme();
+    }
+    return mode === 'light' ? 'light' : 'dark';
+  },
+
+  applyTheme(mode, notify = false) {
+    const effective = this.resolveEffectiveTheme(mode);
+    document.documentElement.setAttribute('data-theme', effective);
+    localStorage.setItem(this.storageKey, mode);
+
+    // Atualiza ícones do botão rápido no header
+    const sunIcon = document.getElementById('themeIconSun');
+    const moonIcon = document.getElementById('themeIconMoon');
+    const btnToggle = document.getElementById('btnThemeToggle');
+
+    if (sunIcon && moonIcon && btnToggle) {
+      if (effective === 'dark') {
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+        btnToggle.title = 'Mudar para Modo Claro (Alt+T)';
+      } else {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+        btnToggle.title = 'Mudar para Modo Escuro (Alt+T)';
+      }
+    }
+
+    // Sincroniza cards de opções em Configurações
+    document.querySelectorAll('.theme-option-card').forEach(card => {
+      const cardMode = card.dataset.themeMode;
+      const isSelected = cardMode === mode;
+      card.classList.toggle('selected', isSelected);
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) radio.checked = isSelected;
+    });
+
+    if (notify) {
+      const modeLabel = mode === 'auto'
+        ? `Automático (Detectado: ${effective === 'dark' ? 'Modo Escuro' : 'Modo Claro'})`
+        : (mode === 'light' ? 'Modo Claro (Fluent Light)' : 'Modo Escuro (Obsidian)');
+      showToast(`Tema alterado: ${modeLabel}`);
+    }
+  },
+
+  toggle() {
+    const currentMode = this.getSavedTheme();
+    const effective = this.resolveEffectiveTheme(currentMode);
+    const nextMode = effective === 'dark' ? 'light' : 'dark';
+    this.applyTheme(nextMode, true);
+  },
+
+  init() {
+    const saved = this.getSavedTheme();
+    this.applyTheme(saved, false);
+
+    // Botão de alternância rápida no Header
+    const btnToggle = document.getElementById('btnThemeToggle');
+    if (btnToggle) {
+      btnToggle.addEventListener('click', () => {
+        this.toggle();
+      });
+    }
+
+    // Cliques nos Cards de seleção em Configurações
+    document.querySelectorAll('.theme-option-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const mode = card.dataset.themeMode;
+        if (mode) {
+          this.applyTheme(mode, true);
+        }
+      });
+    });
+
+    // Mudança nos inputs de rádio
+    document.querySelectorAll('input[name="uiTheme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.applyTheme(e.target.value, true);
+        }
+      });
+    });
+
+    // Listener para quando o tema do Windows muda dinamicamente
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (this.getSavedTheme() === 'auto') {
+          this.applyTheme('auto', false);
+        }
+      });
+    }
+
+    // Atalho de teclado rápido: Alt+T para alternar
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        this.toggle();
+      }
+    });
+  }
+};
+
+// =============================================================================
 // INICIALIZAÇÃO E EVENT LISTENERS
 // =============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Inicializa gerenciador de temas (Dark / Light / Auto)
+  ThemeManager.init();
+
   // Navegação na Sidebar
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
