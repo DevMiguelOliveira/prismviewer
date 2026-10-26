@@ -100,7 +100,7 @@ impl Default for ViewerState {
         Self {
             operator_name: "Técnico".to_string(),
             auth_token: None,
-            server_url: "http://20.121.137.44:443".to_string(),
+            server_url: "https://api.prysmview.com".to_string(),
             login_operator_id: "admin".to_string(),
             login_password: String::new(),
             is_authenticated: false,

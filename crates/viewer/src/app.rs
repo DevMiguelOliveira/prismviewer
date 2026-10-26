@@ -68,6 +68,10 @@ pub struct PrysmViewerApp {
 
 impl PrysmViewerApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+        Self::new_standalone()
+    }
+
+    pub fn new_standalone() -> Self {
         let mut state = ViewerState::new();
 
         // Dados iniciais de demonstração / carregamento
@@ -149,6 +153,12 @@ impl PrysmViewerApp {
             metrics: SessionMetrics::default(),
             logo_texture: None,
         }
+    }
+}
+
+impl Default for PrysmViewerApp {
+    fn default() -> Self {
+        Self::new_standalone()
     }
 }
 
@@ -716,7 +726,7 @@ impl PrysmViewerApp {
                     &mut cols[1],
                     "⚡ NUVEM AZURE",
                     &format!("{} ms", latency),
-                    "20.121.137.44",
+                    "Nuvem Segura Ativa",
                     Color32::from_rgb(16, 26, 48),
                     COLOR_CYAN_NEON,
                     COLOR_CYAN_NEON,
@@ -763,7 +773,7 @@ impl PrysmViewerApp {
                     &mut cols[3],
                     "⚡ NUVEM AZURE",
                     &format!("{} ms", latency),
-                    "20.121.137.44",
+                    "Nuvem Segura Ativa",
                     Color32::from_rgb(16, 26, 48),
                     COLOR_CYAN_NEON,
                     COLOR_CYAN_NEON,
@@ -1674,11 +1684,9 @@ impl PrysmViewerApp {
                     });
                     ui.add_space(6.0);
                     ui.label(
-                        RichText::new(
-                            "● Status: Conectado e ativo em http://20.121.137.44:443/health",
-                        )
-                        .color(COLOR_MINT_ONLINE)
-                        .size(12.0),
+                        RichText::new("● Status: Conectado e operacional via TLS 1.3")
+                            .color(COLOR_MINT_ONLINE)
+                            .size(12.0),
                     );
                 });
 
@@ -2208,7 +2216,7 @@ impl PrysmViewerApp {
                                 ui.label(RichText::new("URL:").color(COLOR_TEXT_DARK).size(11.0));
                                 ui.add(
                                     egui::TextEdit::singleline(&mut self.state.server_url)
-                                        .hint_text("http://20.121.137.44:443")
+                                        .hint_text("https://api.prysmview.com")
                                         .desired_width(220.0),
                                 );
                             });
@@ -2341,4 +2349,61 @@ mod tests {
         assert!(COLOR_TEXT_MUTED == Color32::from_rgb(148, 163, 184));
         assert!(COLOR_TEXT_DARK == Color32::from_rgb(100, 116, 139));
     }
+
+    #[test]
+    fn test_login_and_admin_layout_in_1280x720_and_1920x1080() {
+        let resolutions = [(1280.0_f32, 720.0_f32), (1920.0_f32, 1080.0_f32)];
+
+        for (width, height) in resolutions {
+            let ctx = egui::Context::default();
+            let mut app = PrysmViewerApp::default();
+
+            // Simula renderização do login em tela inicial
+            let _ = ctx.run(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::Vec2::new(width, height),
+                    )),
+                    ..Default::default()
+                },
+                |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        app.render_admin_login(ui);
+                    });
+                },
+            );
+
+            // Simula renderização autenticada em todas as abas
+            app.state.is_authenticated = true;
+            for tab in [
+                AdminTab::Dashboard,
+                AdminTab::DirectConnect,
+                AdminTab::Stores,
+                AdminTab::AuditHistory,
+                AdminTab::Settings,
+            ] {
+                app.state.active_tab = tab;
+                let _ = ctx.run(
+                    egui::RawInput {
+                        screen_rect: Some(egui::Rect::from_min_size(
+                            egui::Pos2::ZERO,
+                            egui::Vec2::new(width, height),
+                        )),
+                        ..Default::default()
+                    },
+                    |ctx| {
+                        egui::CentralPanel::default().show(ctx, |ui| match app.state.active_tab {
+                            AdminTab::Dashboard => app.render_dashboard(ui),
+                            AdminTab::DirectConnect => app.render_direct_connect_tab(ui),
+                            AdminTab::Stores => app.render_stores_tab(ui),
+                            AdminTab::AuditHistory => app.render_audit_history_tab(ui),
+                            AdminTab::Settings => app.render_settings_tab(ui),
+                        });
+                    },
+                );
+            }
+        }
+    }
 }
+
