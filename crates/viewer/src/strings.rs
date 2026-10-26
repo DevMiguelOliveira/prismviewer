@@ -24,7 +24,8 @@ pub const LOGIN_USER_LABEL: &str = "Identificador / E-mail do Técnico:";
 pub const LOGIN_PASS_LABEL: &str = "Senha com Segundo Fator (MFA):";
 pub const LOGIN_SUBMIT_BTN: &str = "Entrar no Sistema";
 pub const LOGIN_LOGOUT_BTN: &str = "Encerrar Sessão do Técnico";
-pub const LOGIN_LOCKED_MSG: &str = "Acesso bloqueado por 15 minutos após tentativas inválidas repetidas.";
+pub const LOGIN_LOCKED_MSG: &str =
+    "Acesso bloqueado por 15 minutos após tentativas inválidas repetidas.";
 
 // ==============================================================================
 // 3. ESTADOS E STATUS DE SESSÃO
@@ -54,10 +55,12 @@ pub const BTN_AUDIT: &str = "Ver Histórico de Auditoria";
 // ==============================================================================
 // 6. MENSAGENS DE ERRO E SEGURANÇA
 // ==============================================================================
-pub const ERR_TICKET_EXPIRED: &str = "O ticket do chamado expirou. Solicite a reabertura no sistema.";
+pub const ERR_TICKET_EXPIRED: &str =
+    "O ticket do chamado expirou. Solicite a reabertura no sistema.";
 pub const ERR_TICKET_REVOKED: &str = "Acesso cancelado centralmente pela equipe de segurança.";
 pub const ERR_UNAUTHORIZED: &str = "Você não possui permissão para acessar este terminal de caixa.";
-pub const ERR_NETWORK_FAIL: &str = "Falha de comunicação com o PDV. Verifique a conexão de rede da loja.";
+pub const ERR_NETWORK_FAIL: &str =
+    "Falha de comunicação com o PDV. Verifique a conexão de rede da loja.";
 
 #[cfg(test)]
 mod tests {
