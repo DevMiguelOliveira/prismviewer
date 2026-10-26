@@ -4,12 +4,18 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/time/rate"
 )
 
@@ -208,3 +214,152 @@ func RateLimitMiddleware(rl *IPRateLimiter) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+// Argon2idParams define os parametros recomendados pela OWASP para armazenamento seguro de senhas.
+type Argon2idParams struct {
+	Memory      uint32
+	Iterations  uint32
+	Parallelism uint8
+	SaltLength  uint32
+	KeyLength   uint32
+}
+
+var DefaultArgon2idParams = Argon2idParams{
+	Memory:      64 * 1024, // 64 MB
+	Iterations:  3,
+	Parallelism: 2,
+	SaltLength:  16,
+	KeyLength:   32,
+}
+
+// HashPasswordArgon2id deriva um hash criptografico seguro usando Argon2id (S-11).
+func HashPasswordArgon2id(password string) (string, error) {
+	params := DefaultArgon2idParams
+	salt := make([]byte, params.SaltLength)
+	if _, err := rand.Read(salt); err != nil {
+		return "", fmt.Errorf("falha ao gerar salt: %w", err)
+	}
+
+	hash := argon2.IDKey([]byte(password), salt, params.Iterations, params.Memory, params.Parallelism, params.KeyLength)
+
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+
+	encoded := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+		argon2.Version, params.Memory, params.Iterations, params.Parallelism, b64Salt, b64Hash)
+
+	return encoded, nil
+}
+
+// VerifyPasswordArgon2id verifica uma senha contra um hash codificado em tempo constante (S-11, S-16).
+func VerifyPasswordArgon2id(password, encodedHash string) (bool, error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 6 {
+		return false, errors.New("formato de hash argon2id invalido")
+	}
+
+	if parts[1] != "argon2id" {
+		return false, errors.New("algoritmo incompativel")
+	}
+
+	var version int
+	if _, err := fmt.Sscanf(parts[2], "v=%d", &version); err != nil || version != argon2.Version {
+		return false, errors.New("versao de argon2 incompativel")
+	}
+
+	var memory uint32
+	var iterations uint32
+	var parallelism uint8
+	if _, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &iterations, &parallelism); err != nil {
+		return false, errors.New("parametros invalidos no hash")
+	}
+
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return false, errors.New("falha ao decodificar salt base64")
+	}
+
+	expectedHash, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return false, errors.New("falha ao decodificar digest base64")
+	}
+
+	calculatedHash := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, uint32(len(expectedHash)))
+
+	if subtle.ConstantTimeCompare(expectedHash, calculatedHash) == 1 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// EntraClaims representa as declaracoes do token OIDC do Microsoft Entra ID (S-08).
+type EntraClaims struct {
+	Sub               string   `json:"sub"`
+	Name              string   `json:"name"`
+	PreferredUsername string   `json:"preferred_username"`
+	Email             string   `json:"email"`
+	Roles             []string `json:"roles"`
+	Groups            []string `json:"groups"`
+	Exp               int64    `json:"exp"`
+	Iss               string   `json:"iss"`
+	Aud               string   `json:"aud"`
+}
+
+// ValidateEntraToken valida o token do Entra ID e verifica se o operador pertence ao grupo permitido (S-08).
+func ValidateEntraToken(rawToken string, requiredGroup string) (*EntraClaims, error) {
+	parts := strings.Split(rawToken, ".")
+	if len(parts) != 3 {
+		return nil, errors.New("formato JWT invalido")
+	}
+
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("falha ao decodificar payload JWT: %w", err)
+	}
+
+	var claims EntraClaims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("payload JWT invalido: %w", err)
+	}
+
+	// 1. Verifica expiracao
+	if time.Now().Unix() > claims.Exp {
+		return nil, errors.New("token Entra ID expirado")
+	}
+
+	// 2. Verifica se o tecnico pertence ao grupo estatico autorizado
+	if requiredGroup != "" {
+		hasGroup := false
+		for _, g := range claims.Groups {
+			if subtle.ConstantTimeCompare([]byte(g), []byte(requiredGroup)) == 1 {
+				hasGroup = true
+				break
+			}
+		}
+		for _, r := range claims.Roles {
+			if subtle.ConstantTimeCompare([]byte(r), []byte(requiredGroup)) == 1 {
+				hasGroup = true
+				break
+			}
+		}
+		if !hasGroup {
+			return nil, fmt.Errorf("operador fora do grupo autorizado '%s'", requiredGroup)
+		}
+	}
+
+	return &claims, nil
+}
+
+// SetSecureSessionCookie define cookie de sessao estritamente seguro: HttpOnly, Secure e SameSite=Strict (S-11).
+func SetSecureSessionCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "prysmview_session",
+		Value:    token,
+		Expires:  expiresAt,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	})
+}
+

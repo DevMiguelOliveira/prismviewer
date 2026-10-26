@@ -35,5 +35,6 @@ Este documento registra as dependências iniciais do projeto conforme especifica
 | [`modernc.org/sqlite`](https://modernc.org/sqlite) | Banco SQLite sem CGO | BSD-3-Clause | Permite build estático multiplataforma sem dependência de libsqlite3 do sistema ou CGO. |
 | [`golang.org/x/time/rate`](https://pkg.go.dev/golang.org/x/time/rate) | Rate limiting por IP e por token | BSD-3-Clause | Implementação testada e padrão para limitação de requisições (proteção contra brute-force). |
 | [`crypto/ed25519`](https://pkg.go.dev/crypto/ed25519) (stdlib) | Validação de assinaturas Ed25519 do Host | BSD-3-Clause | Presente na biblioteca padrão Go, sem dependência externa adicional. |
+| [`golang.org/x/crypto`](https://pkg.go.dev/golang.org/x/crypto) | Hashing de senhas com Argon2id para contas locais de emergência (S-11) | BSD-3-Clause | Padrão oficial do ecossistema Go para derivação de chaves e hash resistente a GPUs/ASICs. |
 
 *Observação:* Versões exatas serão fixadas em `Cargo.lock` e `go.sum` na Fase 0, conforme regras do projeto.

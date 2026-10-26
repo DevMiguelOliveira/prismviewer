@@ -160,3 +160,70 @@ func TestGenerateOpaqueToken(t *testing.T) {
 		t.Errorf("hash nao confere: esperado %s, obtido %s", expectedHash, tokenHash)
 	}
 }
+
+func TestArgon2id_HashAndVerify(t *testing.T) {
+	password := "SenhaSegura!123"
+	hash, err := HashPasswordArgon2id(password)
+	if err != nil {
+		t.Fatalf("falha ao gerar hash argon2id: %v", err)
+	}
+
+	valid, err := VerifyPasswordArgon2id(password, hash)
+	if err != nil || !valid {
+		t.Fatalf("senha correta nao foi validada pelo argon2id: %v", err)
+	}
+}
+
+func TestArgon2id_WrongPasswordRejected(t *testing.T) {
+	hash, err := HashPasswordArgon2id("SenhaOriginal123")
+	if err != nil {
+		t.Fatalf("falha ao gerar hash: %v", err)
+	}
+
+	valid, err := VerifyPasswordArgon2id("SenhaErrada456", hash)
+	if err != nil {
+		t.Fatalf("erro inesperado ao verificar senha errada: %v", err)
+	}
+	if valid {
+		t.Fatal("senha errada foi aceita pelo argon2id")
+	}
+}
+
+func TestEntraIDToken_ValidWithGroup(t *testing.T) {
+	// Cria mock de JWT header.payload.sig
+	header := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+	claimsJSON := fmt.Sprintf(`{
+		"sub": "tech-uuid-1234",
+		"name": "Maria Suporte",
+		"preferred_username": "maria.suporte@empresa.com",
+		"email": "maria.suporte@empresa.com",
+		"groups": ["prysmview-technicians", "ti-suporte"],
+		"roles": ["Technician"],
+		"exp": %d
+	}`, time.Now().Add(1*time.Hour).Unix())
+
+	b64Payload := "eyJzdWIiOiJ0ZWNoLXV1aWQtMTIzNCIsIm5hbWUiOiJNYXJpYSBTdXBvcnRlIiwicHJlZmVycmVkX3VzZXJuYW1lIjoibWFyaWEuc3Vwb3J0ZUBlbXByZXNhLmNvbSIsImVtYWlsIjoibWFyaWEuc3Vwb3J0ZUBlbXByZXNhLmNvbSIsImdyb3VwcyI6WyJwcnlzbXZpZXctdGVjaG5pY2lhbnMiLCJ0aS1zdXBvcnRlIl0sInJvbGVzIjpbIlRlY2huaWNpYW4iXSwiZXhwIjoyNTM0MDIzMDA3OTl9"
+	_ = claimsJSON
+	rawToken := header + "." + b64Payload + ".mockSignature"
+
+	claims, err := ValidateEntraToken(rawToken, "prysmview-technicians")
+	if err != nil {
+		t.Fatalf("token valido do Entra ID foi rejeitado: %v", err)
+	}
+	if claims.PreferredUsername != "maria.suporte@empresa.com" {
+		t.Errorf("username incorreto: %s", claims.PreferredUsername)
+	}
+}
+
+func TestEntraIDToken_OutsideGroupRejected(t *testing.T) {
+	header := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+	// Payload sem o grupo "prysmview-technicians"
+	b64Payload := "eyJzdWIiOiJvdXRzaWRlci0xMjM0IiwibmFtZSI6IkpvYW8gRm9yYSIsInByZWZlcnJlZF91c2VybmFtZSI6ImpvYW8uZm9yYUBlbXByZXNhLmNvbSIsImVtYWlsIjoiam9hby5mb3JhQGVtcHJlc2EuY29tIiwiZ3JvdXBzIjpbImZpbmFuY2Vpcm8iXSwicm9sZXMiOlsiVXNlciJdLCJleHAiOjI1MzQwMjMwMDc5OX0"
+	rawToken := header + "." + b64Payload + ".mockSignature"
+
+	_, err := ValidateEntraToken(rawToken, "prysmview-technicians")
+	if err == nil {
+		t.Fatal("token de operador fora do grupo autorizado deveria ser rejeitado")
+	}
+}
+
