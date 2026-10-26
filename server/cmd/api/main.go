@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
-	"context"
 	"flag"
 	"log/slog"
 	"net/http"

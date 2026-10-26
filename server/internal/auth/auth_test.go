@@ -226,4 +226,3 @@ func TestEntraIDToken_OutsideGroupRejected(t *testing.T) {
 		t.Fatal("token de operador fora do grupo autorizado deveria ser rejeitado")
 	}
 }
-

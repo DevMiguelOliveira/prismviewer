@@ -19,21 +19,21 @@ import (
 )
 
 type Server struct {
-	db                *db.DB
-	tracker           *auth.NonceTracker
-	limiter           *auth.IPRateLimiter
-	ticketSigningKey  ed25519.PrivateKey
-	ticketStore       map[string]bool // ticket_id -> usado (uso unico)
-	ticketStoreMu     sync.Mutex
+	db               *db.DB
+	tracker          *auth.NonceTracker
+	limiter          *auth.IPRateLimiter
+	ticketSigningKey ed25519.PrivateKey
+	ticketStore      map[string]bool // ticket_id -> usado (uso unico)
+	ticketStoreMu    sync.Mutex
 }
 
 func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRateLimiter, signingKey ed25519.PrivateKey) http.Handler {
 	s := &Server{
-		db:             database,
-		tracker:        tracker,
-		limiter:        limiter,
+		db:               database,
+		tracker:          tracker,
+		limiter:          limiter,
 		ticketSigningKey: signingKey,
-		ticketStore:    make(map[string]bool),
+		ticketStore:      make(map[string]bool),
 	}
 
 	r := chi.NewRouter()
@@ -74,10 +74,17 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	activeHosts := 0
+	if s.db != nil {
+		if count, err := s.db.GetActiveHeartbeatCount(time.Now().Add(-5 * time.Minute)); err == nil {
+			activeHosts = count
+		}
+	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]string{
-		"status":  "ok",
-		"version": "1.0.0",
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":          "ok",
+		"version":         "1.0.0",
+		"active_hosts_5m": activeHosts,
 	})
 }
 
@@ -367,31 +374,31 @@ type SessionRequestPayload struct {
 	Reason       string `json:"reason"`
 }
 
-/// Ticket de sessão assinado com Ed25519, emitido pelo servidor de sinalização.
-/// Contém machine_id, technician_id, grupos, not_before, expires_at (max 30 min),
-/// nonce e ticket_id. Validado offline pelo host.
+// / Ticket de sessão assinado com Ed25519, emitido pelo servidor de sinalização.
+// / Contém machine_id, technician_id, grupos, not_before, expires_at (max 30 min),
+// / nonce e ticket_id. Validado offline pelo host.
 type SessionTicket struct {
-	TicketID       string    `json:"ticket_id"`
-	MachineID      string    `json:"machine_id"`
-	TechnicianID   string    `json:"technician_id"`
-	Groups         []string  `json:"groups"`
-	NotBefore      time.Time `json:"not_before"`
-	ExpiresAt      time.Time `json:"expires_at"`
-	Nonce          string    `json:"nonce"`
-	Signature      string    `json:"signature"` // hex Ed25519 sobre os campos acima
+	TicketID     string    `json:"ticket_id"`
+	MachineID    string    `json:"machine_id"`
+	TechnicianID string    `json:"technician_id"`
+	Groups       []string  `json:"groups"`
+	NotBefore    time.Time `json:"not_before"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	Nonce        string    `json:"nonce"`
+	Signature    string    `json:"signature"` // hex Ed25519 sobre os campos acima
 }
 
-/// Payload de solicitação de ticket (chamado pelo host/operador).
+// / Payload de solicitação de ticket (chamado pelo host/operador).
 type SessionTicketRequest struct {
 	PDVPublicKey string `json:"pdv_public_key"`
 	MachineID    string `json:"machine_id"`
 	Reason       string `json:"reason"`
 }
 
-/// Resposta de emissão de ticket.
+// / Resposta de emissão de ticket.
 type SessionTicketResponse struct {
-	Ticket SessionTicket `json:"ticket"`
-	Message string       `json:"message"`
+	Ticket  SessionTicket `json:"ticket"`
+	Message string        `json:"message"`
 }
 
 func (s *Server) handleSessionRequest(w http.ResponseWriter, r *http.Request) {
@@ -458,24 +465,24 @@ func (s *Server) handleSessionTicket(w http.ResponseWriter, r *http.Request) {
 	ticketID := auth.GenerateOpaqueTokenNonce()
 
 	ticket := SessionTicket{
-		TicketID:    ticketID,
-		MachineID:   req.MachineID,
+		TicketID:     ticketID,
+		MachineID:    req.MachineID,
 		TechnicianID: operatorID,
-		Groups:      []string{"suporte"},
-		NotBefore:   now,
-		ExpiresAt:   expiresAt,
-		Nonce:       nonce,
+		Groups:       []string{"suporte"},
+		NotBefore:    now,
+		ExpiresAt:    expiresAt,
+		Nonce:        nonce,
 	}
 
 	// Assina o ticket (sem o campo signature)
 	toSign := map[string]interface{}{
-		"ticket_id":   ticket.TicketID,
-		"machine_id":  ticket.MachineID,
+		"ticket_id":     ticket.TicketID,
+		"machine_id":    ticket.MachineID,
 		"technician_id": ticket.TechnicianID,
-		"groups":      ticket.Groups,
-		"not_before":  ticket.NotBefore.UTC().Format(time.RFC3339),
-		"expires_at":  ticket.ExpiresAt.UTC().Format(time.RFC3339),
-		"nonce":       ticket.Nonce,
+		"groups":        ticket.Groups,
+		"not_before":    ticket.NotBefore.UTC().Format(time.RFC3339),
+		"expires_at":    ticket.ExpiresAt.UTC().Format(time.RFC3339),
+		"nonce":         ticket.Nonce,
 	}
 	payloadBytes, err := json.Marshal(toSign)
 	if err != nil {
@@ -500,7 +507,7 @@ func (s *Server) handleSessionTicket(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-/// Marca um ticket como usado (consulta pelo host após validação offline).
+// / Marca um ticket como usado (consulta pelo host após validação offline).
 func (s *Server) markTicketUsed(ticketID string) bool {
 	s.ticketStoreMu.Lock()
 	defer s.ticketStoreMu.Unlock()
@@ -511,7 +518,7 @@ func (s *Server) markTicketUsed(ticketID string) bool {
 	return false
 }
 
-/// Verifica se um ticket ainda não foi usado (consulta de revogação/uso único).
+// / Verifica se um ticket ainda não foi usado (consulta de revogação/uso único).
 func (s *Server) isTicketValid(ticketID string) bool {
 	s.ticketStoreMu.Lock()
 	defer s.ticketStoreMu.Unlock()

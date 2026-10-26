@@ -362,4 +362,3 @@ func SetSecureSessionCookie(w http.ResponseWriter, token string, expiresAt time.
 		Path:     "/",
 	})
 }
-

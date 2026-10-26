@@ -230,3 +230,48 @@ func TestAuditChainIntegrity(t *testing.T) {
 		t.Fatalf("esperava deteccao de adulteracao no registro 1, obteve brokenID=%d err=%v", brokenID, err)
 	}
 }
+
+func TestActiveHeartbeatCount(t *testing.T) {
+	database, err := Open(":memory:")
+	if err != nil {
+		t.Fatalf("erro ao abrir banco: %v", err)
+	}
+	defer database.Close()
+
+	now := time.Now()
+	// Insere PDV recente
+	pdvRecent := PDV{
+		PublicKey:    "pubkey-active",
+		DisplayID:    "PDV-01",
+		StoreName:    "Loja Centro",
+		POSNumber:    1,
+		AgentVersion: "1.0.0",
+		Status:       "online",
+		LastSeen:     now,
+	}
+	if err := database.RegisterPDV(pdvRecent); err != nil {
+		t.Fatalf("falha ao registrar PDV recente: %v", err)
+	}
+
+	// Insere PDV antigo (> 10 minutos atrás)
+	pdvOld := PDV{
+		PublicKey:    "pubkey-old",
+		DisplayID:    "PDV-02",
+		StoreName:    "Loja Shopping",
+		POSNumber:    2,
+		AgentVersion: "1.0.0",
+		Status:       "offline",
+		LastSeen:     now.Add(-15 * time.Minute),
+	}
+	if err := database.RegisterPDV(pdvOld); err != nil {
+		t.Fatalf("falha ao registrar PDV antigo: %v", err)
+	}
+
+	count, err := database.GetActiveHeartbeatCount(now.Add(-5 * time.Minute))
+	if err != nil {
+		t.Fatalf("falha ao contar heartbeats ativos: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("esperava 1 host ativo nos ultimos 5m, obteve %d", count)
+	}
+}

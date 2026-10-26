@@ -48,12 +48,12 @@ func TestHealthEndpoint(t *testing.T) {
 		t.Fatalf("esperava 200 OK, obteve %d", w.Code)
 	}
 
-	var res map[string]string
+	var res map[string]interface{}
 	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
 		t.Fatalf("resposta invalida: %v", err)
 	}
 	if res["status"] != "ok" {
-		t.Errorf("esperava status ok, obteve %s", res["status"])
+		t.Errorf("esperava status ok, obteve %v", res["status"])
 	}
 }
 
@@ -269,14 +269,14 @@ func TestSessionTicketEmissionAndValidation(t *testing.T) {
 
 	var ticketResp struct {
 		Ticket struct {
-			TicketID    string    `json:"ticket_id"`
-			MachineID   string    `json:"machine_id"`
-			TechnicianID string   `json:"technician_id"`
-			Groups      []string  `json:"groups"`
-			NotBefore   time.Time `json:"not_before"`
-			ExpiresAt   time.Time `json:"expires_at"`
-			Nonce       string    `json:"nonce"`
-			Signature   string    `json:"signature"`
+			TicketID     string    `json:"ticket_id"`
+			MachineID    string    `json:"machine_id"`
+			TechnicianID string    `json:"technician_id"`
+			Groups       []string  `json:"groups"`
+			NotBefore    time.Time `json:"not_before"`
+			ExpiresAt    time.Time `json:"expires_at"`
+			Nonce        string    `json:"nonce"`
+			Signature    string    `json:"signature"`
 		} `json:"ticket"`
 		Message string `json:"message"`
 	}
@@ -503,5 +503,3 @@ func TestAgentTokenAndHeartbeatFlow(t *testing.T) {
 		t.Fatalf("esperava 401 Unauthorized para token de agente revogado, obteve %d", hbWRevoked.Code)
 	}
 }
-
-

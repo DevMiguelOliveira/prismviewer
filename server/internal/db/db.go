@@ -42,7 +42,7 @@ type AuditRecord struct {
 	Reason           string    `json:"reason"`
 	ConsentResult    string    `json:"consent_result"`
 	BytesTransferred int64     `json:"bytes_transferred"`
-	PrevHash         string    `json:"prev_hash"`  // hash do registro anterior (cadeia)
+	PrevHash         string    `json:"prev_hash"`   // hash do registro anterior (cadeia)
 	RecordHash       string    `json:"record_hash"` // hash deste registro (cadeia de integridade)
 }
 
@@ -433,3 +433,12 @@ func (d *DB) GetActiveRevocations() ([]string, error) {
 	return list, rows.Err()
 }
 
+// GetActiveHeartbeatCount retorna o total de PDVs com heartbeat recente (O-03).
+func (d *DB) GetActiveHeartbeatCount(since time.Time) (int, error) {
+	row := d.conn.QueryRow("SELECT COUNT(*) FROM pdvs WHERE last_seen >= ?", since)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
