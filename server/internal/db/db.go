@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -119,6 +120,21 @@ func (d *DB) migrate() error {
 		prev_hash TEXT NOT NULL,
 		record_hash TEXT NOT NULL
 	);
+
+	CREATE TABLE IF NOT EXISTS agent_tokens (
+		machine_id TEXT PRIMARY KEY,
+		token_hash TEXT NOT NULL,
+		is_revoked INTEGER NOT NULL DEFAULT 0,
+		created_at DATETIME NOT NULL,
+		rotated_at DATETIME
+	);
+
+	CREATE TABLE IF NOT EXISTS revocacoes (
+		id TEXT PRIMARY KEY,
+		revocation_type TEXT NOT NULL,
+		reason TEXT NOT NULL,
+		created_at DATETIME NOT NULL
+	);
 	`
 	_, err := d.conn.Exec(schema)
 	return err
@@ -137,6 +153,12 @@ func (d *DB) RegisterPDV(p PDV) error {
 		last_seen = excluded.last_seen;
 	`
 	_, err := d.conn.Exec(query, p.PublicKey, p.DisplayID, p.StoreName, p.POSNumber, p.AgentVersion, p.Status, p.LastSeen)
+	return err
+}
+
+func (d *DB) UpdatePDVHeartbeat(machineID, status string) error {
+	_, err := d.conn.Exec("UPDATE pdvs SET status = ?, last_seen = ? WHERE display_id = ? OR public_key = ?",
+		status, time.Now(), machineID, machineID)
 	return err
 }
 
@@ -324,3 +346,90 @@ func constantTimeCompare(a, b string) bool {
 	}
 	return result == 0
 }
+
+// IssueOrRotateAgentToken emite ou rotaciona o token da máquina, armazenando apenas o hash SHA-256 (S-13).
+func (d *DB) IssueOrRotateAgentToken(machineID string) (string, string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", "", fmt.Errorf("falha ao ler entropia: %w", err)
+	}
+	tokenHex := hex.EncodeToString(bytes)
+	h := sha256.Sum256([]byte(tokenHex))
+	tokenHash := hex.EncodeToString(h[:])
+
+	now := time.Now()
+	query := `
+	INSERT INTO agent_tokens (machine_id, token_hash, is_revoked, created_at, rotated_at)
+	VALUES (?, ?, 0, ?, ?)
+	ON CONFLICT(machine_id) DO UPDATE SET
+		token_hash = excluded.token_hash,
+		is_revoked = 0,
+		rotated_at = excluded.rotated_at;
+	`
+	_, err := d.conn.Exec(query, machineID, tokenHash, now, now)
+	if err != nil {
+		return "", "", err
+	}
+	return tokenHex, tokenHash, nil
+}
+
+// RevokeAgentToken revoga imediatamente o token de uma máquina (S-13).
+func (d *DB) RevokeAgentToken(machineID string) error {
+	_, err := d.conn.Exec("UPDATE agent_tokens SET is_revoked = 1 WHERE machine_id = ?", machineID)
+	return err
+}
+
+// ValidateAgentToken valida se o token da máquina confere com o hash em tempo constante e não está revogado (S-13, S-16).
+func (d *DB) ValidateAgentToken(machineID, tokenHex string) (bool, error) {
+	var storedHash string
+	var isRevoked int
+	err := d.conn.QueryRow("SELECT token_hash, is_revoked FROM agent_tokens WHERE machine_id = ?", machineID).
+		Scan(&storedHash, &isRevoked)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if isRevoked == 1 {
+		return false, nil
+	}
+
+	h := sha256.Sum256([]byte(tokenHex))
+	calculatedHash := hex.EncodeToString(h[:])
+
+	if !constantTimeCompare(storedHash, calculatedHash) {
+		return false, nil
+	}
+	return true, nil
+}
+
+// AddRevocation registra a revogação central de um ticket, técnico ou máquina (S-09).
+func (d *DB) AddRevocation(id, revType, reason string) error {
+	_, err := d.conn.Exec("INSERT OR REPLACE INTO revocacoes (id, revocation_type, reason, created_at) VALUES (?, ?, ?, ?)",
+		id, revType, reason, time.Now())
+	return err
+}
+
+// GetActiveRevocations lista as revogações ativas enviadas nos heartbeats aos hosts (S-09).
+func (d *DB) GetActiveRevocations() ([]string, error) {
+	rows, err := d.conn.Query("SELECT id FROM revocacoes ORDER BY created_at DESC LIMIT 100")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		list = append(list, id)
+	}
+	if list == nil {
+		list = []string{}
+	}
+	return list, rows.Err()
+}
+

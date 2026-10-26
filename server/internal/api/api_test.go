@@ -442,3 +442,66 @@ func TestOperatorLogin_EntraID(t *testing.T) {
 	}
 }
 
+func TestAgentTokenAndHeartbeatFlow(t *testing.T) {
+	database, router := setupTestServer(t)
+	defer database.Close()
+
+	machineID := "PDV-TEST-01"
+
+	// 1. Emissao de token de agente (S-13)
+	issueReqBody := fmt.Sprintf(`{"machine_id":"%s"}`, machineID)
+	issueReq := httptest.NewRequest("POST", "/api/v1/host/token", strings.NewReader(issueReqBody))
+	issueW := httptest.NewRecorder()
+	router.ServeHTTP(issueW, issueReq)
+
+	if issueW.Code != http.StatusCreated {
+		t.Fatalf("esperava 201 Created na emissao de token de agente, obteve %d", issueW.Code)
+	}
+
+	var issueRes IssueTokenResponse
+	_ = json.Unmarshal(issueW.Body.Bytes(), &issueRes)
+	token := issueRes.Token
+	if len(token) != 64 {
+		t.Fatalf("token de agente tem tamanho incorreto: %s", token)
+	}
+
+	// 2. Adiciona revogacao centralizada para testar distribuicao via heartbeat (S-09)
+	_ = database.AddRevocation("tkt-comprometido-001", "ticket", "teste de revogacao")
+
+	// 3. Heartbeat valido com o token
+	hbReq := httptest.NewRequest("POST", "/api/v1/host/heartbeat", nil)
+	hbReq.Header.Set("X-Machine-ID", machineID)
+	hbReq.Header.Set("Authorization", "Bearer "+token)
+	hbW := httptest.NewRecorder()
+	router.ServeHTTP(hbW, hbReq)
+
+	if hbW.Code != http.StatusOK {
+		t.Fatalf("esperava 200 OK no heartbeat valido, obteve %d: %s", hbW.Code, hbW.Body.String())
+	}
+
+	var hbRes HeartbeatResponse
+	_ = json.Unmarshal(hbW.Body.Bytes(), &hbRes)
+	if hbRes.Status != "ok" {
+		t.Errorf("status inesperado no heartbeat: %s", hbRes.Status)
+	}
+	if len(hbRes.Revocations) == 0 || hbRes.Revocations[0] != "tkt-comprometido-001" {
+		t.Errorf("lista de revogacoes nao distribuida no heartbeat: %v", hbRes.Revocations)
+	}
+
+	// 4. Revoga o token do agente e tenta enviar novo heartbeat -> 401 Unauthorized (S-13)
+	if err := database.RevokeAgentToken(machineID); err != nil {
+		t.Fatalf("falha ao revogar token: %v", err)
+	}
+
+	hbReqRevoked := httptest.NewRequest("POST", "/api/v1/host/heartbeat", nil)
+	hbReqRevoked.Header.Set("X-Machine-ID", machineID)
+	hbReqRevoked.Header.Set("Authorization", "Bearer "+token)
+	hbWRevoked := httptest.NewRecorder()
+	router.ServeHTTP(hbWRevoked, hbReqRevoked)
+
+	if hbWRevoked.Code != http.StatusUnauthorized {
+		t.Fatalf("esperava 401 Unauthorized para token de agente revogado, obteve %d", hbWRevoked.Code)
+	}
+}
+
+

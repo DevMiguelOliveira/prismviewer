@@ -52,6 +52,8 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 		// Host endpoints
 		r.Post("/host/register", s.handleHostRegister)
 		r.Get("/host/status", s.handleHostStatus)
+		r.Post("/host/heartbeat", s.handleHostHeartbeat)
+		r.Post("/host/token", s.handleHostToken)
 
 		// Operator login
 		r.Post("/operator/login", s.handleOperatorLogin)
@@ -164,6 +166,77 @@ func (s *Server) handleHostStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(pdv)
+}
+
+type HeartbeatResponse struct {
+	Status      string   `json:"status"`
+	Revocations []string `json:"revocations"`
+	ServerTime  string   `json:"server_time"`
+}
+
+func (s *Server) handleHostHeartbeat(w http.ResponseWriter, r *http.Request) {
+	machineID := r.Header.Get("X-Machine-ID")
+	authHeader := r.Header.Get("Authorization")
+
+	if machineID == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		s.limiter.RecordFailure(r.RemoteAddr)
+		http.Error(w, "X-Machine-ID e Authorization Bearer obrigatorios", http.StatusUnauthorized)
+		return
+	}
+
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	valid, err := s.db.ValidateAgentToken(machineID, token)
+	if err != nil || !valid {
+		s.limiter.RecordFailure(r.RemoteAddr)
+		slog.Warn("Heartbeat rejeitado: token de agente invalido ou revogado", "machine_id", machineID, "ip", r.RemoteAddr)
+		http.Error(w, "Token de agente invalido ou revogado", http.StatusUnauthorized)
+		return
+	}
+
+	// Atualiza heartbeat do PDV no banco
+	_ = s.db.UpdatePDVHeartbeat(machineID, "online")
+
+	revocations, err := s.db.GetActiveRevocations()
+	if err != nil {
+		revocations = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(HeartbeatResponse{
+		Status:      "ok",
+		Revocations: revocations,
+		ServerTime:  time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+type IssueTokenRequest struct {
+	MachineID string `json:"machine_id"`
+}
+
+type IssueTokenResponse struct {
+	MachineID string `json:"machine_id"`
+	Token     string `json:"token"`
+}
+
+func (s *Server) handleHostToken(w http.ResponseWriter, r *http.Request) {
+	var req IssueTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MachineID == "" {
+		http.Error(w, "machine_id obrigatorio", http.StatusBadRequest)
+		return
+	}
+
+	tokenHex, _, err := s.db.IssueOrRotateAgentToken(req.MachineID)
+	if err != nil {
+		http.Error(w, "Erro ao gerar token de agente", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(IssueTokenResponse{
+		MachineID: req.MachineID,
+		Token:     tokenHex,
+	})
 }
 
 type LoginRequest struct {
