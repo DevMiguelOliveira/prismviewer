@@ -24,7 +24,7 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
 
     let mut window_builder = WindowBuilder::new()
-        .with_title("PrysmView - Suporte Remoto PDV")
+        .with_title("PrysmView - Acesso Remoto & Gestão de Dispositivos")
         .with_inner_size(LogicalSize::new(1280.0, 780.0))
         .with_min_inner_size(LogicalSize::new(960.0, 600.0));
 

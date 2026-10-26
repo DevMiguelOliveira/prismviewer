@@ -1,6 +1,6 @@
 /**
  * PrysmView Admin Console - Frontend Controller
- * Suporte completo a Helpdesk, Gestão de PDVs e IPC nativo com Rust.
+ * Solução corporativa universal de acesso e gestão remota de dispositivos.
  */
 
 // Estado Global da Aplicação
@@ -9,65 +9,65 @@ const state = {
   filterStatus: 'all',
   selectedStore: '',
   searchQuery: '',
-  inspectedPdvId: 'PDV-01',
+  inspectedPdvId: 'DESK-01',
   latencyMs: 18,
   
   pdvs: [
     {
-      id: "PDV-01",
-      storeName: "Loja 101 - Centro",
+      id: "DESK-01",
+      storeName: "Matriz - Corporativo",
       isOnline: true,
       agentVersion: "0.1.0",
-      publicKey: "ed25519_pdv01_key_hash",
+      publicKey: "ed25519_host01_key_hash",
       lastSeen: "Agora",
       ipAddress: "192.168.1.101",
       osInfo: "Windows 11 Pro 23H2",
       resolution: "1920x1080 @ 60Hz",
-      notes: "Caixa Frente 01: SAT Fiscal Ativo (COM2). Pinpad Gertec USB. Impressora Bematech MP-4200."
+      notes: "Estação Financeiro: Impressora de rede HP LaserJet. Monitor duplo. Ramal 4022."
     },
     {
-      id: "PDV-02",
-      storeName: "Loja 101 - Centro",
+      id: "DESK-02",
+      storeName: "Matriz - Corporativo",
       isOnline: true,
       agentVersion: "0.1.0",
-      publicKey: "ed25519_pdv02_key_hash",
+      publicKey: "ed25519_host02_key_hash",
       lastSeen: "Agora",
       ipAddress: "192.168.1.102",
       osInfo: "Windows 11 Pro 23H2",
       resolution: "1920x1080 @ 60Hz",
-      notes: "Caixa Rápido 02: Leitor Honeywell 2D para QR Code e PIX. Gaveta automática conectada na RJ11."
+      notes: "Estação Faturamento: Certificado digital A1 configurado. Leitor biométrico USB."
     },
     {
-      id: "PDV-01",
-      storeName: "Loja 204 - Shopping Sul",
+      id: "SRV-01",
+      storeName: "Filial Sul - Escritório",
       isOnline: false,
       agentVersion: "0.1.0",
-      publicKey: "ed25519_pdv04_key_hash",
+      publicKey: "ed25519_host04_key_hash",
       lastSeen: "15 min atrás",
       ipAddress: "192.168.2.101",
       osInfo: "Windows 10 Enterprise 22H2",
       resolution: "1920x1080 @ 60Hz",
-      notes: "Caixa Fechado Temporariamente. Manutenção preventiva agendada."
+      notes: "Servidor de Arquivos: Manutenção preventiva agendada fora do horário comercial."
     },
     {
-      id: "PDV-03",
-      storeName: "Loja 305 - Hiper Norte",
+      id: "NOTE-03",
+      storeName: "Unidade Norte - Operações",
       isOnline: true,
       agentVersion: "0.1.0",
-      publicKey: "ed25519_pdv03_key_hash",
+      publicKey: "ed25519_host03_key_hash",
       lastSeen: "Agora",
       ipAddress: "192.168.3.103",
       osInfo: "Windows 11 Pro 23H2",
       resolution: "1920x1080 @ 60Hz",
-      notes: "Caixa Preferencial 03: Monitor Touch 15''. SAT reserva configurado na COM4."
+      notes: "Notebook Gestão: VPN corporativa habilitada. Conexão prioritária Wi-Fi 6."
     }
   ],
 
   auditRecords: [
-    { id: "AUD-901", timestamp: "Hoje 10:14", operator: "admin", pdv: "PDV-01", store: "Loja 101", reason: "Suporte TEF/Pinpad", duration: "12m 40s", status: "Concluída" },
-    { id: "AUD-902", timestamp: "Hoje 09:30", operator: "admin", pdv: "PDV-02", store: "Loja 101", reason: "Atualização de Tabela Fiscal", duration: "04m 15s", status: "Concluída" },
-    { id: "AUD-903", timestamp: "Ontem 18:22", operator: "suporte02", pdv: "PDV-03", store: "Loja 305", reason: "Revisão Driver Impressora", duration: "08m 50s", status: "Concluída" },
-    { id: "AUD-904", timestamp: "Ontem 14:10", operator: "suporte01", pdv: "PDV-01", store: "Loja 204", reason: "Diagnóstico de Rede", duration: "19m 20s", status: "Concluída" }
+    { id: "AUD-901", timestamp: "Hoje 10:14", operator: "admin", pdv: "DESK-01", store: "Matriz", reason: "Suporte e Configuração de Impressora", duration: "12m 40s", status: "Concluída" },
+    { id: "AUD-902", timestamp: "Hoje 09:30", operator: "admin", pdv: "DESK-02", store: "Matriz", reason: "Instalação de Certificado Digital", duration: "04m 15s", status: "Concluída" },
+    { id: "AUD-903", timestamp: "Ontem 18:22", operator: "suporte02", pdv: "NOTE-03", store: "Unidade Norte", reason: "Otimização de Desempenho", duration: "08m 50s", status: "Concluída" },
+    { id: "AUD-904", timestamp: "Ontem 14:10", operator: "suporte01", pdv: "SRV-01", store: "Filial Sul", reason: "Verificação de Logs e Backup", duration: "19m 20s", status: "Concluída" }
   ]
 };
 
@@ -90,8 +90,8 @@ window.onPrysmMessage = function(data) {
     if (parsed.type === 'ping_result') {
       state.latencyMs = parsed.latencyMs || 18;
       document.getElementById('kpiLatency').textContent = `${state.latencyMs} ms`;
-      document.getElementById('headerLatencyText').textContent = `${state.latencyMs} ms • Nuvem Segura`;
-      showToast(`Ping API: HTTP 200 OK (${state.latencyMs} ms de RTT)`);
+      document.getElementById('headerLatencyText').textContent = `${state.latencyMs} ms • Conexão Segura`;
+      showToast(`Ping Servidor: HTTP 200 OK (${state.latencyMs} ms de RTT)`);
     } else if (parsed.type === 'status_message') {
       showToast(parsed.message);
     }
@@ -120,7 +120,7 @@ function showToast(message) {
 }
 
 // =============================================================================
-// RENDERIZAÇÃO DA LISTA DE PDVS & DASHBOARD
+// RENDERIZAÇÃO DA LISTA DE DISPOSITIVOS & DASHBOARD
 // =============================================================================
 function getFilteredPdvs() {
   return state.pdvs.filter(pdv => {
@@ -128,7 +128,7 @@ function getFilteredPdvs() {
     if (state.filterStatus === 'online' && !pdv.isOnline) return false;
     if (state.filterStatus === 'offline' && pdv.isOnline) return false;
     
-    // Filtro por Loja
+    // Filtro por Grupo/Cliente
     if (state.selectedStore && pdv.storeName !== state.selectedStore) return false;
 
     // Filtro por Busca Global
@@ -163,16 +163,16 @@ function renderDashboard() {
   document.getElementById('pillOfflineLabel').textContent = `Offline (${offline})`;
 
   const filtered = getFilteredPdvs();
-  document.getElementById('resultsCountLabel').textContent = `Exibindo ${filtered.length} de ${total} caixas`;
+  document.getElementById('resultsCountLabel').textContent = `Exibindo ${filtered.length} de ${total} dispositivos`;
 
-  // Renderiza Cards de PDV
+  // Renderiza Cards de Dispositivos
   const container = document.getElementById('pdvListContainer');
   container.innerHTML = '';
 
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-subtle);">
-        <p style="font-size: 14px; font-weight: 500;">Nenhum caixa encontrado com os filtros atuais.</p>
+        <p style="font-size: 14px; font-weight: 500;">Nenhum dispositivo encontrado com os filtros atuais.</p>
         <p style="font-size: 12px; margin-top: 4px;">Tente alterar o status ou limpar o termo de pesquisa.</p>
       </div>
     `;
@@ -209,7 +209,7 @@ function renderDashboard() {
               <span class="tele-chip">OS: ${pdv.osInfo}</span>
               <span class="tele-chip highlight">IP: ${pdv.ipAddress}</span>
               <span class="tele-chip">Tela: ${pdv.resolution}</span>
-              <span class="tele-chip" style="color: var(--accent-violet);">Host v${pdv.agentVersion}</span>
+              <span class="tele-chip" style="color: var(--accent-violet);">Agente v${pdv.agentVersion}</span>
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@ function renderInspectorDrawer() {
   const pdv = getInspectedPdv();
   if (!pdv) return;
 
-  document.getElementById('drawerPdvId').textContent = `Helpdesk: ${pdv.id}`;
+  document.getElementById('drawerPdvId').textContent = pdv.id;
   document.getElementById('drawerStoreName').textContent = pdv.storeName;
   document.getElementById('diagIp').textContent = pdv.ipAddress;
   document.getElementById('diagOs').textContent = pdv.osInfo;
@@ -271,12 +271,12 @@ function renderInspectorDrawer() {
   } else {
     btnConnect.disabled = true;
     btnConnect.className = 'btn-disabled primary-connect-btn';
-    btnConnect.innerHTML = `<span>Caixa Offline - Conexão Indisponível</span>`;
+    btnConnect.innerHTML = `<span>Dispositivo Offline - Conexão Indisponível</span>`;
   }
 }
 
 // =============================================================================
-// RENDERIZAÇÃO DAS OUTRAS ABAS (AUDITORIA E LOJAS)
+// RENDERIZAÇÃO DAS OUTRAS ABAS (AUDITORIA E GRUPOS)
 // =============================================================================
 function renderAuditTable() {
   const tbody = document.getElementById('auditTableBody');
@@ -300,7 +300,7 @@ function renderAuditTable() {
 function renderStoresGrid() {
   const grid = document.getElementById('storesGrid');
   grid.innerHTML = '';
-  const stores = ['Loja 101 - Centro', 'Loja 204 - Shopping Sul', 'Loja 305 - Hiper Norte'];
+  const stores = ['Matriz - Corporativo', 'Filial Sul - Escritório', 'Unidade Norte - Operações'];
   
   stores.forEach(store => {
     const storePdvs = state.pdvs.filter(p => p.storeName === store);
@@ -313,12 +313,12 @@ function renderStoresGrid() {
         <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${store}</h4>
         <span class="status-badge ${onlineCount > 0 ? 'online' : 'offline'}">${onlineCount}/${storePdvs.length} Online</span>
       </div>
-      <p style="font-size: 11.5px; color: var(--text-muted);">Rede: 192.168.x.x • Gateway VPN Ativo</p>
+      <p style="font-size: 11.5px; color: var(--text-muted);">Rede: 192.168.x.x • Gateway VPN Seguro</p>
       <div style="display: flex; gap: 6px; flex-wrap: wrap;">
         ${storePdvs.map(p => `<span class="tele-chip ${p.isOnline ? 'highlight' : ''}">${p.id}</span>`).join('')}
       </div>
       <button class="btn-secondary" style="margin-top: 6px; justify-content: center;" onclick="filterByStore('${store}')">
-        Filtrar Caixas Desta Loja
+        Filtrar Dispositivos Deste Grupo
       </button>
     `;
     grid.appendChild(card);
@@ -355,18 +355,18 @@ function switchTab(tabName) {
   };
 
   const breadcrumbsMap = {
-    'dashboard': 'Monitoramento de Caixas',
+    'dashboard': 'Painel de Dispositivos',
     'direct': 'Conexão Rápida',
-    'stores': 'Lojas e Filiais',
+    'stores': 'Grupos & Clientes',
     'audit': 'Auditoria E2E',
-    'settings': 'Central de Configurações & Helpdesk'
+    'settings': 'Configurações Globais'
   };
 
   const targetId = targetMap[tabName] || 'viewDashboard';
   const page = document.getElementById(targetId);
   if (page) page.classList.add('active');
 
-  document.getElementById('breadcrumbLabel').textContent = breadcrumbsMap[tabName] || 'Monitoramento';
+  document.getElementById('breadcrumbLabel').textContent = breadcrumbsMap[tabName] || 'Dispositivos';
 
   if (tabName === 'dashboard') renderDashboard();
   if (tabName === 'audit') renderAuditTable();
@@ -381,7 +381,7 @@ let activeSessionTarget = null;
 function startSession(pdvId, storeName) {
   activeSessionTarget = { pdvId, storeName };
   document.getElementById('modalTitle').textContent = `Conexão Segura: ${pdvId}`;
-  document.getElementById('modalSubtitle').textContent = `Solicite ao operador no caixa (${storeName}) o código de 8 dígitos exibido na tela do PDV.`;
+  document.getElementById('modalSubtitle').textContent = `Solicite ao usuário no dispositivo remoto (${storeName}) o código de 8 dígitos exibido na tela.`;
   
   // Limpa inputs
   document.querySelectorAll('.code-digit').forEach(input => input.value = '');
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtro de Loja
+  // Filtro de Grupo
   document.getElementById('storeSelectFilter').addEventListener('change', (e) => {
     state.selectedStore = e.target.value;
     renderDashboard();
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQuickRestartAgent').addEventListener('click', () => {
     const pdv = getInspectedPdv();
     sendRustCommand('restart_agent', { pdv_id: pdv.id });
-    showToast(`Sinal de reinício enviado ao agente do ${pdv.id}`);
+    showToast(`Sinal de reinício enviado ao serviço do ${pdv.id}`);
   });
 
   document.getElementById('btnQuickRebootSystem').addEventListener('click', () => {
@@ -474,22 +474,22 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Ping em ${pdv.ipAddress}: RTT 18 ms (QUIC OK)`);
   });
 
-  // Salvar Notas de Suporte
+  // Salvar Notas Técnicas
   document.getElementById('btnSaveNotes').addEventListener('click', () => {
     const pdv = getInspectedPdv();
     const notes = document.getElementById('notesTextarea').value;
     pdv.notes = notes;
     sendRustCommand('save_notes', { pdv_id: pdv.id, notes });
-    showToast(`Notas técnicas do ${pdv.id} gravadas com sucesso.`);
+    showToast(`Notas técnicas do dispositivo ${pdv.id} gravadas.`);
   });
 
   // Testar Ping na API
   document.getElementById('btnTestPing').addEventListener('click', () => {
     sendRustCommand('test_api_ping');
-    showToast('API de Sinalização: HTTP 200 OK (18 ms de RTT via TLS 1.3)');
+    showToast('Servidor de Sinalização: HTTP 200 OK (18 ms de RTT via TLS 1.3)');
   });
 
-  // Salvar Preferências de Helpdesk
+  // Salvar Preferências
   document.getElementById('btnSaveAllSettings').addEventListener('click', () => {
     const techName = document.getElementById('cfgTechName').value;
     const techRole = document.getElementById('cfgTechRole').value;
@@ -500,13 +500,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sidebarTechDept').textContent = techDept;
 
     sendRustCommand('save_settings', { techName, techRole, techDept });
-    showToast('Configurações e parâmetros de Helpdesk salvos com sucesso.');
+    showToast('Configurações e parâmetros de suporte salvos com sucesso.');
   });
 
   // Exportar Auditoria CSV
   const handleExportCsv = () => {
     sendRustCommand('export_audit_csv');
-    showToast('Relatório de auditoria exportado com sucesso para a pasta de Downloads.');
+    showToast('Relatório de auditoria exportado para a pasta de Downloads.');
   };
   document.getElementById('btnExportAudit').addEventListener('click', handleExportCsv);
   document.getElementById('btnExportAudit2').addEventListener('click', handleExportCsv);
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sincronizar / Atualizar
   document.getElementById('btnRefresh').addEventListener('click', () => {
     sendRustCommand('refresh_fleet');
-    showToast('Sincronização de caixas concluída (18 ms)');
+    showToast('Sincronização de dispositivos concluída (18 ms)');
     renderDashboard();
   });
 
@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     closeModal();
-    showToast(`Código validado com sucesso! Conectando ao ${activeSessionTarget?.pdvId || 'PDV'} via QUIC...`);
+    showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'} via QUIC...`);
   });
 
   // Conexão Direta Submit
@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pdvId = document.getElementById('directPdvInput').value.trim();
     const code = document.getElementById('directCodeInput').value.trim();
     if (!pdvId || code.length < 8) {
-      showToast('Preencha o identificador do PDV e o código de 8 dígitos.');
+      showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
       return;
     }
     showToast(`Conectando diretamente a ${pdvId} via QUIC TLS 1.3...`);
