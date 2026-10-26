@@ -13,6 +13,7 @@ pub mod sas;
 pub mod service;
 pub mod session_code;
 pub mod signaling;
+pub mod ticket;
 pub mod updater;
 
 pub use capture::{CaptureWorker, CapturedFrame, DxgiCaptureError};
@@ -46,4 +47,8 @@ pub use signaling::{
 };
 pub use updater::{
     verify_package_integrity, UpdateBackupGuard, UpdateChannel, UpdateError, UpdateManifest,
+};
+pub use ticket::{
+    FileReplayCache, InMemoryReplayCache, ReplayCache, SessionTicket, SessionTicketValidator,
+    TicketError, ValidatedSessionTicket, CLOCK_SKEW_TOLERANCE, MAX_TICKET_VALIDITY_WINDOW,
 };
