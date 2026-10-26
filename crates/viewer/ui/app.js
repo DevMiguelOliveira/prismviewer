@@ -416,11 +416,23 @@ function renderInspectorDrawer() {
 
   document.getElementById('drawerPdvId').textContent = pdv.id;
   document.getElementById('drawerStoreName').textContent = pdv.storeName;
+  const statusEl = document.getElementById('diagStatus');
+  if (statusEl) {
+    statusEl.textContent = pdv.isOnline ? 'Online (Pronto)' : 'Offline (Sem sinal)';
+    statusEl.style.color = pdv.isOnline ? 'var(--accent-mint)' : 'var(--text-muted)';
+  }
   document.getElementById('diagIp').textContent = pdv.ipAddress;
   document.getElementById('diagOs').textContent = pdv.osInfo;
   document.getElementById('diagResolution').textContent = pdv.resolution;
-  document.getElementById('diagVersion').textContent = `PrysmHost v${pdv.agentVersion} (LocalSystem)`;
-  document.getElementById('diagKey').textContent = pdv.publicKey;
+  document.getElementById('diagVersion').textContent = `v${pdv.agentVersion}`;
+  const lastSeenEl = document.getElementById('diagLastSeen');
+  if (lastSeenEl) {
+    lastSeenEl.textContent = pdv.lastSeen || 'Agora';
+  }
+  const keyEl = document.getElementById('diagKey');
+  if (keyEl) {
+    keyEl.textContent = '';
+  }
   document.getElementById('notesTextarea').value = pdv.notes || '';
 
   const pulse = document.getElementById('drawerPulseDot');
@@ -438,7 +450,7 @@ function renderInspectorDrawer() {
     btnConnect.className = 'btn-primary primary-connect-btn';
     btnConnect.innerHTML = `
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-      <span>Conectar Sessão Remota (QUIC TLS 1.3)</span>
+      <span>Iniciar Conexão Remota</span>
     `;
   } else {
     btnConnect.disabled = true;
@@ -896,7 +908,7 @@ function initApp() {
     btnQuickPing.onclick = () => {
       const pdv = getInspectedPdv();
       sendRustCommand('ping_pdv', { pdv_id: pdv.id, ip: pdv.ipAddress });
-      showToast(`Ping em ${pdv.ipAddress}: RTT 18 ms (QUIC OK)`);
+      showToast(`Diagnóstico em ${pdv.id} (${pdv.ipAddress}): Resposta em 18 ms - Conexão estável`);
     };
   }
 
@@ -1027,7 +1039,7 @@ function initApp() {
         return;
       }
       closeModal();
-      showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'} via QUIC...`);
+      showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'}...`);
     };
   }
 
@@ -1041,7 +1053,7 @@ function initApp() {
         showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
         return;
       }
-      showToast(`Conectando diretamente a ${pdvId} via QUIC TLS 1.3...`);
+      showToast(`Conectando a ${pdvId}...`);
     };
   }
 

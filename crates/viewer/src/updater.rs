@@ -78,7 +78,7 @@ pub fn check_for_updates_for_version(current: &str, channel: &str) -> UpdateStat
             current_version: current.to_string(),
             latest_version: latest_version.to_string(),
             channel: channel.to_string(),
-            changelog: "• Nova interface corporativa moderna (WebView2 Fluent & Cyber Slate)\n• Otimização de latência QUIC TLS 1.3\n• Atualização automática embutida com 1 clique sem reinstalação manual".to_string(),
+            changelog: "• Nova interface corporativa moderna (WebView2 Fluent & Cyber Slate)\n• Otimização de latência e estabilidade de conexão\n• Atualização automática embutida com 1 clique sem reinstalação manual".to_string(),
             download_url: format!("https://github.com/DevMiguelOliveira/prismviewer/releases/download/v{}/PrysmAdmin.exe", latest_version),
             sha256_hex: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         }

@@ -336,7 +336,7 @@ impl eframe::App for PrysmViewerApp {
                             ui.label(RichText::new(msg).color(COLOR_CYAN_GLOW).size(12.0));
                         } else if self.state.active_session {
                             ui.label(
-                                RichText::new("● Sessão ativa com criptografia E2E (QUIC TLS 1.3)")
+                                RichText::new("● Sessão Ativa • Criptografia Fim a Fim")
                                     .color(COLOR_MINT_ONLINE)
                                     .size(12.0),
                             );
@@ -525,7 +525,7 @@ impl PrysmViewerApp {
                             Color32::from_rgb(16, 185, 129),
                         );
                         ui.label(
-                            RichText::new("Zero-Trust • QUIC TLS 1.3")
+                            RichText::new("Conexão Segura Criptografada")
                                 .color(Color32::from_rgb(120, 135, 155))
                                 .size(10.0),
                         );
@@ -1125,7 +1125,7 @@ impl PrysmViewerApp {
                 // Botão de Ação Primária de Helpdesk: Conectar Sessão Remota
                 if pdv.is_online {
                     let btn_connect = egui::Button::new(
-                        RichText::new("⚡ Conectar Sessão Remota (QUIC TLS 1.3)")
+                        RichText::new("⚡ Iniciar Conexão Remota")
                             .color(COLOR_TEXT_WHITE)
                             .strong()
                             .size(13.0),
@@ -1160,7 +1160,7 @@ impl PrysmViewerApp {
                         self.state.status_message =
                             Some(format!("Sinal de reinício enviado ao agente do {}", pdv.id));
                     }
-                    if ui.button("🖥 Reboot Caixa").clicked() {
+                    if ui.button("🖥 Reiniciar Dispositivo").clicked() {
                         self.state.status_message = Some(format!(
                             "Solicitação de reinício do sistema enviada ao {}",
                             pdv.id
@@ -1170,9 +1170,9 @@ impl PrysmViewerApp {
                         self.state.status_message =
                             Some(format!("Comando SAS Ctrl+Alt+Del enviado ao {}", pdv.id));
                     }
-                    if ui.button("📶 Ping / Diagnóstico").clicked() {
+                    if ui.button("📶 Diagnóstico").clicked() {
                         self.state.status_message =
-                            Some(format!("Ping em {}: RTT 18 ms (QUIC OK)", pdv.ip_address));
+                            Some(format!("Teste em {}: Resposta rápida 18 ms (Estável)", pdv.ip_address));
                     }
                 });
 
@@ -1246,15 +1246,26 @@ impl PrysmViewerApp {
                         ui.end_row();
 
                         ui.label(
-                            RichText::new("Chave Pública Ed25519:")
+                            RichText::new("Status:")
                                 .color(COLOR_TEXT_MUTED)
                                 .size(11.5),
                         );
                         ui.label(
-                            RichText::new(&pdv.public_key)
+                            RichText::new(if pdv.is_online { "Online (Pronto)" } else { "Offline" })
+                                .color(if pdv.is_online { COLOR_MINT_ONLINE } else { COLOR_TEXT_MUTED })
+                                .size(11.5),
+                        );
+                        ui.end_row();
+
+                        ui.label(
+                            RichText::new("Último Sinal:")
                                 .color(COLOR_TEXT_MUTED)
-                                .monospace()
-                                .size(10.0),
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.last_seen)
+                                .color(COLOR_TEXT_WHITE)
+                                .size(11.5),
                         );
                         ui.end_row();
                     });
@@ -1777,7 +1788,7 @@ impl PrysmViewerApp {
             );
             ui.label(
                 RichText::new(
-                    "Gerenciamento de conexões iroh QUIC, perfil de suporte, políticas Zero-Trust e otimização DXGI.",
+                    "Gerenciamento de conexões seguras, perfil de suporte corporativo e otimização de vídeo DXGI.",
                 )
                 .color(COLOR_TEXT_MUTED)
                 .size(12.0),
@@ -1893,7 +1904,7 @@ impl PrysmViewerApp {
                             COLOR_MINT_ONLINE,
                         );
                         ui.heading(
-                            RichText::new("Conectividade & Sinalização de Loja (iroh QUIC + TLS 1.3)")
+                            RichText::new("Conectividade & Sinalização Central")
                                 .size(14.5)
                                 .color(COLOR_CYAN_NEON)
                                 .strong(),
@@ -1924,7 +1935,7 @@ impl PrysmViewerApp {
                             });
                             ui.end_row();
 
-                            ui.label(RichText::new("Servidor Relay QUIC (Fallback):").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.label(RichText::new("Servidor Relay Seguro (Fallback):").color(COLOR_TEXT_WHITE).size(12.0));
                             ui.add(
                                 egui::TextEdit::singleline(&mut self.state.relay_url)
                                     .desired_width(300.0),
@@ -1951,7 +1962,7 @@ impl PrysmViewerApp {
                             Color32::from_rgb(16, 185, 129),
                         );
                         ui.label(
-                            RichText::new("Status de Rede: P2P Direto Prioritário • Criptografia Fim a Fim (Ed25519)")
+                            RichText::new("Status de Rede: Conexão Direta Prioritária • Criptografia Fim a Fim")
                                 .color(COLOR_MINT_ONLINE)
                                 .size(11.5),
                         );
@@ -2341,7 +2352,7 @@ impl PrysmViewerApp {
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 ui.label(
-                    RichText::new("🔒 QUIC TLS 1.3")
+                    RichText::new("🔒 Conexão Segura")
                         .color(COLOR_MINT_ONLINE)
                         .size(12.0)
                         .strong(),
@@ -2534,18 +2545,18 @@ impl PrysmViewerApp {
             self.render_trust_item(
                 ui,
                 Color32::from_rgb(16, 185, 129),
-                "QUIC TLS 1.3 Criptografia Fim a Fim",
+                "Criptografia Segura Fim a Fim",
             );
             ui.add_space(10.0);
             self.render_trust_item(
                 ui,
                 COLOR_CYAN_NEON,
-                "Zero-Trust & Consentimento Obrigatório",
+                "Segurança de Sessão & Consentimento Local",
             );
             ui.add_space(10.0);
-            self.render_trust_item(ui, COLOR_BLUE_ELECTRIC, "Auditoria Centralizada & Hash E2E");
+            self.render_trust_item(ui, COLOR_BLUE_ELECTRIC, "Auditoria Centralizada & Hash de Conformidade");
             ui.add_space(10.0);
-            self.render_trust_item(ui, COLOR_VIOLET_NEON, "Ultra Leve para PDVs Modestos");
+            self.render_trust_item(ui, COLOR_VIOLET_NEON, "Ultra Leve e Baixo Consumo de Recursos");
 
             ui.add_space(28.0);
 

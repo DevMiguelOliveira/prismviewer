@@ -114,7 +114,7 @@
         <div class="tech-dept" id="sidebarTechDept">Central de Operações de TI</div>
         <div class="security-seal">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          <span>Zero-Trust • QUIC TLS 1.3</span>
+          <span>Conexão Segura Criptografada</span>
         </div>
       </div>
     </aside>
@@ -271,7 +271,7 @@
             <!-- Botão Primário Largo de Conexão Remota -->
             <button class="btn-primary primary-connect-btn" id="btnDrawerConnect">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <span>Conectar Sessão Remota (QUIC TLS 1.3)</span>
+              <span>Iniciar Conexão Remota</span>
             </button>
 
             <!-- Ações Rápidas de Suporte -->
@@ -295,13 +295,17 @@
               </button>
               <button class="quick-btn" id="btnQuickPing">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-                <span>Ping / Diag</span>
+                <span>Diagnóstico</span>
               </button>
             </div>
 
-            <!-- Diagnóstico Técnico -->
-            <div class="section-label">Diagnóstico Técnico</div>
+            <!-- Informações do Dispositivo -->
+            <div class="section-label">Informações do Dispositivo</div>
             <table class="diag-table">
+              <tr>
+                <td>Status:</td>
+                <td id="diagStatus" style="color: var(--accent-mint); font-weight: 600;">Online (Pronto)</td>
+              </tr>
               <tr>
                 <td>Endereço IP:</td>
                 <td id="diagIp" style="color: var(--accent-cyan); font-weight: 600;">192.168.1.101</td>
@@ -316,11 +320,11 @@
               </tr>
               <tr>
                 <td>Versão do Agente:</td>
-                <td id="diagVersion" style="color: var(--accent-violet);">PrysmHost v0.1.0 (LocalSystem)</td>
+                <td id="diagVersion" style="color: var(--text-secondary);">v0.1.0</td>
               </tr>
               <tr>
-                <td>Chave Pública Ed25519:</td>
-                <td id="diagKey" class="diag-code">ed25519_host01_key_hash</td>
+                <td>Último Sinal:</td>
+                <td id="diagLastSeen" style="color: var(--text-muted);">Agora</td>
               </tr>
             </table>
 
@@ -562,7 +566,7 @@
           <div class="settings-card" id="cardNetwork" data-settings-group="network">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <h4>Comunicação de Rede & Conectividade Segura (QUIC TLS 1.3)</h4>
+              <h4>Comunicação de Rede & Conectividade Segura</h4>
             </div>
 
             <p class="card-desc-text">
@@ -589,7 +593,7 @@
             </div>
 
             <div class="info-banner">
-              <strong>Arquitetura de Conexão Zero-Trust:</strong> Conexão P2P Direta prioritária entre operador e dispositivo. Em caso de restrição severa de firewall corporativo, o tráfego é roteado pelo relay criptografado via QUIC TLS 1.3 sem que os dados de sessão sejam descriptografados.
+              <strong>Arquitetura de Conexão Segura:</strong> Conexão direta prioritária entre operador e dispositivo com túnel criptografado fim a fim.
             </div>
           </div>
 
@@ -635,11 +639,11 @@
                   <div class="pulse-dot"></div>
                   <strong style="color: var(--accent-cyan); font-size: 14px;">Nova Versão Disponível: <span id="latestVersionTag">v0.1.1</span></strong>
                 </div>
-                <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">Assinatura: Ed25519 OK</span>
+                <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">Integridade Verificada</span>
               </div>
               <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.6; white-space: pre-line;" id="updateChangelog">
                 • Nova interface corporativa moderna (WebView2 Fluent & Cyber Slate)
-                • Otimização de latência QUIC TLS 1.3
+                • Otimização de latência e estabilidade de conexão
                 • Atualização automática embutida com 1 clique sem reinstalação manual
               </p>
               
