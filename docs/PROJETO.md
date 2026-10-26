@@ -73,20 +73,18 @@ Interface visual inspirada no TeamViewer, em estilo limpo e funcional.
 
 ## 5. Operação, Backup e Recuperação de Desastre (Disaster Recovery)
 
-### 5.1 Infraestrutura em Nuvem (Custo Zero)
-- **Hospedagem**: Oracle Cloud Always Free (ARM Ampere A1, 4 OCPUs, 24 GB RAM, Ubuntu Server 24.04 LTS).
-- **Serviços**: Gerenciados via systemd (`prysmview-api.service` e `prysmview-relay.service`).
-- **Firewall**: UFW liberando apenas portas 22 (SSH restrito), 443 TCP (HTTPS API) e 3340 UDP (Relay iroh).
+### 5.1 Infraestrutura em Nuvem Atual e Estratégia Pós-Créditos (O-06 / O-07)
+- **Hospedagem Atual (Créditos até 18/11/2026):** Microsoft Azure (`Standard D2alds_v7`, Ampere Altra ARM64 2 vCPUs, 8 GB RAM, Ubuntu Server 24.04 LTS).
+- **Serviços:** Gerenciados via systemd (`prysmview-api.service` e `prysmview-relay.service`) com usuário restrito `prysmview`.
+- **Proxy Reverso TLS:** Caddy com terminação TLS 1.2/1.3 automática (Let's Encrypt), redirect HTTP :80 -> HTTPS :443 e cabeçalho HSTS.
+- **Firewall:** UFW e Azure NSG liberando apenas portas 22 (SSH restrito a IPs autorizados), 80/443 TCP (HTTP/HTTPS API) e 3340 UDP (Relay iroh/QUIC).
+- **Estratégia Pós-18/11/2026:** Migração planejada para Oracle Cloud Always Free (4 OCPUs ARM64, 24 GB RAM, 10 TB/mês de tráfego de saída gratuito a R$ 0,00), modelada no [ADR 0004](adr/0004-hospedagem-pos-creditos.md).
 
-### 5.2 Backup Diário e Retenção
-- **Banco de Dados**: SQLite puro sem CGO (`/var/lib/prysmview/prysmview.db`).
-- **Rotina de Backup**: Script diário `deploy/backup-sqlite.sh` executado via cron/systemd timer gerando dump comprimido com gzip (`.sql.gz`).
-- **Retenção**: Rotação automática de 30 dias.
-- **Sincronização**: Envio diário encriptado para repositório Git privado.
+### 5.2 Backup Diário Cifrado com 'age' (O-01)
+- **Banco de Dados:** SQLite puro sem CGO (`/var/lib/prysmview/prysmview.db`), operando em modo WAL com integridade transacional.
+- **Rotina de Backup:** Script diário `deploy/backup-sqlite.sh` executado via cron às 03:00 UTC. Utiliza o comando nativo `sqlite3 .backup` e criptografa a cópia binária diretamente com `age` (`.db.age`), sem expor a chave privada na VM.
+- **Retenção:** Rotação automática de 30 dias na máquina e envio para fora da VM via hook seguro.
 
-### 5.3 Procedimento de Disaster Recovery (RTO < 30 min, RPO < 24 h)
-1. Instanciar nova VM Ubuntu Server 24.04 na Oracle Cloud.
-2. Executar script de firewall: `bash deploy/setup-ufw.sh`.
-3. Instalar binários compilados `prysmview-api` e `prysmview-relay` em `/usr/local/bin/`.
-4. Restaurar o último dump SQLite descompactando em `/var/lib/prysmview/prysmview.db` com permissão `0600`.
-5. Ativar serviços: `systemctl enable --now prysmview-api prysmview-relay`.
+### 5.3 Procedimento de Disaster Recovery (O-02)
+- **Métricas Homologadas:** RTO < 10 minutos (tempo de restauração total) e RPO 24 horas (ou < 1 hora se agendado cron horário).
+- **Runbook Operacional:** Procedimento detalhado passo a passo documentado em [`docs/runbook-disaster-recovery.md`](runbook-disaster-recovery.md), testável a qualquer momento via `bash deploy/test-backup-restore.sh`.

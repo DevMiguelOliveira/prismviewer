@@ -11,10 +11,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-2021%20Stable-orange?logo=rust" alt="Rust" />
-  <img src="https://img.shields.io/badge/Go-1.22+-blue?logo=go" alt="Go" />
+  <img src="https://img.shields.io/badge/Go-1.23.2-blue?logo=go" alt="Go" />
   <img src="https://img.shields.io/badge/Protocol-QUIC%20%7C%20TLS%201.3-brightgreen" alt="Protocol" />
   <img src="https://img.shields.io/badge/Design-Cyber%20Prism%20UI-cyan" alt="Cyber Prism" />
-  <img src="https://img.shields.io/badge/Tests-107%20Rust%20%7C%2014%20Go%20Passed-success" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-135%20Rust%20%7C%2024%20Go%20Passed-success" alt="Tests" />
   <img src="https://img.shields.io/badge/License-MIT-blue" alt="License" />
 </p>
 
@@ -50,11 +50,13 @@ O PrysmView possui instaladores 100% separados para o cliente e para a equipe de
 
 ---
 
-## 🌐 Infraestrutura Cloud Ativa (Custo Zero)
+## 🌐 Infraestrutura Cloud Ativa e Estratégia de Custos (O-06 / O-07)
 
-- **Servidor de Sinalização (API):** `http://20.121.137.44:443` (Azure Ampere A1 ARM64)
-- **Relay P2P iroh (QUIC):** `20.121.137.44:3340` (UDP)
-- **Health Check Público:** `http://20.121.137.44:443/health` (`{"status":"ok","version":"1.0.0"}`)
+- **Hospedagem Atual (Créditos Azure até 18/11/2026):** VM Ubuntu 24.04 LTS ARM64 (`Standard D2alds_v7`)
+- **API de Sinalização (HTTPS):** Porta 443 TCP com proxy reverso Caddy (Let's Encrypt automático) e fallback direto interno na porta 8080 TCP
+- **Relay P2P iroh (QUIC):** Porta 3340 UDP
+- **Health Check de Produção:** `https://api.seudominio.com/health` (ou `http://127.0.0.1:8080/health` localmente)
+- **Transição Pós-Créditos:** Modelada no [ADR 0004](docs/adr/0004-hospedagem-pos-creditos.md) para migração a custo zero para Oracle Cloud Always Free (10 TB/mês de tráfego de saída gratuito).
 
 ---
 
