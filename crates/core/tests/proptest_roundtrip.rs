@@ -248,4 +248,24 @@ proptest! {
             decode_payload(MessageType::Video, &frame[Header::SIZE..]).expect("decode video");
         prop_assert_eq!(decoded, msg);
     }
+
+    /// Fuzzing determinístico: qualquer sequência arbitrária de bytes (dados corrompidos ou maliciosos)
+    /// NUNCA deve provocar pânico nos decodificadores (S-15).
+    #[test]
+    fn prop_fuzz_arbitrary_bytes_never_panic(
+        data in prop::collection::vec(any::<u8>(), 0..4096),
+    ) {
+        if let Ok(header) = decode_header(&data) {
+            if data.len() >= Header::SIZE {
+                let payload = &data[Header::SIZE..];
+                // Tenta decodificar o payload de acordo com o tipo anunciado
+                let _ = decode_payload::<ControlMessage>(header.msg_type, payload);
+                let _ = decode_payload::<VideoFrameMessage>(header.msg_type, payload);
+                let _ = decode_payload::<InputMessage>(header.msg_type, payload);
+                let _ = decode_payload::<ChatMessage>(header.msg_type, payload);
+                let _ = decode_payload::<FileBlockMessage>(header.msg_type, payload);
+            }
+        }
+    }
 }
+
