@@ -63,6 +63,10 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
             if body.contains("check_updates") {
                 let status = crate::updater::check_for_updates("stable");
                 info!("Checagem de atualização executada: {:?}", status);
+            } else if body.contains("apply_update") {
+                info!("Comando de instalação in-place de atualização recebido com sucesso.");
+            } else if body.contains("export_audit_csv") {
+                info!("Comando de exportação de registros de auditoria CSV recebido.");
             }
         })
         .build(&window)?;
