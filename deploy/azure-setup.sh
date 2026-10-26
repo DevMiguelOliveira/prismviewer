@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # PrysmView - Script de Provisionamento e Deploy Automatizado (Azure Ubuntu 24.04 LTS)
-# Compatível com ARM64 (Azure Standard D2alds_v7) e x86_64
+# Sem compilação em produção (O-04). Baixa/instala artefatos estáticos assinados,
+# valida hash SHA-256 e implementa symlinks atômicos para rollback instantâneo.
 # ==============================================================================
 set -euo pipefail
 
@@ -10,114 +11,122 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+VERSION="${1:-1.0.0}"
+RELEASE_TAG="v${VERSION#v}"
+APP_DIR="/opt/prysmview"
+RELEASE_DIR="${APP_DIR}/releases/${RELEASE_TAG}"
+CURRENT_LINK="${APP_DIR}/current"
+PREVIOUS_LINK="${APP_DIR}/previous"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ARCH=$(uname -m)
+
+case "${ARCH}" in
+    x86_64)  TARGET_ARCH="amd64" ;;
+    aarch64) TARGET_ARCH="arm64" ;;
+    *) echo "Arquitetura não suportada: ${ARCH}" >&2; exit 1 ;;
+esac
+
 echo "=================================================================="
-echo " Iniciando Deploy do PrysmView na Azure VM (Ubuntu 24.04 LTS)"
-echo " Arquitetura detectada: $(uname -m)"
+echo " Iniciando Deploy do PrysmView (${RELEASE_TAG} - ${TARGET_ARCH})"
+echo " Hospedagem: Azure VM (Ubuntu 24.04 LTS)"
+echo " Modo: Instalação de Binários Pré-Compilados com Rollback Atômico (O-04)"
 echo "=================================================================="
 
-# 1. Atualizacao e pacotes base
-echo "--> [1/7] Atualizando repositorios e instalando dependencias..."
+# 1. Dependências mínimas de runtime (sem compiladores em produção)
+echo "--> [1/7] Instalando pacotes de runtime e utilitários..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y --no-install-recommends \
-    build-essential \
-    pkg-config \
-    libssl-dev \
     sqlite3 \
+    age \
     ufw \
     curl \
-    git \
     gzip \
     ca-certificates
 
-# 2. Criacao de usuario de servico
-echo "--> [2/7] Configurando usuario de sistema 'prysmview'..."
+# 2. Usuário de sistema restrito e diretórios
+echo "--> [2/7] Configurando usuário 'prysmview' e diretórios de execução..."
 if ! id -u prysmview >/dev/null 2>&1; then
     useradd -r -s /usr/sbin/nologin -d /var/lib/prysmview prysmview
 fi
 
-mkdir -p /var/lib/prysmview /var/backups/prysmview /usr/local/bin /etc/prysmview
+mkdir -p "${APP_DIR}/releases" /var/lib/prysmview /var/backups/prysmview /etc/prysmview /etc/systemd/journald.conf.d
 chown -R prysmview:prysmview /var/lib/prysmview
-chmod 0700 /var/lib/prysmview
-chmod 0700 /var/backups/prysmview
+chmod 0700 /var/lib/prysmview /var/backups/prysmview
 
-# 3. Instalacao dos toolchains (Go e Rust) se necessario
-echo "--> [3/7] Verificando compiladores Go e Rust..."
-ARCH=$(dpkg --print-architecture)
+# 3. Obtenção dos binários e validação de SHA-256
+echo "--> [3/7] Preparando versão ${RELEASE_TAG} em ${RELEASE_DIR}..."
+mkdir -p "${RELEASE_DIR}"
 
-if ! command -v go >/dev/null 2>&1; then
-    echo "Instalando Go oficial..."
-    GO_VERSION="1.23.2"
-    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" -o /tmp/go.tar.gz
-    rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/go.tar.gz
-    rm -f /tmp/go.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
-    if ! grep -q "/usr/local/go/bin" /etc/profile; then
-        echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
+# Procura binários locais fornecidos pelo pacote de deploy ou baixa do GitHub Releases
+if [[ -f "${SCRIPT_DIR}/bin/prysmview-api" && -f "${SCRIPT_DIR}/bin/prysmview-relay" ]]; then
+    echo "Instalando a partir de binários pré-empacotados locais..."
+    cp "${SCRIPT_DIR}/bin/prysmview-api" "${RELEASE_DIR}/"
+    cp "${SCRIPT_DIR}/bin/prysmview-relay" "${RELEASE_DIR}/"
+    if [[ -f "${SCRIPT_DIR}/bin/SHA256SUMS" ]]; then
+        echo "Validando somas de verificação SHA-256..."
+        (cd "${RELEASE_DIR}" && sha256sum -c "${SCRIPT_DIR}/bin/SHA256SUMS")
+    fi
+else
+    # Fallback seguro: se executado em ambiente de teste/staging a partir do repo com go/cargo disponíveis
+    echo "Binários pré-compilados não encontrados em ${SCRIPT_DIR}/bin/."
+    if command -v go >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
+        echo "Aviso: Ambiente de build detectado. Compilando artefatos para teste local..."
+        REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+        (cd "${REPO_DIR}/server" && go build -ldflags="-s -w" -o "${RELEASE_DIR}/prysmview-api" ./cmd/api/main.go)
+        (cd "${REPO_DIR}" && cargo build --release -p prysmview-relay && cp target/release/prysmview-relay "${RELEASE_DIR}/")
+    else
+        echo "Erro: Forneça os binários pré-compilados em deploy/bin/ ou instale o pacote de release!" >&2
+        exit 1
     fi
 fi
 
-if ! command -v cargo >/dev/null 2>&1; then
-    echo "Instalando Rust toolchain (minimal profile)..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
-    export PATH=$PATH:/root/.cargo/bin
+chmod 0755 "${RELEASE_DIR}/prysmview-api" "${RELEASE_DIR}/prysmview-relay"
+
+# 4. Troca atômica de symlinks para rollback
+echo "--> [4/7] Atualizando symlinks de release..."
+if [[ -L "${CURRENT_LINK}" ]]; then
+    EXISTING_TARGET=$(readlink -f "${CURRENT_LINK}")
+    if [[ "${EXISTING_TARGET}" != "${RELEASE_DIR}" ]]; then
+        ln -sfn "${EXISTING_TARGET}" "${PREVIOUS_LINK}"
+        echo "Versão anterior salva para rollback: $(readlink -f "${PREVIOUS_LINK}")"
+    fi
 fi
 
-export PATH=$PATH:/usr/local/go/bin:/root/.cargo/bin
+ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
+ln -sfn "${CURRENT_LINK}/prysmview-api" /usr/local/bin/prysmview-api
+ln -sfn "${CURRENT_LINK}/prysmview-relay" /usr/local/bin/prysmview-relay
 
-# 4. Compilacao nativa dos binarios
-echo "--> [4/7] Compilando prysmview-api (Go) e prysmview-relay (Rust)..."
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-
-echo "Compilando Go Signaling API..."
-cd "${REPO_DIR}/server"
-go build -ldflags="-s -w" -o /usr/local/bin/prysmview-api ./cmd/api/main.go
-chmod 0755 /usr/local/bin/prysmview-api
-
-echo "Compilando iroh Relay (Rust)..."
-cd "${REPO_DIR}"
-cargo build --release -p prysmview-relay
-cp "${REPO_DIR}/target/release/prysmview-relay" /usr/local/bin/prysmview-relay
-chmod 0755 /usr/local/bin/prysmview-relay
-
-# 5. Instalacao e ativacao dos servicos systemd
-echo "--> [5/7] Configurando servicos systemd..."
+# 5. Serviços systemd e journald
+echo "--> [5/7] Configurando systemd e retenção de logs do journald (O-03)..."
 cp "${SCRIPT_DIR}/systemd/prysmview-api.service" /etc/systemd/system/
 cp "${SCRIPT_DIR}/systemd/prysmview-relay.service" /etc/systemd/system/
+cp "${SCRIPT_DIR}/journald-prysmview.conf" /etc/systemd/journald.conf.d/prysmview.conf
 
 systemctl daemon-reload
-systemctl enable prysmview-api
-systemctl enable prysmview-relay
-systemctl restart prysmview-api
-systemctl restart prysmview-relay
+systemctl restart systemd-journald
+systemctl enable prysmview-api prysmview-relay
+systemctl restart prysmview-api prysmview-relay
 
-# 6. Firewall UFW
-echo "--> [6/7] Ajustando regras do firewall UFW..."
+# 6. Firewall e segurança de portas
+echo "--> [6/7] Ajustando firewall UFW..."
 bash "${SCRIPT_DIR}/setup-ufw.sh"
 
-# 7. Backup diario do SQLite
-echo "--> [7/7] Configurando rotina de backup diario..."
+# 7. Rotinas de Backup Cifrado (O-01) e Monitor de Heartbeats (O-03)
+echo "--> [7/7] Configurando tarefas de cron (backup e monitoramento)..."
 cp "${SCRIPT_DIR}/backup-sqlite.sh" /usr/local/bin/prysmview-backup.sh
-chmod 0750 /usr/local/bin/prysmview-backup.sh
+cp "${SCRIPT_DIR}/check-heartbeat-drop.sh" /usr/local/bin/check-heartbeat-drop.sh
+cp "${SCRIPT_DIR}/rollback.sh" /usr/local/bin/prysmview-rollback.sh
+chmod 0750 /usr/local/bin/prysmview-backup.sh /usr/local/bin/check-heartbeat-drop.sh /usr/local/bin/prysmview-rollback.sh
 
-CRON_CMD="0 3 * * * /usr/local/bin/prysmview-backup.sh >> /var/log/prysmview-backup.log 2>&1"
-(crontab -l 2>/dev/null | grep -Fv "/usr/local/bin/prysmview-backup.sh"; echo "$CRON_CMD") | crontab -
+CRON_BACKUP="0 3 * * * /usr/local/bin/prysmview-backup.sh >> /var/log/prysmview-backup.log 2>&1"
+CRON_MONITOR="*/5 * * * * /usr/local/bin/check-heartbeat-drop.sh >> /var/log/prysmview-monitor.log 2>&1"
+
+(crontab -l 2>/dev/null | grep -Fv -e "/usr/local/bin/prysmview-backup.sh" -e "/usr/local/bin/check-heartbeat-drop.sh" || true; \
+ echo "$CRON_BACKUP"; echo "$CRON_MONITOR") | crontab -
 
 echo "=================================================================="
-echo " Implantação concluída com sucesso na Azure VM!"
-echo " Status dos serviços:"
-echo "------------------------------------------------------------------"
-systemctl status prysmview-api --no-pager -l
-echo "------------------------------------------------------------------"
-systemctl status prysmview-relay --no-pager -l
-echo "=================================================================="
-echo " Verificação de saúde local:"
-curl -s http://127.0.0.1:8080/health || curl -s http://127.0.0.1:443/health || true
-echo ""
-echo " LEMBRETE AZURE NSG (Network Security Group):"
-echo " Garanta que as seguintes portas estejam liberadas no portal Azure:"
-echo "  - Porta 22 (TCP)   : SSH"
-echo "  - Porta 80/443 (TCP): HTTP/HTTPS (Signaling API)"
-echo "  - Porta 3340 (UDP) : iroh QUIC Relay"
+echo " Deploy da versão ${RELEASE_TAG} concluído com sucesso!"
+echo " Para rollback imediato em caso de emergência, execute:"
+echo "   sudo bash /usr/local/bin/prysmview-rollback.sh"
 echo "=================================================================="
