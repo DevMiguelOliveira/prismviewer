@@ -82,10 +82,10 @@ const state = {
   filterStatus: 'all',
   selectedStore: '',
   searchQuery: '',
-  inspectedPdvId: 'DESK-01',
+  inspectedPdvId: null,
   latencyMs: 18,
   viewMode: 'cards', // 'cards' ou 'table'
-  drawerCollapsed: false,
+  drawerCollapsed: true,
   currentPage: 1,
   pageSize: 10, // Densidade otimizada: 10 por página com paginação instantânea
 
@@ -143,8 +143,10 @@ window.onPrysmMessage = function(data) {
     const parsed = typeof data === 'string' ? JSON.parse(data) : data;
     if (parsed.type === 'ping_result') {
       state.latencyMs = parsed.latencyMs || 18;
-      document.getElementById('kpiLatency').textContent = `${state.latencyMs} ms`;
-      document.getElementById('headerLatencyText').textContent = `${state.latencyMs} ms • Conexão Segura`;
+      const kpiLat = document.getElementById('kpiLatency');
+      if (kpiLat) kpiLat.textContent = `${state.latencyMs} ms`;
+      const hdrLat = document.getElementById('headerLatencyText');
+      if (hdrLat) hdrLat.textContent = `${state.latencyMs} ms • Conexão Segura`;
       showToast(`Ping Servidor: HTTP 200 OK (${state.latencyMs} ms de RTT)`);
     } else if (parsed.type === 'status_message') {
       showToast(parsed.message);
@@ -332,11 +334,11 @@ function renderFleetCards(pageItems) {
           <div class="telemetry-chips">
             <span class="tele-chip highlight">${pdv.ipAddress}</span>
             <span class="tele-chip">${pdv.osInfo}</span>
-            <span class="tele-chip version">v${pdv.agentVersion}</span>
           </div>
         </div>
       </div>
       <div class="pdv-actions">
+        <button class="btn-secondary" style="padding: 4px 10px; font-size: 11.5px; height: 28px;" onclick="event.stopPropagation(); selectPdvForInspection(${JSON.stringify(pdv).replace(/"/g, '&quot;')})">Ficha</button>
         ${actionBtn}
       </div>
     `;
@@ -353,7 +355,7 @@ function renderFleetTable(pageItems) {
   if (pageItems.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
+        <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
           Nenhum dispositivo encontrado com os filtros atuais.
         </td>
       </tr>
@@ -384,7 +386,6 @@ function renderFleetTable(pageItems) {
       <td style="color: var(--text-secondary); font-weight: 500;">${pdv.storeName}</td>
       <td><span class="tele-chip highlight">${pdv.ipAddress}</span></td>
       <td style="color: var(--text-muted); font-size: 12px;">${pdv.osInfo}</td>
-      <td><span class="tele-chip" style="color: var(--accent-violet);">v${pdv.agentVersion}</span></td>
       <td style="color: var(--text-muted); font-size: 11.5px;">${pdv.lastSeen}</td>
       <td style="text-align: right;">
         <div style="display: inline-flex; gap: 6px; align-items: center;">
@@ -399,15 +400,27 @@ function renderFleetTable(pageItems) {
 }
 
 function getInspectedPdv() {
-  return state.pdvs.find(p => p.id === state.inspectedPdvId) || state.pdvs[0];
+  return state.pdvs.find(p => p.id === state.inspectedPdvId) || null;
 }
 
 function selectPdvForInspection(pdv) {
   state.inspectedPdvId = pdv.id;
+  state.drawerCollapsed = false;
+  const split = document.getElementById('splitDashboard');
+  if (split) {
+    split.classList.remove('drawer-collapsed');
+  }
   renderDashboard();
 }
 
 function renderInspectorDrawer() {
+  const split = document.getElementById('splitDashboard');
+  if (state.drawerCollapsed || !state.inspectedPdvId) {
+    if (split) split.classList.add('drawer-collapsed');
+    return;
+  }
+  if (split) split.classList.remove('drawer-collapsed');
+
   const pdv = getInspectedPdv();
   if (!pdv) return;
 
@@ -448,7 +461,7 @@ function renderInspectorDrawer() {
       btnConnect.className = 'btn-primary primary-connect-btn';
       btnConnect.innerHTML = `
         <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        <span>Conectar Sessão Remota (QUIC TLS 1.3)</span>
+        <span>Conectar Sessão Remota</span>
       `;
     } else {
       btnConnect.disabled = true;
@@ -833,6 +846,20 @@ function initApp() {
         split.classList.toggle('drawer-collapsed');
         state.drawerCollapsed = split.classList.contains('drawer-collapsed');
       }
+    };
+  }
+
+  // Botão fechar na própria Ficha Técnica
+  const btnCloseInspector = document.getElementById('btnCloseInspector');
+  if (btnCloseInspector) {
+    btnCloseInspector.onclick = () => {
+      state.drawerCollapsed = true;
+      state.inspectedPdvId = null;
+      const split = document.getElementById('splitDashboard');
+      if (split) {
+        split.classList.add('drawer-collapsed');
+      }
+      renderDashboard();
     };
   }
 
