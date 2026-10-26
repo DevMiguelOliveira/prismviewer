@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 
 pub const MIN_FPS: u32 = 15;
 pub const MAX_FPS: u32 = 30;
-pub const DEFAULT_KEYFRAME_INTERVAL_SECS: u64 = 5;
+pub const DEFAULT_KEYFRAME_INTERVAL_SECS: u64 = 30;
 
 /// Controlador adaptativo de taxa de vídeo e keyframes.
 pub struct RateController {
@@ -72,10 +72,21 @@ impl RateController {
     }
 
     /// Avalia se o próximo frame deve ser codificado como keyframe (completo).
-    /// Dispara se foi forçado ou se decorreram 5 segundos desde o último keyframe.
+    /// Dispara se foi forçado ou se decorreu o intervalo de keyframes.
     pub fn should_encode_keyframe(&mut self) -> bool {
+        self.should_encode_keyframe_adaptive(true)
+    }
+
+    /// Avaliação adaptativa de keyframe (P-03):
+    /// Se a tela está sem alteração de tiles (`has_activity == false`), evita disparar
+    /// keyframe redundante a menos que tenha sido solicitado explicitamente pelo viewer.
+    pub fn should_encode_keyframe_adaptive(&mut self, has_activity: bool) -> bool {
         if self.force_next_keyframe {
             return true;
+        }
+
+        if !has_activity {
+            return false;
         }
 
         match self.last_keyframe_sent {
@@ -177,4 +188,19 @@ mod tests {
         controller.request_keyframe();
         assert!(controller.should_encode_keyframe());
     }
+
+    #[test]
+    fn test_adaptive_keyframe_suppressed_on_static_screen() {
+        let mut controller = RateController::default();
+        controller.on_frame_sent(true);
+        controller.on_frame_ack(Duration::from_millis(10));
+
+        // Sem atividade, não deve disparar keyframe
+        assert!(!controller.should_encode_keyframe_adaptive(false));
+
+        // Com atividade e se forçado, deve disparar
+        controller.request_keyframe();
+        assert!(controller.should_encode_keyframe_adaptive(false));
+    }
 }
+
