@@ -28,6 +28,7 @@
     <div class="brand-section">
       <img src="../../assets/logo.png" alt="Prysm Logo" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-title">PRYSM<span>VIEW</span></div>
+      <span class="app-version-pill" id="headerAppVersion">v0.1.0</span>
       <span class="breadcrumb-divider">/</span>
       <span class="breadcrumb-current" id="breadcrumbLabel">Painel de Dispositivos</span>
     </div>
@@ -590,8 +591,13 @@
               </div>
 
               <label class="form-label">Status da Versão:</label>
-              <div id="updateStatusText" style="font-size: 13px; color: var(--accent-mint); font-weight: 500;">
-                ● Sistema Atualizado (Você está utilizando a versão mais recente)
+              <div>
+                <div id="updateStatusText" style="font-size: 13px; color: var(--accent-mint); font-weight: 500;">
+                  ● Sistema Atualizado (Você está utilizando a versão mais recente)
+                </div>
+                <div id="lastCheckTimeText" style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
+                  Última verificação: Hoje, 12:45
+                </div>
               </div>
             </div>
 

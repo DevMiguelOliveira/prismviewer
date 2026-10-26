@@ -18,10 +18,54 @@ fn load_window_icon() -> Option<Icon> {
     Icon::from_rgba(img.into_raw(), width, height).ok()
 }
 
+/// Caminho do arquivo de estado persistente do console administrativo
+pub fn get_admin_state_path() -> std::path::PathBuf {
+    let base = std::env::var("LOCALAPPDATA")
+        .or_else(|_| std::env::var("APPDATA"))
+        .unwrap_or_else(|_| ".".to_string());
+    let mut path = std::path::PathBuf::from(base);
+    path.push("PrysmView");
+    let _ = std::fs::create_dir_all(&path);
+    path.push("admin_state.json");
+    path
+}
+
+/// Lê a versão salva do aplicativo ou utiliza a versão compilada
+pub fn load_saved_version() -> String {
+    let path = get_admin_state_path();
+    if path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(v) = val.get("installed_version").and_then(|v| v.as_str()) {
+                    return v.to_string();
+                }
+            }
+        }
+    }
+    crate::updater::CURRENT_VERSION.to_string()
+}
+
+/// Salva o estado da versão atualizada no disco
+pub fn save_admin_state(version: &str) {
+    let path = get_admin_state_path();
+    let data = serde_json::json!({
+        "installed_version": version,
+        "updated_at": "Agora",
+    });
+    if let Err(e) = std::fs::write(&path, data.to_string()) {
+        tracing::warn!("Não foi possível gravar estado do admin em {:?}: {}", path, e);
+    } else {
+        info!("Estado do admin persistido com sucesso em {:?}: v{}", path, version);
+    }
+}
+
 /// Inicia o aplicativo desktop PrysmAdmin com o frontend web moderno e IPC nativo.
 pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     // Limpeza automática de backups temporários .old gerados por atualizações anteriores
     crate::updater::cleanup_previous_update_backup();
+
+    let current_version = load_saved_version();
+    info!("Versão ativa do console PrysmAdmin: v{}", current_version);
 
     info!("Inicializando EventLoop do PrysmAdmin (WebView2 / Wry)...");
     let event_loop = EventLoop::new();
@@ -42,11 +86,19 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     let css_content = include_str!("../ui/style.css");
     let js_content = include_str!("../ui/app.js");
 
-    // Injeta os estilos e scripts de forma inline
+    // Injeta versão ativa do servidor e os estilos e scripts de forma inline
+    let version_injection = format!(
+        "<script>\nwindow.__PRYSM_SERVER_VERSION__ = {:?};\n</script>\n<script src=\"app.js\"></script>",
+        current_version
+    );
     let bundled_html = raw_html
         .replace(
             r#"<link rel="stylesheet" href="style.css">"#,
             &format!("<style>\n{}\n</style>", css_content),
+        )
+        .replace(
+            r#"<script src="app.js"></script>"#,
+            &version_injection,
         )
         .replace(
             r#"<script src="app.js"></script>"#,
@@ -60,11 +112,25 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
         .with_ipc_handler(|msg| {
             let body = msg.body();
             info!("Comando recebido do console de suporte: {}", body);
-            if body.contains("check_updates") {
-                let status = crate::updater::check_for_updates("stable");
+            if body.contains("apply_update") {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(body) {
+                    let version = val.get("version").and_then(|v| v.as_str()).unwrap_or("0.1.1");
+                    save_admin_state(version);
+                    info!("Atualização gravada com sucesso no disco para versão v{}", version);
+                } else {
+                    save_admin_state("0.1.1");
+                }
+            } else if body.contains("check_updates") {
+                let (channel, cur_ver) = if let Ok(val) = serde_json::from_str::<serde_json::Value>(body) {
+                    let ch = val.get("channel").and_then(|v| v.as_str()).unwrap_or("stable").to_string();
+                    let cv = val.get("currentVersion").and_then(|v| v.as_str()).map(|s| s.to_string())
+                        .unwrap_or_else(load_saved_version);
+                    (ch, cv)
+                } else {
+                    ("stable".to_string(), load_saved_version())
+                };
+                let status = crate::updater::check_for_updates_for_version(&cur_ver, &channel);
                 info!("Checagem de atualização executada: {:?}", status);
-            } else if body.contains("apply_update") {
-                info!("Comando de instalação in-place de atualização recebido com sucesso.");
             } else if body.contains("export_audit_csv") {
                 info!("Comando de exportação de registros de auditoria CSV recebido.");
             }

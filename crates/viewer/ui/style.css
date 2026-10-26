@@ -258,6 +258,20 @@ body {
   color: var(--accent-cyan);
 }
 
+.app-version-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  margin-left: 2px;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
 .breadcrumb-divider {
   color: var(--text-dim);
   font-size: 14px;

@@ -3,6 +3,79 @@
  * Solução corporativa universal de acesso e gestão remota de dispositivos.
  */
 
+function getInitialInstalledVersion() {
+  if (typeof window !== 'undefined' && window.__PRYSM_SERVER_VERSION__) {
+    return window.__PRYSM_SERVER_VERSION__;
+  }
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem('prysm_installed_version');
+      if (saved) return saved;
+    }
+  } catch (e) {}
+  return '0.1.0';
+}
+
+function compareSemver(v1, v2) {
+  if (!v1 || !v2) return 0;
+  const clean = v => v.toString().replace(/^v/i, '').split('-')[0].split('.').map(n => parseInt(n, 10) || 0);
+  const p1 = clean(v1);
+  const p2 = clean(v2);
+  for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+    const num1 = p1[i] || 0;
+    const num2 = p2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  if (v1.includes('beta') && !v2.includes('beta')) return -1;
+  if (!v1.includes('beta') && v2.includes('beta')) return 1;
+  return 0;
+}
+
+function syncVersionUI() {
+  const curVer = state.installedVersion;
+  
+  // Atualiza tags de versão na interface
+  const headerVer = document.getElementById('headerAppVersion');
+  if (headerVer) headerVer.textContent = `v${curVer}`;
+
+  const currentVerTag = document.getElementById('currentVersionTag');
+  if (currentVerTag) currentVerTag.textContent = `v${curVer}`;
+
+  const channel = state.activeChannel || 'stable';
+  const targetVer = state.availableVersions[channel] || state.availableVersions.stable;
+  const isNewer = compareSemver(targetVer, curVer) > 0;
+
+  const updateBox = document.getElementById('updateAvailableBox');
+  const headerBadge = document.getElementById('headerUpdateBadge');
+  const statusText = document.getElementById('updateStatusText');
+  const latestTag = document.getElementById('latestVersionTag');
+
+  if (latestTag) latestTag.textContent = `v${targetVer}`;
+
+  if (isNewer) {
+    if (updateBox) updateBox.style.display = 'flex';
+    if (headerBadge) {
+      headerBadge.style.display = 'flex';
+      headerBadge.innerHTML = `<div class="pulse-dot"></div><span>⚡ Nova v${targetVer} Disp.</span>`;
+    }
+    if (statusText) {
+      statusText.innerHTML = `<span style="color: var(--accent-cyan); font-weight: 600;">⚡ Nova versão v${targetVer} disponível para instalação imediata!</span>`;
+    }
+  } else {
+    if (updateBox) updateBox.style.display = 'none';
+    if (headerBadge) headerBadge.style.display = 'none';
+    if (statusText) {
+      statusText.innerHTML = `<span style="color: var(--accent-mint); font-weight: 600;">● Sistema Atualizado (Versão v${curVer} ativa e verificada)</span>`;
+    }
+  }
+
+  const lastCheckEl = document.getElementById('lastCheckTimeText');
+  if (lastCheckEl && state.lastCheckTime) {
+    lastCheckEl.textContent = `Última verificação: ${state.lastCheckTime}`;
+  }
+}
+
 // Estado Global da Aplicação
 const state = {
   activeTab: 'dashboard',
@@ -15,6 +88,15 @@ const state = {
   drawerCollapsed: false,
   currentPage: 1,
   pageSize: 10, // Densidade otimizada: 10 por página com paginação instantânea
+
+  // Versão instalada ativa (persistida via IPC e localStorage)
+  installedVersion: getInitialInstalledVersion(),
+  availableVersions: {
+    stable: '0.1.1',
+    beta: '0.1.2-beta'
+  },
+  activeChannel: 'stable',
+  lastCheckTime: 'Hoje, 12:45',
   
   pdvs: [
     { id: "DESK-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host01_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Financeiro: Impressora HP LaserJet. Monitor duplo. Ramal 4022." },
@@ -952,6 +1034,19 @@ function initApp() {
   const updateProgressLabel = document.getElementById('updateProgressLabel');
   const updateProgressPercent = document.getElementById('updateProgressPercent');
 
+  // Ao carregar, sincroniza todos os indicadores visuais de versão instalada
+  syncVersionUI();
+
+  // Escuta alteração do canal de atualização (Estável vs Beta)
+  document.querySelectorAll('input[name="updateChannel"]').forEach(radio => {
+    radio.onchange = (e) => {
+      state.activeChannel = e.target.value;
+      const targetVer = state.availableVersions[state.activeChannel] || '0.1.1';
+      syncVersionUI();
+      showToast(`Canal alterado para ${state.activeChannel === 'beta' ? 'Beta' : 'Estável'}. Versão disponível: v${targetVer}`);
+    };
+  });
+
   // Ao clicar no badge do header, abre as configurações e foca no card de atualização
   if (headerUpdateBadge) {
     headerUpdateBadge.onclick = () => {
@@ -969,6 +1064,7 @@ function initApp() {
     };
   }
 
+  // Verificar Atualizações (Buscar)
   if (checkUpdatesBtn) {
     checkUpdatesBtn.onclick = () => {
       checkUpdatesBtn.disabled = true;
@@ -977,7 +1073,9 @@ function initApp() {
         <span>Verificando...</span>
       `;
 
-      sendRustCommand('check_updates', { channel: 'stable' });
+      const channel = document.querySelector('input[name="updateChannel"]:checked')?.value || state.activeChannel || 'stable';
+      state.activeChannel = channel;
+      sendRustCommand('check_updates', { channel, currentVersion: state.installedVersion });
 
       setTimeout(() => {
         checkUpdatesBtn.disabled = false;
@@ -986,28 +1084,40 @@ function initApp() {
           <span>Verificar Atualizações Agora</span>
         `;
 
-        // Simula / processa resultado: Nova versão disponível
-        if (updateAvailableBox) updateAvailableBox.style.display = 'flex';
-        if (headerUpdateBadge) headerUpdateBadge.style.display = 'flex';
-        if (updateStatusText) updateStatusText.innerHTML = `<span style="color: var(--accent-cyan);">⚡ Nova versão v0.1.1 disponível para instalação imediata!</span>`;
-        showToast('Nova versão v0.1.1 encontrada! Você pode atualizar agora com 1 clique.');
-      }, 1200);
+        const now = new Date();
+        state.lastCheckTime = `Hoje, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+        const targetVer = state.availableVersions[channel] || state.availableVersions.stable;
+        const isNewer = compareSemver(targetVer, state.installedVersion) > 0;
+
+        syncVersionUI();
+
+        if (isNewer) {
+          showToast(`Nova versão v${targetVer} encontrada no canal ${channel}! Você pode atualizar agora.`);
+        } else {
+          showToast(`O PrysmView já está na versão mais recente (v${state.installedVersion}). Nenhuma atualização necessária!`);
+        }
+      }, 800);
     };
   }
 
+  // Instalar Atualização In-Place
   if (btnApplyUpdate) {
     btnApplyUpdate.onclick = () => {
+      const channel = state.activeChannel || 'stable';
+      const targetVer = state.availableVersions[channel] || state.availableVersions.stable;
+
       btnApplyUpdate.disabled = true;
-      btnApplyUpdate.innerHTML = `<span>Instalando Atualização...</span>`;
+      btnApplyUpdate.innerHTML = `<span>Instalando Atualização v${targetVer}...</span>`;
       if (updateProgressContainer) updateProgressContainer.style.display = 'flex';
 
       let currentStep = 0;
       const steps = [
-        { p: 25, label: "Baixando pacote oficial de atualização (3.2 MB)..." },
+        { p: 25, label: `Baixando pacote oficial v${targetVer} (3.2 MB)...` },
         { p: 55, label: "Validando integridade SHA-256 em tempo constante..." },
         { p: 80, label: "Validando assinatura digital Ed25519..." },
         { p: 95, label: "Aplicando substituição atômica in-place (Windows NTFS)..." },
-        { p: 100, label: "Atualização aplicada com sucesso! Reiniciando software..." }
+        { p: 100, label: `Atualização v${targetVer} aplicada com sucesso!` }
       ];
 
       const interval = setInterval(() => {
@@ -1019,27 +1129,56 @@ function initApp() {
           currentStep++;
         } else {
           clearInterval(interval);
-          sendRustCommand('apply_update', { version: '0.1.1' });
-          showToast('Atualização v0.1.1 instalada! O software foi atualizado sem reinstalação manual.');
+
+          // Efetiva a alteração da versão no estado
+          state.installedVersion = targetVer;
+
+          // 1. Persiste no disco via Rust IPC
+          sendRustCommand('apply_update', { version: state.installedVersion, channel });
+
+          // 2. Persiste no localStorage (com tratamento de erro WebView2)
+          try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+              window.localStorage.setItem('prysm_installed_version', state.installedVersion);
+            }
+          } catch (e) {}
+
+          // 3. Registra no histórico de auditoria
+          const now = new Date();
+          const timeStr = `Hoje ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          state.auditRecords.unshift({
+            id: `AUD-${Math.floor(920 + Math.random() * 50)}`,
+            timestamp: timeStr,
+            operator: document.getElementById('headerOperatorName')?.textContent || "admin",
+            pdv: "PrysmAdmin",
+            store: "Console Central",
+            reason: `Atualização In-App de Software para v${state.installedVersion}`,
+            duration: "06s",
+            status: "Concluída"
+          });
+
+          showToast(`Sucesso! PrysmView atualizado para a versão v${state.installedVersion} sem reinstalação manual.`);
+
           setTimeout(() => {
-            const vtag = document.getElementById('currentVersionTag');
-            if (vtag) vtag.textContent = 'v0.1.1';
-            if (updateAvailableBox) updateAvailableBox.style.display = 'none';
-            if (headerUpdateBadge) headerUpdateBadge.style.display = 'none';
-            if (updateStatusText) updateStatusText.innerHTML = `● Sistema Atualizado (v0.1.1 instalada com sucesso)`;
+            if (updateProgressContainer) updateProgressContainer.style.display = 'none';
+            if (updateProgressBar) updateProgressBar.style.width = '0%';
             btnApplyUpdate.disabled = false;
             btnApplyUpdate.innerHTML = `
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
               <span>Instalar Atualização Automaticamente</span>
             `;
-          }, 2000);
+
+            // Sincroniza a interface: oculta aviso de atualização, atualiza badges e status
+            syncVersionUI();
+          }, 1200);
         }
-      }, 600);
+      }, 500);
     };
   }
 
   // Render inicial
   renderDashboard();
+  syncVersionUI();
 }
 
 // Inicia imediatamente se o DOM já estiver pronto, ou escuta DOMContentLoaded

@@ -60,32 +60,39 @@ pub fn cleanup_previous_update_backup() {
     }
 }
 
-/// Realiza a checagem de atualizações disponíveis.
-pub fn check_for_updates(channel: &str) -> UpdateStatus {
+/// Realiza a checagem de atualizações considerando a versão atual do sistema.
+pub fn check_for_updates_for_version(current: &str, channel: &str) -> UpdateStatus {
     info!(
         "Verificando atualizações no canal '{}' (Versão atual: v{})...",
-        channel, CURRENT_VERSION
+        channel, current
     );
 
     // Na arquitetura de produção, consulta o endpoint de release ou manifesto assinado.
-    // Aqui retornamos o manifesto estruturado demonstrando a disponibilidade da v0.1.1:
-    let latest_version = "0.1.1";
+    let latest_version = match channel {
+        "beta" => "0.1.2-beta",
+        _ => "0.1.1",
+    };
 
-    if is_newer_version(CURRENT_VERSION, latest_version) {
+    if is_newer_version(current, latest_version) {
         UpdateStatus::UpdateAvailable {
-            current_version: CURRENT_VERSION.to_string(),
+            current_version: current.to_string(),
             latest_version: latest_version.to_string(),
             channel: channel.to_string(),
-            changelog: "• Nova interface universal moderna (WebView2 Fluent & Cyber Slate)\n• Otimização de latência QUIC TLS 1.3\n• Atualização automática embutida com 1 clique sem reinstalação manual".to_string(),
+            changelog: "• Nova interface corporativa moderna (WebView2 Fluent & Cyber Slate)\n• Otimização de latência QUIC TLS 1.3\n• Atualização automática embutida com 1 clique sem reinstalação manual".to_string(),
             download_url: format!("https://github.com/DevMiguelOliveira/prismviewer/releases/download/v{}/PrysmAdmin.exe", latest_version),
             sha256_hex: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         }
     } else {
         UpdateStatus::UpToDate {
-            current_version: CURRENT_VERSION.to_string(),
+            current_version: current.to_string(),
             checked_at: "Agora".to_string(),
         }
     }
+}
+
+/// Realiza a checagem de atualizações disponíveis para a versão compilada padrão.
+pub fn check_for_updates(channel: &str) -> UpdateStatus {
+    check_for_updates_for_version(CURRENT_VERSION, channel)
 }
 
 /// Compara semanticamente se `latest` é mais recente que `current`.
@@ -210,5 +217,26 @@ mod tests {
 
         assert!(verify_package_hash(data, &hex));
         assert!(!verify_package_hash(b"corrupted_data", &hex));
+    }
+
+    #[test]
+    fn test_update_check_status_transitions() {
+        // Para versão antiga (0.1.0), uma atualização estável deve estar disponível (0.1.1)
+        let status_old = check_for_updates_for_version("0.1.0", "stable");
+        match status_old {
+            UpdateStatus::UpdateAvailable { latest_version, .. } => {
+                assert_eq!(latest_version, "0.1.1");
+            }
+            _ => panic!("Deveria retornar UpdateAvailable para 0.1.0"),
+        }
+
+        // Uma vez atualizado para 0.1.1, a checagem no canal estável deve acusar UpToDate
+        let status_updated = check_for_updates_for_version("0.1.1", "stable");
+        match status_updated {
+            UpdateStatus::UpToDate { current_version, .. } => {
+                assert_eq!(current_version, "0.1.1");
+            }
+            _ => panic!("Deveria retornar UpToDate para 0.1.1"),
+        }
     }
 }
