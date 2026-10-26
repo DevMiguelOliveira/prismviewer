@@ -4,6 +4,8 @@ pub mod api_client;
 pub mod app;
 pub mod canvas;
 pub mod session;
+pub mod strings;
+pub mod theme;
 
 pub use api_client::{
     ApiPdvItem, AuditPayload, LoginRequest, LoginResponse, SessionRequestPayload, SessionResponse,

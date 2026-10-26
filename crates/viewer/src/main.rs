@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 //! prysmview-viewer - Ponto de entrada do aplicativo do operador
 
 use eframe::egui::Vec2;

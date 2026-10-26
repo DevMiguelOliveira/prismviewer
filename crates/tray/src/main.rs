@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 //! prysmview-tray - Aplicativo visual do Host no PDV estilo TeamViewer Host
 //!
 //! Executa na sessão do usuário comum no PDV (sem privilégios de administrador).
