@@ -61,6 +61,21 @@
       <!-- Card Principal: Permitir Acesso Remoto -->
       <section class="host-card main-credentials-card">
         <div class="card-section-label">PERMITIR CONTROLE REMOTO</div>
+
+        <!-- Operador Local Cadastrado -->
+        <div class="credential-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="cred-label" style="margin-bottom: 0;">Operador / Usuário deste Caixa:</label>
+            <button class="btn-link-action" id="btnEditUser" title="Alterar Operador / Usuário">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Alterar</span>
+            </button>
+          </div>
+          <div class="user-info-row">
+            <div class="user-avatar-mini" id="displayUserAvatar">OP</div>
+            <div class="user-name-display" id="displayLocalUser">Aguardando identificação...</div>
+          </div>
+        </div>
         
         <!-- Sua ID deste Caixa -->
         <div class="credential-group">
@@ -128,6 +143,39 @@
         </span>
       </div>
     </footer>
+
+    <!-- Modal de Cadastro / Identificação do Usuário no Primeiro Login -->
+    <div class="consent-modal-overlay" id="userRegistrationModal" style="display: none;">
+      <div class="consent-dialog" style="max-width: 340px;">
+        <div class="consent-icon-circle" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: var(--accent-cyan);">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <h3 class="consent-title" id="userModalTitle">Identificação do Usuário</h3>
+        <p class="consent-subtitle" id="userModalSubtitle">Cadastre o nome do operador ou atendente responsável por esta estação de trabalho.</p>
+
+        <form id="formUserProfile" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; text-align: left;">
+          <div>
+            <label class="cred-label" style="margin-bottom: 4px;">Nome do Operador / Caixa:</label>
+            <input type="text" class="host-form-input" id="inputLocalUserName" placeholder="Ex: Maria Eduarda (Caixa 01)" required style="width: 100%;">
+          </div>
+
+          <div>
+            <label class="cred-label" style="margin-bottom: 4px;">ID da Estação / PDV:</label>
+            <input type="text" class="host-form-input" id="inputLocalPdvId" placeholder="Ex: PDV-CAIXA-01" required style="width: 100%;">
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn-consent-reject" id="btnCancelUserModal" style="flex: 1; padding: 10px; display: none;">
+              <span>Cancelar</span>
+            </button>
+            <button type="submit" class="btn-consent-accept" id="btnSaveUserProfile" style="flex: 2; padding: 10px; justify-content: center;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Salvar Operador</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Modal de Consentimento de Acesso -->
     <div class="consent-modal-overlay" id="consentModalOverlay" style="display: none;">

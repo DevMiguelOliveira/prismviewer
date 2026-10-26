@@ -5,6 +5,7 @@
 let hostState = {
   isConnected: false,
   pdvId: 'PDV-CAIXA-01',
+  localUser: null,
   isSessionActive: false,
   currentOperator: null,
   currentCode: null,
@@ -14,6 +15,15 @@ let hostState = {
   statusMessage: 'Aguardando serviço local prysmview-svc...',
   pendingConsent: null
 };
+
+function getSavedLocalUser() {
+  try {
+    if (window.localStorage) {
+      return window.localStorage.getItem('prysm_host_user') || null;
+    }
+  } catch (e) {}
+  return null;
+}
 
 let consentTimerInterval = null;
 let codeTimerInterval = null;
@@ -34,6 +44,24 @@ function sendIpcMessage(action, data = {}) {
 // RENDERIZAÇÃO DA INTERFACE
 // =============================================================================
 function renderState() {
+  // 0. Atualizar Operador Local do Caixa
+  const elLocalUser = document.getElementById('displayLocalUser');
+  const elUserAvatar = document.getElementById('displayUserAvatar');
+  if (elLocalUser) {
+    const userName = hostState.localUser || 'Não cadastrado';
+    elLocalUser.textContent = userName;
+    if (elUserAvatar) {
+      const initials = userName
+        .split(' ')
+        .filter(Boolean)
+        .map(n => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'OP';
+      elUserAvatar.textContent = initials;
+    }
+  }
+
   // 1. Atualizar ID do PDV
   const elPdvId = document.getElementById('displayPdvId');
   if (elPdvId) {
@@ -152,6 +180,40 @@ window.updateHostState = function(stateObj) {
   renderState();
 };
 
+function openUserModal(isFirstLogin = false) {
+  const modal = document.getElementById('userRegistrationModal');
+  if (!modal) return;
+  const title = document.getElementById('userModalTitle');
+  const subtitle = document.getElementById('userModalSubtitle');
+  const btnCancel = document.getElementById('btnCancelUserModal');
+  const inputName = document.getElementById('inputLocalUserName');
+  const inputPdv = document.getElementById('inputLocalPdvId');
+
+  if (isFirstLogin) {
+    if (title) title.textContent = 'Primeiro Acesso: Identifique o Operador';
+    if (subtitle) subtitle.textContent = 'Cadastre o nome do operador ou atendente responsável por esta estação de trabalho.';
+    if (btnCancel) btnCancel.style.display = 'none';
+  } else {
+    if (title) title.textContent = 'Alterar Operador do Caixa';
+    if (subtitle) subtitle.textContent = 'Atualize o nome do operador para a troca de turno deste PDV.';
+    if (btnCancel) btnCancel.style.display = 'block';
+  }
+
+  if (inputName) inputName.value = hostState.localUser || '';
+  if (inputPdv) inputPdv.value = hostState.pdvId || 'PDV-CAIXA-01';
+
+  modal.style.display = 'flex';
+  if (inputName) setTimeout(() => inputName.focus(), 50);
+}
+
+function closeUserModal() {
+  const modal = document.getElementById('userRegistrationModal');
+  if (modal) modal.style.display = 'none';
+}
+
+window.openUserModal = openUserModal;
+window.closeUserModal = closeUserModal;
+
 // =============================================================================
 // INICIALIZAÇÃO E EVENTOS DOM
 // =============================================================================
@@ -159,8 +221,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Carrega estado inicial caso injetado pelo WebView
   if (window.__INITIAL_HOST_STATE__) {
     window.updateHostState(window.__INITIAL_HOST_STATE__);
-  } else {
-    renderState();
+  }
+
+  // Carrega usuário de localStorage caso ainda não esteja no estado
+  if (!hostState.localUser) {
+    const saved = getSavedLocalUser();
+    if (saved) hostState.localUser = saved;
+  }
+
+  renderState();
+
+  // PRIMEIRO LOGIN: Se o usuário ainda não tiver sido cadastrado, abre o modal de boas-vindas imediatamente
+  if (!hostState.localUser) {
+    setTimeout(() => openUserModal(true), 200);
   }
 
   // Botão Copiar ID
@@ -290,5 +363,43 @@ document.addEventListener('DOMContentLoaded', () => {
     btnClose.addEventListener('click', () => {
       sendIpcMessage('window_close');
     });
+  }
+
+  // Eventos do Modal de Cadastro / Identificação de Usuário
+  const formUser = document.getElementById('formUserProfile');
+  if (formUser) {
+    formUser.onsubmit = (e) => {
+      e.preventDefault();
+      const inputName = document.getElementById('inputLocalUserName');
+      const inputPdv = document.getElementById('inputLocalPdvId');
+      const name = inputName ? inputName.value.trim() : '';
+      const pdv = inputPdv ? inputPdv.value.trim() : '';
+
+      if (!name) return;
+
+      hostState.localUser = name;
+      if (pdv) hostState.pdvId = pdv;
+
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem('prysm_host_user', name);
+          if (pdv) window.localStorage.setItem('prysm_host_pdv_id', pdv);
+        }
+      } catch (err) {}
+
+      sendIpcMessage('save_user_profile', { localUser: name, pdvId: pdv });
+      closeUserModal();
+      renderState();
+    };
+  }
+
+  const btnEditUser = document.getElementById('btnEditUser');
+  if (btnEditUser) {
+    btnEditUser.onclick = () => openUserModal(false);
+  }
+
+  const btnCancelUserModal = document.getElementById('btnCancelUserModal');
+  if (btnCancelUserModal) {
+    btnCancelUserModal.onclick = closeUserModal;
   }
 });

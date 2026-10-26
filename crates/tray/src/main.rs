@@ -72,11 +72,54 @@ pub struct PendingConsent {
     pub response: Option<bool>,
 }
 
+/// Caminho do arquivo de configuração persistente do Host no AppData local.
+pub fn get_host_config_path() -> std::path::PathBuf {
+    let base = std::env::var("LOCALAPPDATA")
+        .or_else(|_| std::env::var("APPDATA"))
+        .unwrap_or_else(|_| ".".to_string());
+    let mut path = std::path::PathBuf::from(base);
+    path.push("PrysmView");
+    let _ = std::fs::create_dir_all(&path);
+    path.push("host_config.json");
+    path
+}
+
+/// Carrega usuário e PDV configurados no disco
+pub fn load_host_config() -> (Option<String>, Option<String>) {
+    let path = get_host_config_path();
+    if path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                let user = val.get("local_user").and_then(|v| v.as_str()).map(|s| s.to_string());
+                let pdv = val.get("pdv_id").and_then(|v| v.as_str()).map(|s| s.to_string());
+                return (user, pdv);
+            }
+        }
+    }
+    (None, None)
+}
+
+/// Salva usuário e PDV no disco
+pub fn save_host_config(user: &str, pdv_id: &str) {
+    let path = get_host_config_path();
+    let data = serde_json::json!({
+        "local_user": user,
+        "pdv_id": pdv_id,
+        "updated_at": "Agora",
+    });
+    if let Err(e) = std::fs::write(&path, data.to_string()) {
+        tracing::warn!("Falha ao gravar configuração do Host em {:?}: {}", path, e);
+    } else {
+        info!("Configuração do Host persistida com sucesso em {:?}: {} ({})", path, user, pdv_id);
+    }
+}
+
 /// Gerenciador de estado reativo da aplicação Host no PDV.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TrayState {
     pub is_connected_to_service: bool,
     pub pdv_id: String,
+    pub local_user: Option<String>,
     pub is_session_active: bool,
     pub current_operator: Option<String>,
     pub current_code: Option<String>,
@@ -90,15 +133,19 @@ pub struct TrayState {
 
 impl Default for TrayState {
     fn default() -> Self {
-        let comp_name = std::env::var("COMPUTERNAME").unwrap_or_default();
-        let pdv_id = if !comp_name.is_empty() {
-            format!("PDV-CAIXA-01 ({comp_name})")
-        } else {
-            "PDV-CAIXA-01".to_string()
-        };
+        let (saved_user, saved_pdv) = load_host_config();
+        let pdv_id = saved_pdv.unwrap_or_else(|| {
+            let comp_name = std::env::var("COMPUTERNAME").unwrap_or_default();
+            if !comp_name.is_empty() {
+                format!("PDV-CAIXA-01 ({comp_name})")
+            } else {
+                "PDV-CAIXA-01".to_string()
+            }
+        });
         Self {
             is_connected_to_service: false,
             pdv_id,
+            local_user: saved_user,
             is_session_active: false,
             current_operator: None,
             current_code: None,
@@ -122,6 +169,7 @@ impl TrayState {
         serde_json::json!({
             "isConnected": self.is_connected_to_service,
             "pdvId": self.pdv_id,
+            "localUser": self.local_user,
             "isSessionActive": self.is_session_active,
             "currentOperator": self.current_operator,
             "currentCode": self.current_code,
@@ -507,6 +555,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     "window_close" => {
                         // Fechar / ocultar janela do Host
+                    }
+                    "save_user_profile" => {
+                        let user_name = val.get("localUser").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
+                        let custom_pdv = val.get("pdvId").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
+                        info!(user = %user_name, pdv = %custom_pdv, "Perfil do operador do host atualizado");
+                        save_host_config(&user_name, &custom_pdv);
+                        if let Ok(mut st) = state_ipc.lock() {
+                            st.local_user = Some(user_name);
+                            if !custom_pdv.is_empty() {
+                                st.pdv_id = custom_pdv;
+                            }
+                        }
                     }
                     _ => {}
                 }
