@@ -93,3 +93,30 @@ Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile
 [UninstallDelete]
 Type: files; Name: "{commonappdata}\PrysmView\reconnect_state.bin"
 Type: dirifempty; Name: "{commonappdata}\PrysmView"
+
+[Code]
+function IsWebView2Installed(): Boolean;
+var
+  Version: String;
+begin
+  Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-9E2A-4295-8BAC-497B32E05C6E}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-9E2A-4295-8BAC-497B32E05C6E}', 'pv', Version);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if not IsWebView2Installed() then
+    begin
+      MsgBox('Aviso sobre a interface gráfica:' + #13#10 + #13#10 +
+             'O serviço de conexão em segundo plano foi instalado com sucesso.' + #13#10 +
+             'Porém, o componente visual "Microsoft Edge WebView2 Runtime" não foi localizado neste Windows.' + #13#10 + #13#10 +
+             'Caso a tela do PrysmView Host não abra, faça o download gratuito do WebView2 Runtime no site oficial da Microsoft.',
+             mbInformation, MB_OK);
+    end;
+  end;
+end;

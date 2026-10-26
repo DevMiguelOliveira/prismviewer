@@ -340,8 +340,35 @@ async fn run_tray_client(
     Ok(())
 }
 
+#[cfg(windows)]
+fn show_error_dialog(title: &str, message: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+    use windows::core::PCWSTR;
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_OK};
+
+    let title_wide: Vec<u16> = OsStr::new(title)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let msg_wide: Vec<u16> = OsStr::new(message)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+
+    unsafe {
+        let _ = MessageBoxW(
+            HWND::default(),
+            PCWSTR(msg_wide.as_ptr()),
+            PCWSTR(title_wide.as_ptr()),
+            MB_OK | MB_ICONERROR,
+        );
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt::init();
+    let _ = tracing_subscriber::fmt::try_init();
     info!("Iniciando PrysmView Host no PDV (Interface Moderna WebView2)...");
 
     let state = Arc::new(Mutex::new(TrayState::new()));
@@ -377,13 +404,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_title("PrysmView Host - Atendimento ao PDV")
         .with_inner_size(LogicalSize::new(410.0, 640.0))
         .with_min_inner_size(LogicalSize::new(360.0, 520.0))
-        .with_resizable(true);
+        .with_resizable(true)
+        .with_visible(true);
 
     if let Some(icon) = load_brand_icon() {
         window_builder = window_builder.with_window_icon(Some(icon));
     }
 
-    let window = window_builder.build(&event_loop)?;
+    let window = match window_builder.build(&event_loop) {
+        Ok(w) => w,
+        Err(e) => {
+            #[cfg(windows)]
+            show_error_dialog(
+                "PrysmView Host - Erro",
+                &format!("Falha ao criar janela do aplicativo: {e}"),
+            );
+            return Err(e.into());
+        }
+    };
+    window.set_focus();
 
     // Embutir HTML, CSS e JavaScript diretamente no binário para portabilidade total e segurança zero-trust
     let raw_html = include_str!("../ui/index.html");
@@ -406,8 +445,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &format!("{}\n<script>\n{}\n</script>", state_injection, js_content),
         );
 
+    // Diretório dedicado no AppData do usuário para o WebView2.
+    // IMPRESCINDÍVEL: Quando instalado em "C:\Program Files", usuários comuns não possuem
+    // permissão de gravação no diretório do programa. O WebView2 falha silenciosamente com
+    // E_ACCESSDENIED (0x80070005) a menos que um data_directory gravável (%LOCALAPPDATA%) seja configurado.
+    let data_dir = std::env::var_os("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir)
+        .join("PrysmView")
+        .join("host_webview");
+    let _ = std::fs::create_dir_all(&data_dir);
+    std::env::set_var("WEBVIEW2_USER_DATA_FOLDER", &data_dir);
+
+    let mut web_context = wry::WebContext::new(Some(data_dir));
+
     // Constrói a WebView vinculada à janela nativa do Windows
-    let webview = WebViewBuilder::new()
+    let webview = match WebViewBuilder::new_with_web_context(&mut web_context)
         .with_devtools(true)
         .with_html(&bundled_html)
         .with_ipc_handler(move |msg| {
@@ -453,7 +506,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         })
-        .build(&window)?;
+        .build(&window)
+    {
+        Ok(wv) => wv,
+        Err(e) => {
+            error!("Falha ao instanciar WebView2: {e}");
+            #[cfg(windows)]
+            show_error_dialog(
+                "PrysmView Host - Erro de Inicialização",
+                &format!(
+                    "Não foi possível abrir a janela do PrysmView Host.\n\n\
+                    O componente visual Microsoft Edge WebView2 Runtime falhou ao carregar:\n{}\n\n\
+                    Se este computador não possuir o WebView2 instalado, instale o 'Microsoft Edge WebView2 Runtime' para utilizar o Host.",
+                    e
+                ),
+            );
+            return Err(e.into());
+        }
+    };
 
     info!("PrysmView Host inicializado com sucesso em modo WebView2.");
 
