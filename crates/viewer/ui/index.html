@@ -126,15 +126,15 @@
            ===================================================================== -->
       <section class="view-page active" id="viewDashboard">
         
-        <!-- KPI Cards -->
+        <!-- KPI Cards Compactos -->
         <div class="kpi-grid">
           <div class="kpi-card" data-filter="all">
             <div class="kpi-header">
               <span class="kpi-label">Total de Dispositivos</span>
               <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
             </div>
-            <div class="kpi-value" id="kpiTotal">4</div>
-            <div class="kpi-subtext">Cadastrados no sistema</div>
+            <div class="kpi-value" id="kpiTotal">1.048</div>
+            <div class="kpi-subtext">Parque gerenciado</div>
           </div>
 
           <div class="kpi-card online" data-filter="online">
@@ -142,7 +142,7 @@
               <span class="kpi-label">Dispositivos Online</span>
               <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
-            <div class="kpi-value" id="kpiOnline">3</div>
+            <div class="kpi-value" id="kpiOnline">982</div>
             <div class="kpi-subtext">Prontos para acesso</div>
           </div>
 
@@ -151,7 +151,7 @@
               <span class="kpi-label">Dispositivos Offline</span>
               <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             </div>
-            <div class="kpi-value" id="kpiOffline">1</div>
+            <div class="kpi-value" id="kpiOffline">66</div>
             <div class="kpi-subtext">Sem sinal recente</div>
           </div>
 
@@ -170,34 +170,89 @@
           <div class="filter-pills">
             <button class="pill-btn active" data-filter="all">
               <span class="dot-status all"></span>
-              <span id="pillAllLabel">Todos (4)</span>
+              <span id="pillAllLabel">Todos</span>
             </button>
             <button class="pill-btn" data-filter="online">
               <span class="dot-status online"></span>
-              <span id="pillOnlineLabel">Online (3)</span>
+              <span id="pillOnlineLabel">Online</span>
             </button>
             <button class="pill-btn" data-filter="offline">
               <span class="dot-status offline"></span>
-              <span id="pillOfflineLabel">Offline (1)</span>
+              <span id="pillOfflineLabel">Offline</span>
             </button>
 
             <select class="select-filter" id="storeSelectFilter">
-              <option value="">Todos os Grupos</option>
+              <option value="">Todos os Clientes / Grupos</option>
               <option value="Matriz - Corporativo">Matriz - Corporativo</option>
               <option value="Filial Sul - Escritório">Filial Sul - Escritório</option>
               <option value="Unidade Norte - Operações">Unidade Norte - Operações</option>
+              <option value="Centro de Distribuição">Centro de Distribuição</option>
+              <option value="Filial Leste - Logística">Filial Leste - Logística</option>
             </select>
           </div>
 
-          <div class="results-count" id="resultsCountLabel">Exibindo 4 de 4 dispositivos</div>
+          <div class="toolbar-right-controls">
+            <div class="results-count" id="resultsCountLabel">Exibindo dispositivos</div>
+            
+            <div class="view-mode-toggle">
+              <button class="view-toggle-btn active" id="btnViewCards" title="Visualização em Cards Compactos">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Cards</span>
+              </button>
+              <button class="view-toggle-btn" id="btnViewTable" title="Visualização em Tabela de Alta Densidade (Ideal para +1000 máquinas)">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                <span>Tabela</span>
+              </button>
+            </div>
+
+            <button class="btn-icon-ghost" id="btnToggleDrawer" title="Ocultar/Expandir Ficha Técnica">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+            </button>
+          </div>
         </div>
 
-        <!-- Split Dashboard (60% Dispositivos + 40% Ficha Técnica) -->
-        <div class="split-dashboard">
+        <!-- Split Dashboard (Frota + Ficha Técnica) -->
+        <div class="split-dashboard" id="splitDashboard">
           
-          <!-- Lista de Dispositivos à esquerda -->
-          <div class="pdv-list-container" id="pdvListContainer">
-            <!-- Os cards serão injetados dinamicamente via app.js -->
+          <!-- Área da Frota à esquerda -->
+          <div class="pdv-fleet-area">
+            <!-- Container de Cards Compactos -->
+            <div class="pdv-list-container" id="pdvListContainer">
+              <!-- Injetado dinamicamente via app.js -->
+            </div>
+
+            <!-- Container da Tabela de Frota de Alta Densidade -->
+            <div class="fleet-table-container" id="fleetTableContainer" style="display: none;">
+              <table class="fleet-table">
+                <thead>
+                  <tr>
+                    <th style="width: 75px;">STATUS</th>
+                    <th>DISPOSITIVO</th>
+                    <th>CLIENTE / GRUPO</th>
+                    <th>IP / REDE</th>
+                    <th>SISTEMA OPERACIONAL</th>
+                    <th>AGENTE</th>
+                    <th>ÚLTIMO SINAL</th>
+                    <th style="text-align: right; width: 140px;">AÇÃO</th>
+                  </tr>
+                </thead>
+                <tbody id="fleetTableBody">
+                  <!-- Linhas injetadas via app.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Barra de Paginação -->
+            <div class="pagination-bar" id="paginationBar">
+              <span class="pagination-info" id="paginationInfo">Mostrando dispositivos</span>
+              <div class="pagination-buttons">
+                <button class="page-btn" id="btnPrevPage">◀ Anterior</button>
+                <div class="page-numbers" id="pageNumbersContainer">
+                  <button class="page-num active">1</button>
+                </div>
+                <button class="page-btn" id="btnNextPage">Próxima ▶</button>
+              </div>
+            </div>
           </div>
 
           <!-- Inspector Drawer à direita -->

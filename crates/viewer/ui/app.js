@@ -11,56 +11,28 @@ const state = {
   searchQuery: '',
   inspectedPdvId: 'DESK-01',
   latencyMs: 18,
+  viewMode: 'cards', // 'cards' ou 'table'
+  drawerCollapsed: false,
+  currentPage: 1,
+  pageSize: 10, // Densidade otimizada: 10 por página com paginação instantânea
   
   pdvs: [
-    {
-      id: "DESK-01",
-      storeName: "Matriz - Corporativo",
-      isOnline: true,
-      agentVersion: "0.1.0",
-      publicKey: "ed25519_host01_key_hash",
-      lastSeen: "Agora",
-      ipAddress: "192.168.1.101",
-      osInfo: "Windows 11 Pro 23H2",
-      resolution: "1920x1080 @ 60Hz",
-      notes: "Estação Financeiro: Impressora de rede HP LaserJet. Monitor duplo. Ramal 4022."
-    },
-    {
-      id: "DESK-02",
-      storeName: "Matriz - Corporativo",
-      isOnline: true,
-      agentVersion: "0.1.0",
-      publicKey: "ed25519_host02_key_hash",
-      lastSeen: "Agora",
-      ipAddress: "192.168.1.102",
-      osInfo: "Windows 11 Pro 23H2",
-      resolution: "1920x1080 @ 60Hz",
-      notes: "Estação Faturamento: Certificado digital A1 configurado. Leitor biométrico USB."
-    },
-    {
-      id: "SRV-01",
-      storeName: "Filial Sul - Escritório",
-      isOnline: false,
-      agentVersion: "0.1.0",
-      publicKey: "ed25519_host04_key_hash",
-      lastSeen: "15 min atrás",
-      ipAddress: "192.168.2.101",
-      osInfo: "Windows 10 Enterprise 22H2",
-      resolution: "1920x1080 @ 60Hz",
-      notes: "Servidor de Arquivos: Manutenção preventiva agendada fora do horário comercial."
-    },
-    {
-      id: "NOTE-03",
-      storeName: "Unidade Norte - Operações",
-      isOnline: true,
-      agentVersion: "0.1.0",
-      publicKey: "ed25519_host03_key_hash",
-      lastSeen: "Agora",
-      ipAddress: "192.168.3.103",
-      osInfo: "Windows 11 Pro 23H2",
-      resolution: "1920x1080 @ 60Hz",
-      notes: "Notebook Gestão: VPN corporativa habilitada. Conexão prioritária Wi-Fi 6."
-    }
+    { id: "DESK-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host01_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Financeiro: Impressora HP LaserJet. Monitor duplo. Ramal 4022." },
+    { id: "DESK-02", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host02_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Estação Faturamento: Certificado A1. Leitor biométrico USB." },
+    { id: "DESK-03", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host05_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Controladoria: Acesso restrito a relatórios e ERP central." },
+    { id: "SRV-01", storeName: "Filial Sul - Escritório", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host04_key_hash", lastSeen: "15 min atrás", ipAddress: "192.168.2.101", osInfo: "Windows 10 Enterprise 22H2", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Arquivos: Manutenção preventiva agendada." },
+    { id: "SRV-02", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host06_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.102", osInfo: "Windows Server 2022", resolution: "1920x1080 @ 60Hz", notes: "Servidor de Banco de Dados Local: Réplica contingência." },
+    { id: "NOTE-03", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host03_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.103", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Notebook Gestão: VPN corporativa habilitada. Wi-Fi 6." },
+    { id: "NOTE-04", storeName: "Unidade Norte - Operações", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host07_key_hash", lastSeen: "Agora", ipAddress: "192.168.3.104", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Supervisão de Turno: Atendimento a chamados de balcão." },
+    { id: "TERM-01", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host08_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.101", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Expedição 1: Leitor de código de barras Zebra USB." },
+    { id: "TERM-02", storeName: "Centro de Distribuição", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host09_key_hash", lastSeen: "Agora", ipAddress: "192.168.4.102", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Terminal Triagem e Recebimento: Impressora térmica de etiquetas." },
+    { id: "TERM-03", storeName: "Centro de Distribuição", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host10_key_hash", lastSeen: "42 min atrás", ipAddress: "192.168.4.103", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Conferência Doca 3: Cabo de rede desconectado para troca de switch." },
+    { id: "LOG-01", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host11_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Despacho Rápido: Integração com balança rodoviária serial." },
+    { id: "LOG-02", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host12_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Rastreamento e Frotas: Monitoramento de entregas ao vivo." },
+    { id: "CAIXA-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host13_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 01: PinPad TEF IP configurado." },
+    { id: "CAIXA-02", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host14_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.112", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 02: SAT Fiscal ativo." },
+    { id: "CAIXA-03", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host15_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Balcão de Serviços Sul: Gaveta automática e scanner." },
+    { id: "CAIXA-04", storeName: "Unidade Norte - Operações", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host16_key_hash", lastSeen: "2 horas atrás", ipAddress: "192.168.3.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Terminal Reserva Norte: Desligado no encerramento de turno." }
   ],
 
   auditRecords: [
@@ -151,82 +123,200 @@ function renderDashboard() {
   const offline = total - online;
 
   // Atualiza KPIs
-  document.getElementById('kpiTotal').textContent = total;
-  document.getElementById('kpiOnline').textContent = online;
-  document.getElementById('kpiOffline').textContent = offline;
-  document.getElementById('kpiLatency').textContent = `${state.latencyMs} ms`;
-  document.getElementById('badgeOnlineCount').textContent = online;
+  const kpiTotalEl = document.getElementById('kpiTotal');
+  if (kpiTotalEl) kpiTotalEl.textContent = total > 50 ? `${total.toLocaleString()}` : total;
+  const kpiOnlineEl = document.getElementById('kpiOnline');
+  if (kpiOnlineEl) kpiOnlineEl.textContent = online;
+  const kpiOfflineEl = document.getElementById('kpiOffline');
+  if (kpiOfflineEl) kpiOfflineEl.textContent = offline;
+  const kpiLatencyEl = document.getElementById('kpiLatency');
+  if (kpiLatencyEl) kpiLatencyEl.textContent = `${state.latencyMs} ms`;
+  const badgeOnlineEl = document.getElementById('badgeOnlineCount');
+  if (badgeOnlineEl) badgeOnlineEl.textContent = online;
 
   // Atualiza Pills
-  document.getElementById('pillAllLabel').textContent = `Todos (${total})`;
-  document.getElementById('pillOnlineLabel').textContent = `Online (${online})`;
-  document.getElementById('pillOfflineLabel').textContent = `Offline (${offline})`;
+  const pillAll = document.getElementById('pillAllLabel');
+  if (pillAll) pillAll.textContent = `Todos (${total})`;
+  const pillOnline = document.getElementById('pillOnlineLabel');
+  if (pillOnline) pillOnline.textContent = `Online (${online})`;
+  const pillOffline = document.getElementById('pillOfflineLabel');
+  if (pillOffline) pillOffline.textContent = `Offline (${offline})`;
 
   const filtered = getFilteredPdvs();
-  document.getElementById('resultsCountLabel').textContent = `Exibindo ${filtered.length} de ${total} dispositivos`;
+  const totalFiltered = filtered.length;
+  const totalPages = Math.ceil(totalFiltered / state.pageSize) || 1;
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  if (state.currentPage < 1) state.currentPage = 1;
 
-  // Renderiza Cards de Dispositivos
-  const container = document.getElementById('pdvListContainer');
-  container.innerHTML = '';
+  const startIndex = (state.currentPage - 1) * state.pageSize;
+  const endIndex = Math.min(startIndex + state.pageSize, totalFiltered);
+  const pageItems = filtered.slice(startIndex, endIndex);
 
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-subtle);">
-        <p style="font-size: 14px; font-weight: 500;">Nenhum dispositivo encontrado com os filtros atuais.</p>
-        <p style="font-size: 12px; margin-top: 4px;">Tente alterar o status ou limpar o termo de pesquisa.</p>
-      </div>
-    `;
+  // Atualiza Contadores
+  const resultsLabel = document.getElementById('resultsCountLabel');
+  if (resultsLabel) resultsLabel.textContent = `${totalFiltered} de ${total} clientes`;
+
+  const paginationInfo = document.getElementById('paginationInfo');
+  if (paginationInfo) {
+    paginationInfo.textContent = totalFiltered === 0 
+      ? 'Nenhum resultado' 
+      : `Exibindo ${startIndex + 1}–${endIndex} de ${totalFiltered} dispositivos`;
+  }
+
+  // Atualiza Botões de Paginação
+  const btnPrev = document.getElementById('btnPrevPage');
+  const btnNext = document.getElementById('btnNextPage');
+  if (btnPrev) btnPrev.disabled = state.currentPage <= 1;
+  if (btnNext) btnNext.disabled = state.currentPage >= totalPages;
+
+  // Números de Página
+  const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+  if (pageNumbersContainer) {
+    pageNumbersContainer.innerHTML = '';
+    const maxPills = Math.min(totalPages, 5);
+    for (let p = 1; p <= maxPills; p++) {
+      const btn = document.createElement('button');
+      btn.className = `page-num ${p === state.currentPage ? 'active' : ''}`;
+      btn.textContent = p;
+      btn.onclick = () => {
+        state.currentPage = p;
+        renderDashboard();
+      };
+      pageNumbersContainer.appendChild(btn);
+    }
+  }
+
+  // Alterna entre Cards Compactos e Tabela de Frota
+  const containerCards = document.getElementById('pdvListContainer');
+  const containerTable = document.getElementById('fleetTableContainer');
+
+  if (state.viewMode === 'table') {
+    if (containerCards) containerCards.style.display = 'none';
+    if (containerTable) containerTable.style.display = 'block';
+    renderFleetTable(pageItems);
   } else {
-    filtered.forEach(pdv => {
-      const isSelected = pdv.id === state.inspectedPdvId && pdv.storeName === getInspectedPdv()?.storeName;
-      const card = document.createElement('div');
-      card.className = `pdv-card ${isSelected ? 'selected' : ''}`;
-      card.onclick = () => selectPdvForInspection(pdv);
-
-      const statusBadge = pdv.isOnline
-        ? `<div class="status-badge online"><div class="pulse-dot"></div> ONLINE</div>`
-        : `<div class="status-badge offline">OFFLINE</div>`;
-
-      const actionBtn = pdv.isOnline
-        ? `<button class="btn-primary" onclick="event.stopPropagation(); startSession('${pdv.id}', '${pdv.storeName}')">
-             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-             <span>Conectar →</span>
-           </button>`
-        : `<button class="btn-disabled" disabled>Indisponível</button>`;
-
-      card.innerHTML = `
-        <div class="pdv-info-left">
-          ${statusBadge}
-          <div class="pdv-meta-group">
-            <div class="pdv-title-row">
-              <span class="pdv-id">${pdv.id}</span>
-              <span style="color: var(--text-dim);">•</span>
-              <span class="pdv-store">${pdv.storeName}</span>
-              <span style="color: var(--text-dim);">•</span>
-              <span class="pdv-seen">Visto: ${pdv.lastSeen}</span>
-            </div>
-            <div class="telemetry-chips">
-              <span class="tele-chip">OS: ${pdv.osInfo}</span>
-              <span class="tele-chip highlight">IP: ${pdv.ipAddress}</span>
-              <span class="tele-chip">Tela: ${pdv.resolution}</span>
-              <span class="tele-chip" style="color: var(--accent-violet);">Agente v${pdv.agentVersion}</span>
-            </div>
-          </div>
-        </div>
-        <div class="pdv-actions">
-          <button class="btn-secondary" onclick="event.stopPropagation(); selectPdvForInspection(${JSON.stringify(pdv).replace(/"/g, '&quot;')})">
-            Ficha Técnica
-          </button>
-          ${actionBtn}
-        </div>
-      `;
-
-      container.appendChild(card);
-    });
+    if (containerCards) containerCards.style.display = 'flex';
+    if (containerTable) containerTable.style.display = 'none';
+    renderFleetCards(pageItems);
   }
 
   // Atualiza a Ficha Técnica / Drawer
   renderInspectorDrawer();
+}
+
+function renderFleetCards(pageItems) {
+  const container = document.getElementById('pdvListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (pageItems.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 30px; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-md); border: 1px dashed var(--border-subtle);">
+        <p style="font-size: 13.5px; font-weight: 500;">Nenhum dispositivo encontrado com os filtros atuais.</p>
+        <p style="font-size: 12px; margin-top: 4px;">Tente alterar o status ou limpar o termo de pesquisa.</p>
+      </div>
+    `;
+    return;
+  }
+
+  pageItems.forEach(pdv => {
+    const isSelected = pdv.id === state.inspectedPdvId;
+    const card = document.createElement('div');
+    card.className = `pdv-card ${isSelected ? 'selected' : ''}`;
+    card.onclick = () => selectPdvForInspection(pdv);
+
+    const statusBadge = pdv.isOnline
+      ? `<div class="status-badge online"><div class="pulse-dot"></div> ON</div>`
+      : `<div class="status-badge offline">OFF</div>`;
+
+    const actionBtn = pdv.isOnline
+      ? `<button class="btn-primary" onclick="event.stopPropagation(); startSession('${pdv.id}', '${pdv.storeName}')">
+           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+           <span>Conectar</span>
+         </button>`
+      : `<button class="btn-disabled" disabled>Off</button>`;
+
+    card.innerHTML = `
+      <div class="pdv-info-left">
+        ${statusBadge}
+        <div class="pdv-meta-group">
+          <div class="pdv-title-row">
+            <span class="pdv-id">${pdv.id}</span>
+            <span style="color: var(--text-dim);">•</span>
+            <span class="pdv-store">${pdv.storeName}</span>
+            <span style="color: var(--text-dim);">•</span>
+            <span class="pdv-seen">${pdv.lastSeen}</span>
+          </div>
+          <div class="telemetry-chips">
+            <span class="tele-chip highlight">${pdv.ipAddress}</span>
+            <span class="tele-chip">${pdv.osInfo}</span>
+            <span class="tele-chip" style="color: var(--accent-violet);">v${pdv.agentVersion}</span>
+          </div>
+        </div>
+      </div>
+      <div class="pdv-actions">
+        <button class="btn-secondary" onclick="event.stopPropagation(); selectPdvForInspection(${JSON.stringify(pdv).replace(/"/g, '&quot;')})">
+          Ficha
+        </button>
+        ${actionBtn}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function renderFleetTable(pageItems) {
+  const tbody = document.getElementById('fleetTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
+          Nenhum dispositivo encontrado com os filtros atuais.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  pageItems.forEach(pdv => {
+    const isSelected = pdv.id === state.inspectedPdvId;
+    const tr = document.createElement('tr');
+    tr.className = isSelected ? 'selected' : '';
+    tr.onclick = () => selectPdvForInspection(pdv);
+
+    const statusBadge = pdv.isOnline
+      ? `<span class="status-badge online" style="display: inline-flex;"><span class="pulse-dot"></span> ON</span>`
+      : `<span class="status-badge offline" style="display: inline-flex;">OFF</span>`;
+
+    const connectBtn = pdv.isOnline
+      ? `<button class="btn-primary" style="padding: 3px 10px; font-size: 11.5px; height: 26px;" onclick="event.stopPropagation(); startSession('${pdv.id}', '${pdv.storeName}')">
+           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+           <span>Conectar</span>
+         </button>`
+      : `<button class="btn-disabled" style="padding: 3px 10px; font-size: 11.5px; height: 26px;" disabled>Off</button>`;
+
+    tr.innerHTML = `
+      <td>${statusBadge}</td>
+      <td style="font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px;">${pdv.id}</td>
+      <td style="color: var(--text-secondary); font-weight: 500;">${pdv.storeName}</td>
+      <td><span class="tele-chip highlight">${pdv.ipAddress}</span></td>
+      <td style="color: var(--text-muted); font-size: 12px;">${pdv.osInfo}</td>
+      <td><span class="tele-chip" style="color: var(--accent-violet);">v${pdv.agentVersion}</span></td>
+      <td style="color: var(--text-muted); font-size: 11.5px;">${pdv.lastSeen}</td>
+      <td style="text-align: right;">
+        <div style="display: inline-flex; gap: 6px; align-items: center;">
+          <button class="btn-secondary" style="padding: 3px 8px; font-size: 11px; height: 26px;" onclick="event.stopPropagation(); selectPdvForInspection(${JSON.stringify(pdv).replace(/"/g, '&quot;')})">Ficha</button>
+          ${connectBtn}
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
 function getInspectedPdv() {
@@ -581,6 +671,7 @@ function initApp() {
   document.querySelectorAll('.kpi-card[data-filter]').forEach(card => {
     card.onclick = () => {
       state.filterStatus = card.dataset.filter;
+      state.currentPage = 1;
       updateFilterPills();
       renderDashboard();
     };
@@ -590,6 +681,7 @@ function initApp() {
   document.querySelectorAll('.pill-btn[data-filter]').forEach(btn => {
     btn.onclick = () => {
       state.filterStatus = btn.dataset.filter;
+      state.currentPage = 1;
       updateFilterPills();
       renderDashboard();
     };
@@ -606,6 +698,7 @@ function initApp() {
   if (storeSelect) {
     storeSelect.onchange = (e) => {
       state.selectedStore = e.target.value;
+      state.currentPage = 1;
       renderDashboard();
     };
   }
@@ -615,7 +708,60 @@ function initApp() {
   if (searchInput) {
     searchInput.oninput = (e) => {
       state.searchQuery = e.target.value;
+      state.currentPage = 1;
       renderDashboard();
+    };
+  }
+
+  // Alternância de Visualização (Cards Compactos vs Tabela de Frota)
+  const btnViewCards = document.getElementById('btnViewCards');
+  const btnViewTable = document.getElementById('btnViewTable');
+  if (btnViewCards && btnViewTable) {
+    btnViewCards.onclick = () => {
+      state.viewMode = 'cards';
+      btnViewCards.classList.add('active');
+      btnViewTable.classList.remove('active');
+      renderDashboard();
+    };
+    btnViewTable.onclick = () => {
+      state.viewMode = 'table';
+      btnViewTable.classList.add('active');
+      btnViewCards.classList.remove('active');
+      renderDashboard();
+    };
+  }
+
+  // Recolher/Expandir Ficha Técnica Lateral
+  const btnToggleDrawer = document.getElementById('btnToggleDrawer');
+  if (btnToggleDrawer) {
+    btnToggleDrawer.onclick = () => {
+      const split = document.getElementById('splitDashboard');
+      if (split) {
+        split.classList.toggle('drawer-collapsed');
+        state.drawerCollapsed = split.classList.contains('drawer-collapsed');
+      }
+    };
+  }
+
+  // Paginação Prev / Next
+  const btnPrevPage = document.getElementById('btnPrevPage');
+  if (btnPrevPage) {
+    btnPrevPage.onclick = () => {
+      if (state.currentPage > 1) {
+        state.currentPage--;
+        renderDashboard();
+      }
+    };
+  }
+  const btnNextPage = document.getElementById('btnNextPage');
+  if (btnNextPage) {
+    btnNextPage.onclick = () => {
+      const filtered = getFilteredPdvs();
+      const totalPages = Math.ceil(filtered.length / state.pageSize) || 1;
+      if (state.currentPage < totalPages) {
+        state.currentPage++;
+        renderDashboard();
+      }
     };
   }
 
