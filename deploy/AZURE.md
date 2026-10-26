@@ -64,7 +64,28 @@ sudo bash deploy/azure-setup.sh
 4. Compila nativamente em ARM64 a API de sinalização (`prysmview-api`) e o Relay (`prysmview-relay`).
 5. Instala e inicia os serviços systemd com reinício automático em caso de falha.
 6. Configura o firewall UFW interno para proteção contra brute-force.
-7. Agenda o cron diário às 03:00 para backup com rotação de 30 dias do banco SQLite.
+7. Agenda o cron diário às 03:00 para backup cifrado com 'age' do banco SQLite (.db.age) com retenção de 30 dias.
+
+---
+
+## 4.1 Rotina de Backup Cifrado e Recuperação de Desastre (O-01 / O-02)
+
+O PrysmView utiliza criptografia moderna de ponta a ponta com **age** para salvaguarda dos dados SQLite:
+- **Geração de Chave do age na VM:**
+  ```bash
+  sudo mkdir -p /root/.age /etc/prysmview
+  sudo age-keygen -o /root/.age/backup.key
+  sudo age-keygen -y /root/.age/backup.key | sudo tee /etc/prysmview/backup.pub
+  ```
+- **Execução Manual do Backup:**
+  ```bash
+  sudo bash /usr/local/bin/prysmview-backup.sh
+  ```
+- **Restauração e Disaster Recovery:**
+  Consulte o runbook detalhado em [`docs/runbook-disaster-recovery.md`](../docs/runbook-disaster-recovery.md). Para restaurar um snapshot cifrado com validação de integridade física:
+  ```bash
+  sudo bash deploy/restore-sqlite.sh /var/backups/prysmview/prysmview_XXXXX.db.age /root/.age/backup.key
+  ```
 
 ---
 
