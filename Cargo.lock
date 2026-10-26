@@ -5686,15 +5686,18 @@ dependencies = [
 name = "prysmview-tray"
 version = "0.1.0"
 dependencies = [
- "eframe",
  "image",
  "prysmview-core",
  "prysmview-host",
+ "serde",
+ "serde_json",
+ "tao",
  "thiserror 2.0.21",
  "tokio",
  "tracing",
  "tracing-subscriber",
  "windows 0.58.0",
+ "wry",
 ]
 
 [[package]]

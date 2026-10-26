@@ -17,7 +17,10 @@ tokio = { version = "1.40", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 thiserror = "2.0"
-eframe = "0.29"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tao = "0.34"
+wry = "0.57"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 [target.'cfg(windows)'.dependencies]
