@@ -120,12 +120,6 @@
           </button>
         </div>
       </div>
-
-      <div class="window-controls-group">
-        <button class="win-btn win-min" title="Minimizar">─</button>
-        <button class="win-btn win-max" title="Maximizar">□</button>
-        <button class="win-btn win-close" id="btnLogout" title="Encerrar Sessão">✕</button>
-      </div>
     </div>
   </header>
 
@@ -822,14 +816,14 @@
       <section class="view-page" id="viewDirect">
         <div style="max-width: 500px; margin: 40px auto; width: 100%; text-align: center;">
           <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Conexão Direta ao Dispositivo</h2>
-          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Insira o identificador do dispositivo e o código de autorização de 8 dígitos exibido na tela remota.</p>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Insira o identificador do dispositivo e o código de 8 dígitos ou a senha de acesso configurada no Host.</p>
 
           <div class="settings-card" style="text-align: left;">
             <label class="form-label">Identificador do Dispositivo:</label>
             <input type="text" class="form-input" id="directPdvInput" placeholder="Ex: DESK-01 ou 192.168.1.101" style="max-width: 100%; margin-top: 6px; margin-bottom: 14px;">
 
-            <label class="form-label">Código de Sessão (8 Dígitos):</label>
-            <input type="text" class="form-input" id="directCodeInput" maxlength="8" placeholder="Ex: 84920147" style="max-width: 100%; margin-top: 6px; font-family: var(--font-mono); font-size: 18px; letter-spacing: 2px; text-align: center; color: var(--accent-cyan); font-weight: 700;">
+            <label class="form-label">Código de Sessão (8 Dígitos) ou Senha de Acesso do Host:</label>
+            <input type="password" class="form-input" id="directCodeInput" placeholder="Ex: 84920147 ou Senha do Host" style="max-width: 100%; margin-top: 6px; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px; text-align: center; color: var(--accent-cyan); font-weight: 700;">
 
             <button class="btn-primary" id="btnDirectSubmit" style="width: 100%; justify-content: center; margin-top: 18px; padding: 12px;">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -900,27 +894,50 @@
       </div>
 
       <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;" id="modalSubtitle">
-        Solicite ao usuário no dispositivo remoto o código de 8 dígitos exibido na tela.
+        Escolha autenticar pelo código de 8 dígitos exibido na tela ou pela senha configurada no Host.
       </p>
 
-      <div class="code-inputs" id="codeInputsContainer">
-        <input type="text" maxlength="1" class="code-digit" autofocus>
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
-        <input type="text" maxlength="1" class="code-digit">
+      <!-- Seleção de Modo de Autorização -->
+      <div style="display: flex; gap: 8px; margin: 12px 0 14px 0; background: rgba(15, 23, 42, 0.5); padding: 4px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.1);">
+        <button type="button" id="tabAuthCode" style="flex: 1; padding: 7px 10px; font-size: 12px; font-weight: 600; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 6px; cursor: pointer;">
+          Código (8 Dígitos)
+        </button>
+        <button type="button" id="tabAuthPassword" style="flex: 1; padding: 7px 10px; font-size: 12px; font-weight: 600; background: transparent; color: var(--text-muted); border: 1px solid transparent; border-radius: 6px; cursor: pointer;">
+          Senha do Host
+        </button>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--text-muted);">
-        <span>Expiração: <strong style="color: var(--accent-amber);" id="modalTimer">120s</strong></span>
-        <span>Máx: 3 tentativas</span>
+      <!-- Modo 1: Código de 8 dígitos -->
+      <div id="containerAuthCode">
+        <div class="code-inputs" id="codeInputsContainer">
+          <input type="text" maxlength="1" class="code-digit" autofocus>
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+          <input type="text" maxlength="1" class="code-digit">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px;">
+          <span>Expiração: <strong style="color: var(--accent-amber);" id="modalTimer">120s</strong></span>
+          <span>Máx: 3 tentativas</span>
+        </div>
+      </div>
+
+      <!-- Modo 2: Senha de Acesso do Host -->
+      <div id="containerAuthPassword" style="display: none; margin-bottom: 12px; text-align: left;">
+        <label class="form-label" style="font-size: 12px; margin-bottom: 6px; display: block;">Senha de Acesso do Host:</label>
+        <div style="position: relative;">
+          <input type="password" class="form-input" id="inputModalHostPassword" placeholder="Digite a senha configurada no PDV..." style="width: 100%; padding-right: 42px;">
+          <button type="button" id="btnToggleModalPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;" title="Mostrar / Ocultar">👁</button>
+        </div>
+        <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 5px;">Conecte diretamente utilizando a senha fixa definida no caixa remoto.</span>
       </div>
 
       <button class="btn-primary" id="btnModalAuthorize" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 13.5px; margin-top: 4px;">
-        Validar Código & Iniciar Sessão
+        Validar & Iniciar Sessão (TLS 1.3)
       </button>
     </div>
   </div>

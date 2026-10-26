@@ -22,11 +22,6 @@
           <div class="brand-subtitle">Módulo de Suporte Remoto • PDV Caixa</div>
         </div>
       </div>
-
-      <div class="window-controls">
-        <button class="win-btn" id="btnWinMin" title="Minimizar">─</button>
-        <button class="win-btn win-close" id="btnWinClose" title="Ocultar para a bandeja">✕</button>
-      </div>
     </header>
 
     <!-- Content Body -->
@@ -110,6 +105,22 @@
             <span id="codeExpiryCountdown">Expira em 120s • Máximo 3 tentativas</span>
           </div>
         </div>
+
+        <!-- Senha Fixa de Acesso (Host) -->
+        <div class="credential-group" style="margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="cred-label" style="margin-bottom: 0;">Senha de Acesso (Fixa):</label>
+            <button class="btn-link-action" id="btnEditPassword" style="font-size: 11px;">[Configurar / Alterar]</button>
+          </div>
+          <div class="cred-box-row" style="background: rgba(15, 23, 42, 0.6); padding: 7px 10px; border-radius: var(--radius-sm, 6px); border: 1px solid rgba(148, 163, 184, 0.15);">
+            <div id="displayAccessPassword" style="font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--accent-cyan, #38bdf8); letter-spacing: 1px;">
+              Nenhuma senha definida
+            </div>
+            <button class="btn-copy-action" id="btnToggleShowPassword" style="padding: 2px 8px; font-size: 11px;" title="Mostrar / Ocultar Senha">
+              <span id="labelTogglePassword">👁 Revelar</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- Card de Travas de Segurança Locais -->
@@ -164,13 +175,19 @@
             <input type="text" class="host-form-input" id="inputLocalPdvId" placeholder="Ex: PDV-CAIXA-01" required style="width: 100%;">
           </div>
 
+          <div>
+            <label class="cred-label" style="margin-bottom: 4px;">Senha de Acesso ao Host (opcional):</label>
+            <input type="password" class="host-form-input" id="inputLocalAccessPassword" placeholder="Definir senha de acesso fixo..." style="width: 100%;">
+            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 3px;">Permite que técnicos conectem a este caixa usando esta senha.</span>
+          </div>
+
           <div style="display: flex; gap: 8px; margin-top: 6px;">
             <button type="button" class="btn-consent-reject" id="btnCancelUserModal" style="flex: 1; padding: 10px; display: none;">
               <span>Cancelar</span>
             </button>
             <button type="submit" class="btn-consent-accept" id="btnSaveUserProfile" style="flex: 2; padding: 10px; justify-content: center;">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>Salvar Operador</span>
+              <span>Salvar Dados</span>
             </button>
           </div>
         </form>

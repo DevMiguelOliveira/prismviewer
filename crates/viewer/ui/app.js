@@ -635,17 +635,62 @@ function switchTab(tabName) {
 // MODAL DE CÓDIGO DE 8 DÍGITOS
 // =============================================================================
 let activeSessionTarget = null;
+let currentAuthMode = 'code'; // 'code' | 'password'
+
+function setAuthMode(mode) {
+  currentAuthMode = mode;
+  const tabCode = document.getElementById('tabAuthCode');
+  const tabPwd = document.getElementById('tabAuthPassword');
+  const boxCode = document.getElementById('containerAuthCode');
+  const boxPwd = document.getElementById('containerAuthPassword');
+
+  if (mode === 'password') {
+    if (tabCode) {
+      tabCode.style.background = 'transparent';
+      tabCode.style.color = 'var(--text-muted)';
+      tabCode.style.borderColor = 'transparent';
+    }
+    if (tabPwd) {
+      tabPwd.style.background = 'rgba(56, 189, 248, 0.15)';
+      tabPwd.style.color = 'var(--accent-cyan)';
+      tabPwd.style.borderColor = 'rgba(56, 189, 248, 0.35)';
+    }
+    if (boxCode) boxCode.style.display = 'none';
+    if (boxPwd) {
+      boxPwd.style.display = 'block';
+      const input = document.getElementById('inputModalHostPassword');
+      if (input) setTimeout(() => input.focus(), 50);
+    }
+  } else {
+    if (tabCode) {
+      tabCode.style.background = 'rgba(56, 189, 248, 0.15)';
+      tabCode.style.color = 'var(--accent-cyan)';
+      tabCode.style.borderColor = 'rgba(56, 189, 248, 0.35)';
+    }
+    if (tabPwd) {
+      tabPwd.style.background = 'transparent';
+      tabPwd.style.color = 'var(--text-muted)';
+      tabPwd.style.borderColor = 'transparent';
+    }
+    if (boxCode) boxCode.style.display = 'block';
+    if (boxPwd) boxPwd.style.display = 'none';
+    const firstInput = document.querySelector('.code-digit');
+    if (firstInput) setTimeout(() => firstInput.focus(), 50);
+  }
+}
 
 function startSession(pdvId, storeName) {
   activeSessionTarget = { pdvId, storeName };
   document.getElementById('modalTitle').textContent = `Conexão Segura: ${pdvId}`;
-  document.getElementById('modalSubtitle').textContent = `Solicite ao usuário no dispositivo remoto (${storeName}) o código de 8 dígitos exibido na tela.`;
+  document.getElementById('modalSubtitle').textContent = `Autentique via código temporário ou senha de acesso do host (${storeName}).`;
   
   // Limpa inputs
   document.querySelectorAll('.code-digit').forEach(input => input.value = '');
+  const inputPwd = document.getElementById('inputModalHostPassword');
+  if (inputPwd) inputPwd.value = '';
+
+  setAuthMode('code');
   document.getElementById('sessionModal').classList.add('active');
-  const firstInput = document.querySelector('.code-digit');
-  if (firstInput) firstInput.focus();
 }
 
 function closeModal() {
@@ -1212,11 +1257,25 @@ function initApp() {
     };
   }
 
-  // Logout
-  const btnLogout = document.getElementById('btnLogout');
-  if (btnLogout) {
-    btnLogout.onclick = () => {
-      showToast('Sessão do operador encerrada com segurança.');
+  // Alternância de Abas de Autenticação no Modal
+  const tabAuthCode = document.getElementById('tabAuthCode');
+  const tabAuthPassword = document.getElementById('tabAuthPassword');
+  if (tabAuthCode) tabAuthCode.onclick = () => setAuthMode('code');
+  if (tabAuthPassword) tabAuthPassword.onclick = () => setAuthMode('password');
+
+  // Alternador de Visibilidade de Senha no Modal
+  const btnToggleModalPwd = document.getElementById('btnToggleModalPassword');
+  if (btnToggleModalPwd) {
+    btnToggleModalPwd.onclick = () => {
+      const input = document.getElementById('inputModalHostPassword');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btnToggleModalPwd.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btnToggleModalPwd.textContent = '👁';
+      }
     };
   }
 
@@ -1242,13 +1301,24 @@ function initApp() {
   const btnModalAuthorize = document.getElementById('btnModalAuthorize');
   if (btnModalAuthorize) {
     btnModalAuthorize.onclick = () => {
-      const code = Array.from(codeInputs).map(i => i.value).join('');
-      if (code.length < 8) {
-        showToast('Por favor, insira o código completo de 8 dígitos.');
-        return;
+      if (currentAuthMode === 'password') {
+        const inputPwd = document.getElementById('inputModalHostPassword');
+        const pwd = (inputPwd?.value || '').trim();
+        if (!pwd) {
+          showToast('Por favor, digite a senha de acesso configurada no PDV.');
+          return;
+        }
+        closeModal();
+        showToast(`Autenticado via Senha do Host! Conectando via TLS 1.3 a ${activeSessionTarget?.pdvId || 'Dispositivo'}...`);
+      } else {
+        const code = Array.from(codeInputs).map(i => i.value).join('');
+        if (code.length < 8) {
+          showToast('Por favor, insira o código completo de 8 dígitos.');
+          return;
+        }
+        closeModal();
+        showToast(`Código validado com sucesso! Conectando via TLS 1.3 a ${activeSessionTarget?.pdvId || 'Dispositivo'}...`);
       }
-      closeModal();
-      showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'}...`);
     };
   }
 
@@ -1257,11 +1327,14 @@ function initApp() {
   if (btnDirectSubmit) {
     btnDirectSubmit.onclick = () => {
       const pdvId = document.getElementById('directPdvInput').value.trim();
-      const code = document.getElementById('directCodeInput').value.trim();
-      if (!pdvId || code.length < 8) {
-        showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
+      const credential = document.getElementById('directCodeInput').value.trim();
+      if (!pdvId || credential.length < 4) {
+        showToast('Preencha o identificador do dispositivo e o código de 8 dígitos ou senha.');
         return;
       }
+
+      const isDigits = /^\d{8}$/.test(credential);
+      const authLabel = isDigits ? `Código de sessão (${credential})` : 'Senha de acesso do host';
 
       // Se o dispositivo ainda não estiver na lista da frota, vincula automaticamente
       const normalizedId = pdvId.toUpperCase();
@@ -1276,14 +1349,14 @@ function initApp() {
           ipAddress: pdvId.includes('.') ? pdvId : "192.168.1.100",
           osInfo: "Windows 11 / 10",
           resolution: "1920x1080 @ 60Hz",
-          notes: `Conexão direta estabelecida com código de sessão (${code}).`
+          notes: `Conexão direta autorizada via ${authLabel}.`
         };
         state.pdvs.unshift(newDevice);
         savePdvs(state.pdvs);
         renderDashboard();
       }
 
-      showToast(`Código validado com sucesso! Conectando via TLS 1.3 a ${pdvId}...`);
+      showToast(`${authLabel} validado com sucesso! Conectando via TLS 1.3 a ${pdvId}...`);
     };
   }
 
@@ -1535,8 +1608,7 @@ function initApp() {
       menuItemLogout.onclick = () => {
         userProfileMenu.classList.remove('active');
         if (userProfileWrapper) userProfileWrapper.classList.remove('menu-open');
-        const btnLogout = document.getElementById('btnLogout');
-        if (btnLogout) btnLogout.click();
+        showToast('Sessão do operador encerrada com segurança.');
       };
     }
   }

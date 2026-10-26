@@ -6,6 +6,8 @@ let hostState = {
   isConnected: false,
   pdvId: 'PDV-CAIXA-01',
   localUser: null,
+  accessPassword: null,
+  isPasswordRevealed: false,
   isSessionActive: false,
   currentOperator: null,
   currentCode: null,
@@ -20,6 +22,15 @@ function getSavedLocalUser() {
   try {
     if (window.localStorage) {
       return window.localStorage.getItem('prysm_host_user') || null;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function getSavedAccessPassword() {
+  try {
+    if (window.localStorage) {
+      return window.localStorage.getItem('prysm_host_password') || null;
     }
   } catch (e) {}
   return null;
@@ -101,6 +112,26 @@ function renderState() {
       if (codeExpiryNote) {
         codeExpiryNote.style.display = 'none';
       }
+    }
+  }
+
+  // 3.1 Senha Fixa de Acesso (Host)
+  const elPassword = document.getElementById('displayAccessPassword');
+  const labelToggle = document.getElementById('labelTogglePassword');
+  const btnToggle = document.getElementById('btnToggleShowPassword');
+  if (elPassword) {
+    if (hostState.accessPassword) {
+      if (hostState.isPasswordRevealed) {
+        elPassword.textContent = hostState.accessPassword;
+        if (labelToggle) labelToggle.textContent = '🙈 Ocultar';
+      } else {
+        elPassword.textContent = '•••••••• (Definida)';
+        if (labelToggle) labelToggle.textContent = '👁 Revelar';
+      }
+      if (btnToggle) btnToggle.style.display = 'inline-flex';
+    } else {
+      elPassword.textContent = 'Nenhuma senha definida';
+      if (btnToggle) btnToggle.style.display = 'none';
     }
   }
 
@@ -188,19 +219,21 @@ function openUserModal(isFirstLogin = false) {
   const btnCancel = document.getElementById('btnCancelUserModal');
   const inputName = document.getElementById('inputLocalUserName');
   const inputPdv = document.getElementById('inputLocalPdvId');
+  const inputPwd = document.getElementById('inputLocalAccessPassword');
 
   if (isFirstLogin) {
     if (title) title.textContent = 'Primeiro Acesso: Identifique o Operador';
     if (subtitle) subtitle.textContent = 'Cadastre o nome do operador ou atendente responsável por esta estação de trabalho.';
     if (btnCancel) btnCancel.style.display = 'none';
   } else {
-    if (title) title.textContent = 'Alterar Operador do Caixa';
-    if (subtitle) subtitle.textContent = 'Atualize o nome do operador para a troca de turno deste PDV.';
+    if (title) title.textContent = 'Alterar Operador / Senha do Caixa';
+    if (subtitle) subtitle.textContent = 'Atualize o nome do operador ou a senha de acesso deste PDV.';
     if (btnCancel) btnCancel.style.display = 'block';
   }
 
   if (inputName) inputName.value = hostState.localUser || '';
   if (inputPdv) inputPdv.value = hostState.pdvId || 'PDV-CAIXA-01';
+  if (inputPwd) inputPwd.value = hostState.accessPassword || '';
 
   modal.style.display = 'flex';
   if (inputName) setTimeout(() => inputName.focus(), 50);
@@ -223,10 +256,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateHostState(window.__INITIAL_HOST_STATE__);
   }
 
-  // Carrega usuário de localStorage caso ainda não esteja no estado
+  // Carrega usuário e senha de localStorage caso ainda não estejam no estado
   if (!hostState.localUser) {
     const saved = getSavedLocalUser();
     if (saved) hostState.localUser = saved;
+  }
+  if (!hostState.accessPassword) {
+    const savedPwd = getSavedAccessPassword();
+    if (savedPwd) hostState.accessPassword = savedPwd;
   }
 
   renderState();
@@ -350,44 +387,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Controles de Janela
-  const btnMin = document.getElementById('btnWinMin');
-  if (btnMin) {
-    btnMin.addEventListener('click', () => {
-      sendIpcMessage('window_minimize');
-    });
-  }
-
-  const btnClose = document.getElementById('btnWinClose');
-  if (btnClose) {
-    btnClose.addEventListener('click', () => {
-      sendIpcMessage('window_close');
-    });
-  }
-
-  // Eventos do Modal de Cadastro / Identificação de Usuário
+  // Eventos do Modal de Cadastro / Identificação de Usuário e Senha
   const formUser = document.getElementById('formUserProfile');
   if (formUser) {
     formUser.onsubmit = (e) => {
       e.preventDefault();
       const inputName = document.getElementById('inputLocalUserName');
       const inputPdv = document.getElementById('inputLocalPdvId');
+      const inputPwd = document.getElementById('inputLocalAccessPassword');
       const name = inputName ? inputName.value.trim() : '';
       const pdv = inputPdv ? inputPdv.value.trim() : '';
+      const pwd = inputPwd ? inputPwd.value.trim() : '';
 
       if (!name) return;
 
       hostState.localUser = name;
       if (pdv) hostState.pdvId = pdv;
+      hostState.accessPassword = pwd || null;
 
       try {
         if (window.localStorage) {
           window.localStorage.setItem('prysm_host_user', name);
           if (pdv) window.localStorage.setItem('prysm_host_pdv_id', pdv);
+          if (pwd) window.localStorage.setItem('prysm_host_password', pwd);
+          else window.localStorage.removeItem('prysm_host_password');
         }
       } catch (err) {}
 
-      sendIpcMessage('save_user_profile', { localUser: name, pdvId: pdv });
+      sendIpcMessage('save_user_profile', { localUser: name, pdvId: pdv, accessPassword: pwd });
       closeUserModal();
       renderState();
     };
@@ -396,6 +423,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnEditUser = document.getElementById('btnEditUser');
   if (btnEditUser) {
     btnEditUser.onclick = () => openUserModal(false);
+  }
+
+  const btnEditPwd = document.getElementById('btnEditPassword');
+  if (btnEditPwd) {
+    btnEditPwd.onclick = () => openUserModal(false);
+  }
+
+  const btnTogglePwd = document.getElementById('btnToggleShowPassword');
+  if (btnTogglePwd) {
+    btnTogglePwd.onclick = () => {
+      if (!hostState.accessPassword) return;
+      hostState.isPasswordRevealed = !hostState.isPasswordRevealed;
+      renderState();
+    };
   }
 
   const btnCancelUserModal = document.getElementById('btnCancelUserModal');

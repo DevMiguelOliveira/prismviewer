@@ -84,27 +84,29 @@ pub fn get_host_config_path() -> std::path::PathBuf {
     path
 }
 
-/// Carrega usuário e PDV configurados no disco
-pub fn load_host_config() -> (Option<String>, Option<String>) {
+/// Carrega usuário, PDV e senha de acesso configurados no disco
+pub fn load_host_config() -> (Option<String>, Option<String>, Option<String>) {
     let path = get_host_config_path();
     if path.exists() {
         if let Ok(content) = std::fs::read_to_string(&path) {
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
                 let user = val.get("local_user").and_then(|v| v.as_str()).map(|s| s.to_string());
                 let pdv = val.get("pdv_id").and_then(|v| v.as_str()).map(|s| s.to_string());
-                return (user, pdv);
+                let pwd = val.get("access_password").and_then(|v| v.as_str()).map(|s| s.to_string());
+                return (user, pdv, pwd);
             }
         }
     }
-    (None, None)
+    (None, None, None)
 }
 
-/// Salva usuário e PDV no disco
-pub fn save_host_config(user: &str, pdv_id: &str) {
+/// Salva usuário, PDV e senha de acesso no disco
+pub fn save_host_config(user: &str, pdv_id: &str, access_password: Option<&str>) {
     let path = get_host_config_path();
     let data = serde_json::json!({
         "local_user": user,
         "pdv_id": pdv_id,
+        "access_password": access_password,
         "updated_at": "Agora",
     });
     if let Err(e) = std::fs::write(&path, data.to_string()) {
@@ -120,6 +122,7 @@ pub struct TrayState {
     pub is_connected_to_service: bool,
     pub pdv_id: String,
     pub local_user: Option<String>,
+    pub access_password: Option<String>,
     pub is_session_active: bool,
     pub current_operator: Option<String>,
     pub current_code: Option<String>,
@@ -133,7 +136,7 @@ pub struct TrayState {
 
 impl Default for TrayState {
     fn default() -> Self {
-        let (saved_user, saved_pdv) = load_host_config();
+        let (saved_user, saved_pdv, saved_pwd) = load_host_config();
         let pdv_id = saved_pdv.unwrap_or_else(|| {
             let comp_name = std::env::var("COMPUTERNAME").unwrap_or_default();
             if !comp_name.is_empty() {
@@ -146,6 +149,7 @@ impl Default for TrayState {
             is_connected_to_service: false,
             pdv_id,
             local_user: saved_user,
+            access_password: saved_pwd,
             is_session_active: false,
             current_operator: None,
             current_code: None,
@@ -170,6 +174,7 @@ impl TrayState {
             "isConnected": self.is_connected_to_service,
             "pdvId": self.pdv_id,
             "localUser": self.local_user,
+            "accessPassword": self.access_password,
             "isSessionActive": self.is_session_active,
             "currentOperator": self.current_operator,
             "currentCode": self.current_code,
@@ -550,19 +555,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             st.file_transfer_enabled = enabled;
                         }
                     }
-                    "window_minimize" => {
-                        // Minimizar janela do Host
-                    }
-                    "window_close" => {
-                        // Fechar / ocultar janela do Host
-                    }
                     "save_user_profile" => {
                         let user_name = val.get("localUser").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
                         let custom_pdv = val.get("pdvId").and_then(|v| v.as_str()).unwrap_or("").trim().to_string();
-                        info!(user = %user_name, pdv = %custom_pdv, "Perfil do operador do host atualizado");
-                        save_host_config(&user_name, &custom_pdv);
+                        let access_pwd = val.get("accessPassword").and_then(|v| v.as_str()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+                        info!(user = %user_name, pdv = %custom_pdv, has_pwd = access_pwd.is_some(), "Perfil do operador e credenciais do host atualizados");
+                        save_host_config(&user_name, &custom_pdv, access_pwd.as_deref());
                         if let Ok(mut st) = state_ipc.lock() {
                             st.local_user = Some(user_name);
+                            st.access_password = access_pwd;
                             if !custom_pdv.is_empty() {
                                 st.pdv_id = custom_pdv;
                             }
