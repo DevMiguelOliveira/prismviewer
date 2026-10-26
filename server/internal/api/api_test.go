@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -339,3 +340,105 @@ func TestExpiredTokenRejection(t *testing.T) {
 		t.Fatalf("esperava 401 Unauthorized para token expirado, obteve %d", w.Code)
 	}
 }
+
+func TestSecurityHeadersAndCookies(t *testing.T) {
+	database, router := setupTestServer(t)
+	defer database.Close()
+
+	// 1. Testa headers de seguranca (S-11)
+	req := httptest.NewRequest("GET", "/health", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	hsts := w.Header().Get("Strict-Transport-Security")
+	if hsts == "" || !strings.Contains(hsts, "max-age=") {
+		t.Errorf("cabecalho HSTS ausente ou invalido: %s", hsts)
+	}
+
+	nosniff := w.Header().Get("X-Content-Type-Options")
+	if nosniff != "nosniff" {
+		t.Errorf("cabecalho X-Content-Type-Options incorreto: %s", nosniff)
+	}
+
+	frameOpts := w.Header().Get("X-Frame-Options")
+	if frameOpts != "DENY" {
+		t.Errorf("cabecalho X-Frame-Options incorreto: %s", frameOpts)
+	}
+
+	csp := w.Header().Get("Content-Security-Policy")
+	if csp == "" || !strings.Contains(csp, "default-src") {
+		t.Errorf("cabecalho CSP ausente ou invalido: %s", csp)
+	}
+
+	// 2. Testa cookie seguro HttpOnly, Secure e SameSite=Strict no login (S-11)
+	loginPayload := []byte(`{"operator_id":"op-teste","password":"mock"}`)
+	loginReq := httptest.NewRequest("POST", "/api/v1/operator/login", bytes.NewReader(loginPayload))
+	loginW := httptest.NewRecorder()
+	router.ServeHTTP(loginW, loginReq)
+
+	if loginW.Code != http.StatusOK {
+		t.Fatalf("esperava 200 no login, obteve %d", loginW.Code)
+	}
+
+	cookies := loginW.Result().Cookies()
+	var sessionCookie *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "prysmview_session" {
+			sessionCookie = c
+			break
+		}
+	}
+
+	if sessionCookie == nil {
+		t.Fatal("cookie de sessao 'prysmview_session' nao foi emitido")
+	}
+	if !sessionCookie.HttpOnly {
+		t.Error("cookie deve ter flag HttpOnly ativada")
+	}
+	if !sessionCookie.Secure {
+		t.Error("cookie deve ter flag Secure ativada")
+	}
+	if sessionCookie.SameSite != http.SameSiteStrictMode {
+		t.Errorf("cookie deve ter SameSite=Strict, obteve %v", sessionCookie.SameSite)
+	}
+}
+
+func TestOperatorLogin_EntraID(t *testing.T) {
+	database, router := setupTestServer(t)
+	defer database.Close()
+
+	header := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+	// Payload com grupo autorizado "prysmview-technicians"
+	b64PayloadValid := "eyJzdWIiOiJ0ZWNoLXV1aWQtMTIzNCIsIm5hbWUiOiJNYXJpYSBTdXBvcnRlIiwicHJlZmVycmVkX3VzZXJuYW1lIjoibWFyaWEuc3Vwb3J0ZUBlbXByZXNhLmNvbSIsImVtYWlsIjoibWFyaWEuc3Vwb3J0ZUBlbXByZXNhLmNvbSIsImdyb3VwcyI6WyJwcnlzbXZpZXctdGVjaG5pY2lhbnMiXSwicm9sZXMiOlsiVGVjaG5pY2lhbiJdLCJleHAiOjI1MzQwMjMwMDc5OX0"
+	validToken := header + "." + b64PayloadValid + ".mockSignature"
+
+	// 1. Login com token Entra ID valido
+	validBody := fmt.Sprintf(`{"entra_token":"%s"}`, validToken)
+	req1 := httptest.NewRequest("POST", "/api/v1/operator/login", strings.NewReader(validBody))
+	w1 := httptest.NewRecorder()
+	router.ServeHTTP(w1, req1)
+
+	if w1.Code != http.StatusOK {
+		t.Fatalf("esperava 200 OK para Entra ID valido, obteve %d: %s", w1.Code, w1.Body.String())
+	}
+
+	var res LoginResponse
+	_ = json.Unmarshal(w1.Body.Bytes(), &res)
+	if res.OperatorID != "maria.suporte@empresa.com" {
+		t.Errorf("operator_id divergente: %s", res.OperatorID)
+	}
+
+	// 2. Login com token Entra ID de usuario FORA do grupo autorizado
+	b64PayloadOut := "eyJzdWIiOiJvdXRzaWRlci0xMjM0IiwibmFtZSI6IkpvYW8gRm9yYSIsInByZWZlcnJlZF91c2VybmFtZSI6ImpvYW8uZm9yYUBlbXByZXNhLmNvbSIsImVtYWlsIjoiam9hby5mb3JhQGVtcHJlc2EuY29tIiwiZ3JvdXBzIjpbImZpbmFuY2Vpcm8iXSwicm9sZXMiOlsiVXNlciJdLCJleHAiOjI1MzQwMjMwMDc5OX0"
+	invalidToken := header + "." + b64PayloadOut + ".mockSignature"
+
+	invalidBody := fmt.Sprintf(`{"entra_token":"%s"}`, invalidToken)
+	req2 := httptest.NewRequest("POST", "/api/v1/operator/login", strings.NewReader(invalidBody))
+	w2 := httptest.NewRecorder()
+	router.ServeHTTP(w2, req2)
+
+	if w2.Code != http.StatusUnauthorized {
+		t.Fatalf("esperava 401 Unauthorized para operador fora do grupo autorizado, obteve %d", w2.Code)
+	}
+}
+

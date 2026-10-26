@@ -201,6 +201,9 @@ func (d *DB) ListPDVsForOperator(operatorID string) ([]PDV, error) {
 }
 
 func (d *DB) SaveToken(tokenHash, operatorID string, expiresAt time.Time) error {
+	// Auto-provisionamento JIT (Just-In-Time) para tecnicos autenticados via Entra ID (S-08)
+	_, _ = d.conn.Exec("INSERT INTO operadores (id, name, password_hash, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING",
+		operatorID, operatorID, "entra-id-managed", time.Now())
 	_, err := d.conn.Exec("INSERT INTO tokens (token_hash, operator_id, expires_at) VALUES (?, ?, ?)",
 		tokenHash, operatorID, expiresAt)
 	return err

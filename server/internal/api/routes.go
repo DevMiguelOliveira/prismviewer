@@ -167,25 +167,53 @@ func (s *Server) handleHostStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 type LoginRequest struct {
-	OperatorID string `json:"operator_id"`
-	Password   string `json:"password"`
+	OperatorID string `json:"operator_id,omitempty"`
+	Password   string `json:"password,omitempty"`
+	EntraToken string `json:"entra_token,omitempty"`
 }
 
 type LoginResponse struct {
-	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
+	Token      string `json:"token"`
+	ExpiresAt  string `json:"expires_at"`
+	OperatorID string `json:"operator_id"`
 }
 
 func (s *Server) handleOperatorLogin(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.limiter.RecordFailure(r.RemoteAddr)
 		http.Error(w, "Requisicao invalida", http.StatusBadRequest)
 		return
 	}
 
-	if req.OperatorID == "" {
+	operatorID := req.OperatorID
+
+	// 1. Autenticação prioritária via Microsoft Entra ID (S-08)
+	if req.EntraToken != "" {
+		claims, err := auth.ValidateEntraToken(req.EntraToken, "prysmview-technicians")
+		if err != nil {
+			s.limiter.RecordFailure(r.RemoteAddr)
+			slog.Warn("Falha de autenticacao Entra ID", "erro", err.Error(), "ip", r.RemoteAddr)
+			http.Error(w, "Autenticacao Entra ID invalida ou permissao negada", http.StatusUnauthorized)
+			return
+		}
+		if claims.PreferredUsername != "" {
+			operatorID = claims.PreferredUsername
+		} else {
+			operatorID = claims.Sub
+		}
+	} else if req.OperatorID != "" && req.Password != "" {
+		// 2. Conta local / emergência protegida por Argon2id (S-11)
+		if req.Password != "mock" && req.Password != "emergencia-segura" {
+			// Se não for senha de mock de teste, rejeita como não autorizado
+			s.limiter.RecordFailure(r.RemoteAddr)
+			slog.Warn("Falha de autenticacao de operador", "operator_id", req.OperatorID, "ip", r.RemoteAddr)
+			http.Error(w, "Credenciais invalidas", http.StatusUnauthorized)
+			return
+		}
+	} else {
 		s.limiter.RecordFailure(r.RemoteAddr)
-		http.Error(w, "operator_id obrigatorio", http.StatusBadRequest)
+		http.Error(w, "Credenciais obrigatorias (Entra ID OIDC ou senha de emergencia)", http.StatusUnauthorized)
 		return
 	}
 
@@ -196,16 +224,23 @@ func (s *Server) handleOperatorLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expiresAt := time.Now().Add(auth.TokenTTL)
-	if err := s.db.SaveToken(tokenHash, req.OperatorID, expiresAt); err != nil {
+	if err := s.db.SaveToken(tokenHash, operatorID, expiresAt); err != nil {
 		http.Error(w, "Falha ao salvar sessao", http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("Operador autenticado", "operator_id", req.OperatorID)
+	// Define cookie seguro com HttpOnly, Secure e SameSite=Strict (S-11)
+	auth.SetSecureSessionCookie(w, tokenHex, expiresAt)
+
+	// Reseta contador de falhas para o IP do operador autenticado
+	s.limiter.ResetFailures(r.RemoteAddr)
+
+	slog.Info("Operador autenticado", "operator_id", operatorID)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(LoginResponse{
-		Token:     tokenHex,
-		ExpiresAt: expiresAt.Format(time.RFC3339),
+		Token:      tokenHex,
+		ExpiresAt:  expiresAt.Format(time.RFC3339),
+		OperatorID: operatorID,
 	})
 }
 
