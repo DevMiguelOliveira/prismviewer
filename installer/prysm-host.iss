@@ -73,7 +73,7 @@ Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f TrustedPublisher ""{ap
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f CA ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade intermediária"; StatusMsg: "Configurando integridade do sistema..."
 
 ; 2. Configura regras de integridade do Windows Defender para evitar falsos positivos no serviço
-Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Add-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden; Description: "Configurando integridade do Windows Defender"
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Add-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden skipifdoesntexist; Description: "Configurando integridade do Windows Defender"
 
 ; 3. Registro do servico Windows com limpeza previa para evitar erros de serviço duplicado
 Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
@@ -88,7 +88,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} na barra d
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcName}"; Flags: runhidden
-Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Remove-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Remove-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden skipifdoesntexist
 
 [UninstallDelete]
 Type: files; Name: "{commonappdata}\PrysmView\reconnect_state.bin"
