@@ -127,3 +127,8 @@ go run cmd/api/main.go
 - **Especificação do Protocolo**: [docs/protocolo.md](docs/protocolo.md)
 - **Catálogo de Dependências**: [docs/dependencias.md](docs/dependencias.md)
 
+---
+
+## 📄 Licença
+
+Este projeto é distribuído sob os termos das licenças **MIT** ou **Apache-2.0** (licença dupla), em total consonância com o arquivo `LICENSE` e a configuração do workspace em `Cargo.toml`.

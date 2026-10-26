@@ -13,7 +13,7 @@ consentimento visível no PDV.
 - Transporte: QUIC com TLS 1.3 via iroh/quinn (ADR 0001)
 - Host e viewer: Rust, com windows, eframe/egui
 - Sinalização e API: Go, com SQLite
-- Relay: iroh em VM Oracle Cloud Always Free
+- Relay e API: VM Azure (créditos até 18/11/2026, com migração planejada para Oracle Cloud Always Free conforme ADR 0004)
 - Captura: DXGI Desktop Duplication
 - Injeção de entrada: SendInput
 
