@@ -283,15 +283,14 @@ function renderAuditTable() {
   tbody.innerHTML = '';
   state.auditRecords.forEach(rec => {
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid var(--border-subtle)';
     tr.innerHTML = `
-      <td style="padding: 10px 14px; font-size: 11.5px; font-weight: 600; color: var(--accent-cyan);">${rec.id}</td>
-      <td style="padding: 10px 14px; font-size: 11.5px; color: var(--text-muted);">${rec.timestamp}</td>
-      <td style="padding: 10px 14px; font-size: 11.5px; font-weight: 500; color: var(--accent-violet);">${rec.operator}</td>
-      <td style="padding: 10px 14px; font-size: 11.5px; font-weight: 600; color: var(--text-primary);">${rec.pdv} (${rec.store})</td>
-      <td style="padding: 10px 14px; font-size: 11.5px; color: var(--text-secondary);">${rec.reason}</td>
-      <td style="padding: 10px 14px; font-size: 11.5px; color: var(--accent-mint);">${rec.duration}</td>
-      <td style="padding: 10px 14px; font-size: 11px;"><span style="background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--accent-cyan); padding: 2px 8px; border-radius: var(--radius-full);">${rec.status}</span></td>
+      <td style="font-weight: 600; color: var(--accent-cyan); font-family: var(--font-mono);">${rec.id}</td>
+      <td style="color: var(--text-muted);">${rec.timestamp}</td>
+      <td style="font-weight: 500; color: var(--accent-violet);">${rec.operator}</td>
+      <td style="font-weight: 600; color: var(--text-primary);">${rec.pdv} (${rec.store})</td>
+      <td style="color: var(--text-secondary);">${rec.reason}</td>
+      <td style="color: var(--accent-mint); font-weight: 600;">${rec.duration}</td>
+      <td><span class="audit-badge">${rec.status}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -310,14 +309,14 @@ function renderStoresGrid() {
     card.className = 'settings-card';
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${store}</h4>
+        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary);">${store}</h4>
         <span class="status-badge ${onlineCount > 0 ? 'online' : 'offline'}">${onlineCount}/${storePdvs.length} Online</span>
       </div>
-      <p style="font-size: 11.5px; color: var(--text-muted);">Rede: 192.168.x.x • Gateway VPN Seguro</p>
-      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">Rede: 192.168.x.x • Gateway VPN Seguro</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         ${storePdvs.map(p => `<span class="tele-chip ${p.isOnline ? 'highlight' : ''}">${p.id}</span>`).join('')}
       </div>
-      <button class="btn-secondary" style="margin-top: 6px; justify-content: center;" onclick="filterByStore('${store}')">
+      <button class="btn-secondary" style="margin-top: 8px; justify-content: center; font-size: 13px;" onclick="filterByStore('${store}')">
         Filtrar Dispositivos Deste Grupo
       </button>
     `;
