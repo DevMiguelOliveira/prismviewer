@@ -4,16 +4,19 @@
  */
 
 function getInitialInstalledVersion() {
-  if (typeof window !== 'undefined' && window.__PRYSM_SERVER_VERSION__) {
-    return window.__PRYSM_SERVER_VERSION__;
-  }
+  let ver = '0.1.0';
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       const saved = window.localStorage.getItem('prysm_installed_version');
-      if (saved) return saved;
+      if (saved) ver = saved;
     }
   } catch (e) {}
-  return '0.1.0';
+  if (typeof window !== 'undefined' && window.__PRYSM_SERVER_VERSION__) {
+    if (compareSemver(window.__PRYSM_SERVER_VERSION__, ver) > 0) {
+      ver = window.__PRYSM_SERVER_VERSION__;
+    }
+  }
+  return ver;
 }
 
 function compareSemver(v1, v2) {
@@ -41,6 +44,9 @@ function syncVersionUI() {
 
   const currentVerTag = document.getElementById('currentVersionTag');
   if (currentVerTag) currentVerTag.textContent = `v${curVer}`;
+
+  const diagVer = document.getElementById('diagVersion');
+  if (diagVer) diagVer.textContent = `v${curVer}`;
 
   const channel = state.activeChannel || 'stable';
   const targetVer = state.availableVersions[channel] || state.availableVersions.stable;
@@ -566,6 +572,7 @@ function switchTab(tabName) {
   if (tabName === 'dashboard') renderDashboard();
   if (tabName === 'audit') renderAuditTable();
   if (tabName === 'stores') renderStoresGrid();
+  if (tabName === 'settings') syncVersionUI();
 }
 
 // =============================================================================
@@ -1194,18 +1201,22 @@ function initApp() {
         } else {
           clearInterval(interval);
 
-          // Efetiva a alteração da versão no estado
+          // Efetiva a alteração da versão no estado e variáveis globais
           state.installedVersion = targetVer;
+          if (typeof window !== 'undefined') {
+            window.__PRYSM_SERVER_VERSION__ = targetVer;
+            try {
+              if (window.localStorage) {
+                window.localStorage.setItem('prysm_installed_version', targetVer);
+              }
+            } catch (e) {}
+          }
 
-          // 1. Persiste no disco via Rust IPC
+          // 1. Persiste no disco via Rust IPC (admin_state.json)
           sendRustCommand('apply_update', { version: state.installedVersion, channel });
 
-          // 2. Persiste no localStorage (com tratamento de erro WebView2)
-          try {
-            if (typeof window !== 'undefined' && window.localStorage) {
-              window.localStorage.setItem('prysm_installed_version', state.installedVersion);
-            }
-          } catch (e) {}
+          // 2. Sincroniza visualmente a interface de imediato
+          syncVersionUI();
 
           // 3. Registra no histórico de auditoria
           const now = new Date();
@@ -1232,9 +1243,9 @@ function initApp() {
               <span>Instalar Atualização Automaticamente</span>
             `;
 
-            // Sincroniza a interface: oculta aviso de atualização, atualiza badges e status
+            // Garante ocultação de avisos de atualização e validação completa
             syncVersionUI();
-          }, 1200);
+          }, 800);
         }
       }, 500);
     };
