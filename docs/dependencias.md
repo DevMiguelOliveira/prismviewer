@@ -24,7 +24,10 @@ Este documento registra as dependências iniciais do projeto conforme especifica
 | [`serde_json`](https://crates.io/crates/serde_json) | Serialização e desserialização JSON para APIs REST | MIT / Apache-2.0 | Padrão para JSON na comunicação HTTP com a API Go. |
 | [`thiserror`](https://crates.io/crates/thiserror) | Tipagem estruturada e ergonômica de erros em bibliotecas | MIT / Apache-2.0 | Erros tipados em Rust sem alocações desnecessárias. |
 | [`tracing`](https://crates.io/crates/tracing) | Instrumentação e logging estruturado de eventos | MIT | Padrão assíncrono de observabilidade e auditoria segura. |
-| [`eframe`](https://crates.io/crates/eframe) | Framework GUI desktop baseado em egui | MIT / Apache-2.0 | Interface gráfica nativa e leve para o operador (viewer), sem webviews. |
+| [`eframe`](https://crates.io/crates/eframe) | Framework GUI desktop baseado em egui | MIT / Apache-2.0 | Interface gráfica nativa e leve para a bandeja do PDV (`PrysmHost`). |
+| [`tao`](https://crates.io/crates/tao) | Biblioteca de criação de janelas desktop (Tauri Core) | MIT / Apache-2.0 | Suporte a janelas nativas, DPI, eventos e barra de título no Windows 10/11. |
+| [`wry`](https://crates.io/crates/wry) | Renderizador WebView2 multiplataforma (Tauri Core) | MIT / Apache-2.0 | Integração com o runtime Microsoft Edge WebView2 nativo do Windows para o console `PrysmAdmin`. |
+
 
 
 ## Go (sinalização e API)

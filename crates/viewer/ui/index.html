@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrysmView - Central de Suporte & Gestão PDV</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       HEADER GLOBAL
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="brand-section">
+      <img src="../../assets/logo.png" alt="Prysm Logo" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-title">PRYSM<span>VIEW</span></div>
+      <span class="breadcrumb-divider">/</span>
+      <span class="breadcrumb-current" id="breadcrumbLabel">Monitoramento de Caixas</span>
+    </div>
+
+    <div class="header-center">
+      <div class="search-bar">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar Caixa, Loja, IP ou Versão...">
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-indicator-pill">
+        <div class="pulse-dot"></div>
+        <span id="headerLatencyText">18 ms • Nuvem Segura</span>
+      </div>
+
+      <button class="btn-icon-ghost" id="btnRefresh" title="Sincronizar Caixas">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      </button>
+
+      <div class="user-badge">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span id="headerOperatorName">admin</span>
+      </div>
+
+      <button class="btn-icon-ghost" id="btnLogout" title="Encerrar Sessão">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       LAYOUT PRINCIPAL
+       ========================================================================= -->
+  <div class="app-container">
+    
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-nav">
+        <div class="nav-section-title">Módulos Helpdesk</div>
+        
+        <div class="nav-item active" data-tab="dashboard">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span>Monitoramento</span>
+          <span class="badge-count" id="badgeOnlineCount">3</span>
+        </div>
+
+        <div class="nav-item" data-tab="direct">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <span>Conexão Rápida</span>
+        </div>
+
+        <div class="nav-item" data-tab="stores">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Lojas e Filiais</span>
+        </div>
+
+        <div class="nav-item" data-tab="audit">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>Auditoria E2E</span>
+        </div>
+
+        <div class="nav-item" data-tab="settings">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Configurações</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="tech-role" id="sidebarTechRole">N1 - Suporte a Lojas</div>
+        <div class="tech-dept" id="sidebarTechDept">Central de Suporte Varejo</div>
+        <div class="security-seal">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Zero-Trust • QUIC TLS 1.3</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+
+      <!-- =====================================================================
+           VIEW 1: DASHBOARD DE MONITORAMENTO E HELPDESK
+           ===================================================================== -->
+      <section class="view-page active" id="viewDashboard">
+        
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card" data-filter="all">
+            <div class="kpi-header">
+              <span class="kpi-label">Total de Caixas</span>
+              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <div class="kpi-value" id="kpiTotal">4</div>
+            <div class="kpi-subtext">Cadastrados na rede</div>
+          </div>
+
+          <div class="kpi-card online" data-filter="online">
+            <div class="kpi-header">
+              <span class="kpi-label">Caixas Online</span>
+              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div class="kpi-value" id="kpiOnline">3</div>
+            <div class="kpi-subtext">Prontos para acesso</div>
+          </div>
+
+          <div class="kpi-card" data-filter="offline">
+            <div class="kpi-header">
+              <span class="kpi-label">Caixas Offline</span>
+              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <div class="kpi-value" id="kpiOffline">1</div>
+            <div class="kpi-subtext">Sem sinal recente</div>
+          </div>
+
+          <div class="kpi-card latency">
+            <div class="kpi-header">
+              <span class="kpi-label">Latência Nuvem</span>
+              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </div>
+            <div class="kpi-value" id="kpiLatency">18 ms</div>
+            <div class="kpi-subtext">Sinalização Ativa</div>
+          </div>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="filter-toolbar">
+          <div class="filter-pills">
+            <button class="pill-btn active" data-filter="all">
+              <span class="dot-status all"></span>
+              <span id="pillAllLabel">Todos (4)</span>
+            </button>
+            <button class="pill-btn" data-filter="online">
+              <span class="dot-status online"></span>
+              <span id="pillOnlineLabel">Online (3)</span>
+            </button>
+            <button class="pill-btn" data-filter="offline">
+              <span class="dot-status offline"></span>
+              <span id="pillOfflineLabel">Offline (1)</span>
+            </button>
+
+            <select class="select-filter" id="storeSelectFilter">
+              <option value="">Todas as Lojas</option>
+              <option value="Loja 101 - Centro">Loja 101 - Centro</option>
+              <option value="Loja 204 - Shopping Sul">Loja 204 - Shopping Sul</option>
+              <option value="Loja 305 - Hiper Norte">Loja 305 - Hiper Norte</option>
+            </select>
+          </div>
+
+          <div class="results-count" id="resultsCountLabel">Exibindo 4 de 4 caixas</div>
+        </div>
+
+        <!-- Split Dashboard (60% PDVs + 40% Helpdesk Inspector) -->
+        <div class="split-dashboard">
+          
+          <!-- Lista de PDVs à esquerda -->
+          <div class="pdv-list-container" id="pdvListContainer">
+            <!-- Os cards serão injetados dinamicamente via app.js -->
+          </div>
+
+          <!-- Inspector Drawer Helpdesk à direita -->
+          <div class="inspector-panel" id="inspectorPanel">
+            <div class="inspector-header">
+              <div class="inspector-title">
+                <div class="pulse-dot" id="drawerPulseDot"></div>
+                <div>
+                  <h3 id="drawerPdvId">Helpdesk: PDV-01</h3>
+                  <span id="drawerStoreName">Loja 101 - Centro</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão Primário Largo de Conexão Remota -->
+            <button class="btn-primary primary-connect-btn" id="btnDrawerConnect">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Conectar Sessão Remota (QUIC TLS 1.3)</span>
+            </button>
+
+            <!-- Ações Rápidas de Suporte -->
+            <div class="section-label">Ações Rápidas de Suporte</div>
+            <div class="quick-actions-grid">
+              <button class="quick-btn" id="btnQuickCode">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Código 8 Dígitos</span>
+              </button>
+              <button class="quick-btn" id="btnQuickRestartAgent">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                <span>Reiniciar Agente</span>
+              </button>
+              <button class="quick-btn" id="btnQuickRebootSystem">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                <span>Reboot Caixa</span>
+              </button>
+              <button class="quick-btn" id="btnQuickCtrlAltDel">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Ctrl+Alt+Del</span>
+              </button>
+              <button class="quick-btn" id="btnQuickPing">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                <span>Ping / Diag</span>
+              </button>
+            </div>
+
+            <!-- Diagnóstico Técnico -->
+            <div class="section-label">Diagnóstico Técnico</div>
+            <table class="diag-table">
+              <tr>
+                <td>Endereço IP:</td>
+                <td id="diagIp" style="color: var(--accent-cyan); font-weight: 600;">192.168.1.101</td>
+              </tr>
+              <tr>
+                <td>Sistema Operacional:</td>
+                <td id="diagOs">Windows 11 Pro 23H2</td>
+              </tr>
+              <tr>
+                <td>Resolução do Caixa:</td>
+                <td id="diagResolution">1920x1080 @ 60Hz</td>
+              </tr>
+              <tr>
+                <td>Versão do Agente:</td>
+                <td id="diagVersion" style="color: var(--accent-violet);">PrysmHost v0.1.0 (LocalSystem)</td>
+              </tr>
+              <tr>
+                <td>Chave Pública Ed25519:</td>
+                <td id="diagKey" class="diag-code">ed25519_pdv01_key_hash</td>
+              </tr>
+            </table>
+
+            <!-- Notas de Suporte de Periféricos -->
+            <div class="section-label">Notas Técnicas (SAT, PINPAD, IMPRESSORA)</div>
+            <div class="notes-editor">
+              <textarea class="notes-textarea" id="notesTextarea" placeholder="Insira dados de periféricos (ex: SAT Fiscal COM2, Pinpad USB Gertec)..."></textarea>
+              <button class="btn-secondary" id="btnSaveNotes" style="align-self: flex-start;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Salvar Notas de Suporte</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- =====================================================================
+           VIEW 2: CENTRAL DE CONFIGURAÇÕES & HELPDESK
+           ===================================================================== -->
+      <section class="view-page" id="viewSettings">
+        <div class="settings-container">
+          
+          <div style="margin-bottom: 4px;">
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Central de Configurações & Helpdesk</h2>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Gerenciamento de conexões iroh QUIC, perfil de suporte, políticas Zero-Trust e otimização DXGI.</p>
+          </div>
+
+          <!-- Card 1: Identificação do Técnico -->
+          <div class="settings-card">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <h4>1. Identificação do Técnico & Fila de Helpdesk</h4>
+            </div>
+
+            <div class="form-grid">
+              <label class="form-label">Nome / Matrícula:</label>
+              <input type="text" class="form-input" id="cfgTechName" value="Técnico Admin">
+
+              <label class="form-label">Nível / Cargo:</label>
+              <input type="text" class="form-input" id="cfgTechRole" value="N1 - Suporte a Lojas">
+
+              <label class="form-label">Departamento / Fila:</label>
+              <input type="text" class="form-input" id="cfgTechDept" value="Central de Suporte Varejo">
+
+              <label class="form-label">Ramal / Telefone:</label>
+              <input type="text" class="form-input" id="cfgTechPhone" value="(11) 4004-0000">
+
+              <label class="form-label">Motivo Padrão de Abertura:</label>
+              <input type="text" class="form-input" id="cfgDefaultReason" value="Manutenção Preventiva de Frente de Caixa" style="max-width: 100%;">
+            </div>
+          </div>
+
+          <!-- Card 2: Conectividade & Sinalização -->
+          <div class="settings-card">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <h4>2. Conectividade & Sinalização de Loja (iroh QUIC + TLS 1.3)</h4>
+            </div>
+
+            <div class="form-grid">
+              <label class="form-label">URL da API de Sinalização:</label>
+              <div class="input-with-button">
+                <input type="text" class="form-input" id="cfgServerUrl" value="https://api.prysmview.com">
+                <button class="btn-secondary" id="btnTestPing">⚡ Testar Ping</button>
+              </div>
+
+              <label class="form-label">Servidor Relay QUIC (Fallback):</label>
+              <input type="text" class="form-input" id="cfgRelayUrl" value="quic://relay.prysmview.com:4433">
+
+              <label class="form-label">Reconexão Automática (Queda):</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="reconnect" value="10"> 10s</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="15" checked> 15s (Padrão)</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="30"> 30s</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="60"> 60s</label>
+              </div>
+            </div>
+
+            <div class="info-banner">
+              <strong>Status da Rede:</strong> P2P Direto Prioritário • Criptografia Fim a Fim (Ed25519) • Fallback automático via relay seguro em caso de firewall restrito.
+            </div>
+          </div>
+
+          <!-- Card 3: Segurança Zero-Trust -->
+          <div class="settings-card">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <h4>3. Segurança da Sessão & Políticas Zero-Trust</h4>
+            </div>
+
+            <div class="checkbox-row">
+              <label class="checkbox-item">
+                <input type="checkbox" id="cfgViewOnly">
+                <div class="checkbox-text">
+                  <strong>Modo Apenas Visualização (View-Only / Somente Monitoramento)</strong>
+                  <span>Desativa envio de cliques e teclas, permitindo apenas acompanhamento visual passivo.</span>
+                </div>
+              </label>
+
+              <label class="checkbox-item">
+                <input type="checkbox" id="cfgBlockInput">
+                <div class="checkbox-text">
+                  <strong>Bloquear teclado e mouse local do PDV durante suporte crítico</strong>
+                  <span>Evita conflito de operações pelo operador local enquanto o técnico resolve o problema.</span>
+                </div>
+              </label>
+
+              <label class="checkbox-item">
+                <input type="checkbox" id="cfgClipboard" checked>
+                <div class="checkbox-text">
+                  <strong>Habilitar sincronização de Área de Transferência (Clipboard texto até 1 MB)</strong>
+                  <span>Permite copiar e colar códigos de barras e comandos de forma controlada e auditada.</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="info-banner">
+              <strong>Política Zero-Trust Inviolável:</strong><br>
+              • Nenhuma sessão inicia sem consentimento visível do operador no PDV (ou operador pré-autorizado).<br>
+              • Código de sessão com 8 dígitos, expiração em 120s, máximo de 3 tentativas e HMAC em tempo constante.<br>
+              • Chave privada Ed25519 do PDV protegida por DPAPI no Windows.
+            </div>
+          </div>
+
+          <!-- Card 4: Desempenho DXGI -->
+          <div class="settings-card">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <h4>4. Desempenho de Vídeo DXGI & Economia de Banda</h4>
+            </div>
+
+            <div class="form-grid">
+              <label class="form-label">Taxa de Quadros Alvo (FPS):</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="fps" value="15"> 15 FPS (Econômico / 3G)</label>
+                <label class="radio-label"><input type="radio" name="fps" value="30" checked> 30 FPS (Padrão PDV)</label>
+                <label class="radio-label"><input type="radio" name="fps" value="60"> 60 FPS (Ultra)</label>
+              </div>
+
+              <label class="form-label">Nível de Compressão Zstd:</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="zstd" value="1" checked> Nível 1 (Menor Latência)</label>
+                <label class="radio-label"><input type="radio" name="zstd" value="3"> Nível 3 (Economia de Banda)</label>
+              </div>
+            </div>
+
+            <div class="info-banner">
+              • <strong>Captura:</strong> DXGI Desktop Duplication com detecção de tiles 64x64 alterados.<br>
+              • <strong>Teclado:</strong> Modo nativo ABNT2 Scan Codes (KEYEVENTF_SCANCODE).<br>
+              • <strong>Mouse:</strong> Coordenadas Absolutas Normalizadas (0..65535).<br>
+              • <strong>Segurança:</strong> Liberação automática de todas as teclas e modificadores ao encerrar.
+            </div>
+          </div>
+
+          <!-- Card 5: Armazenamento & Auditoria -->
+          <div class="settings-card">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <h4>5. Armazenamento Local, Auditoria & Diagnóstico</h4>
+            </div>
+
+            <div class="form-grid">
+              <label class="form-label">Pasta de Downloads & Logs:</label>
+              <input type="text" class="form-input" id="cfgDownloadDir" value="C:\Users\Suporte\Downloads\PrysmView" style="max-width: 100%;">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 8px;">
+              <button class="btn-secondary" id="btnExportAudit">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Exportar Relatório (CSV)</span>
+              </button>
+              <button class="btn-secondary" id="btnClearCache">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Limpar Cache de Diagnóstico</span>
+              </button>
+              <button class="btn-primary" id="btnSaveAllSettings">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Salvar Preferências de Helpdesk</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 3: CONEXÃO RÁPIDA / DIRECT CONNECT
+           ===================================================================== -->
+      <section class="view-page" id="viewDirect">
+        <div style="max-width: 500px; margin: 40px auto; width: 100%; text-align: center;">
+          <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Conexão Direta ao PDV</h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Insira o identificador do caixa e o código de sessão de 8 dígitos exibido na tela da loja.</p>
+
+          <div class="settings-card" style="text-align: left;">
+            <label class="form-label">Identificador do Caixa:</label>
+            <input type="text" class="form-input" id="directPdvInput" placeholder="Ex: PDV-01 ou 192.168.1.101" style="max-width: 100%; margin-top: 6px; margin-bottom: 14px;">
+
+            <label class="form-label">Código de Sessão (8 Dígitos):</label>
+            <input type="text" class="form-input" id="directCodeInput" maxlength="8" placeholder="Ex: 84920147" style="max-width: 100%; margin-top: 6px; font-family: var(--font-mono); font-size: 18px; letter-spacing: 2px; text-align: center; color: var(--accent-cyan); font-weight: 700;">
+
+            <button class="btn-primary" id="btnDirectSubmit" style="width: 100%; justify-content: center; margin-top: 18px; padding: 12px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Autorizar e Conectar (TLS 1.3)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 4: AUDITORIA E2E
+           ===================================================================== -->
+      <section class="view-page" id="viewAudit">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Histórico de Auditoria E2E</h2>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Registros imutáveis de acessos remotos e consentimentos concedidos nas lojas.</p>
+          </div>
+          <button class="btn-secondary" id="btnExportAudit2">📥 Exportar CSV</button>
+        </div>
+
+        <div class="settings-card" style="padding: 0; overflow: hidden; margin-top: 10px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead style="background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-subtle);">
+              <tr>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">ID</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">DATA/HORA</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">OPERADOR</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">PDV ALVO</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">MOTIVO</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">DURAÇÃO</th>
+                <th style="padding: 10px 14px; font-size: 11px; color: var(--text-muted); font-weight: 600;">STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <!-- Registros injetados via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 5: LOJAS E FILIAIS
+           ===================================================================== -->
+      <section class="view-page" id="viewStores">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Lojas e Filiais Cadastradas</h2>
+          <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">Visão consolidada de parques de caixas por unidade varejista.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 10px;" id="storesGrid">
+          <!-- Cards de loja injetados via app.js -->
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- =========================================================================
+       MODAL DE CÓDIGO DE 8 DÍGITOS
+       ========================================================================= -->
+  <div class="modal-overlay" id="sessionModal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--accent-cyan);" id="modalTitle">Conexão Segura ao PDV</h3>
+        <button class="btn-icon-ghost" id="btnModalClose">✕</button>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-secondary);" id="modalSubtitle">
+        Solicite ao operador do caixa o código de 8 dígitos exibido na tela do PDV.
+      </p>
+
+      <div class="code-inputs" id="codeInputsContainer">
+        <input type="text" maxlength="1" class="code-digit" autofocus>
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+        <input type="text" maxlength="1" class="code-digit">
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted);">
+        <span>Expiração: <strong style="color: var(--accent-amber);" id="modalTimer">120s</strong></span>
+        <span>Máx: 3 tentativas</span>
+      </div>
+
+      <button class="btn-primary" id="btnModalAuthorize" style="width: 100%; justify-content: center; padding: 10px;">
+        Validar Código & Iniciar Sessão
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

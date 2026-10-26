@@ -44,8 +44,18 @@ O requisito **U-15** solicita uma avaliação criteriosa comparando a manutenç�
 
 ---
 
-## 4. Decisão
+## 4. Decisão Inicial (Histórico)
 
-**Manter o `egui` como o framework de interface gráfica padrão e exclusivo de todos os componentes do PrysmView (`PrysmHost` e `PrysmAdmin`).**
+**Manter o `egui` como o framework de interface gráfica padrão de todos os componentes do PrysmView.**
 
-A arquitetura atual atende 100% das metas não-funcionais (tamanho do executável < 5 MB, memória < 50 MB, CPU ociosa < 1%, latência < 100 ms).
+---
+
+## 5. Revisão da Decisão e Aprovação Humana (2026-10-26)
+
+- **Status:** Aprovado e Homologado pelo Proprietário
+- **Motivação:** Após avaliação prática da interface do operador (`PrysmAdmin`), constatou-se que o framework `egui` (Immediate Mode GUI) possui limitações visuais e tipográficas severas para um software comercial corporativo (ausência de suporte nativo a fontes TrueType/OpenType do Windows, falhas de fallback de fontes gerando caracteres quebrados `□`, renderização crua sem CSS/sombras e rigidez de layout).
+- **Decisão Atualizada:**
+  1. **`PrysmHost` (Agente de Bandeja no PDV):** Permanece 100% em **egui/Rust**, garantindo footprint mínimo (< 15 MB de RAM, sem dependências externas de navegador, ideal para hardware de caixa modesto).
+  2. **`PrysmAdmin` (Console Administrativo / Helpdesk):** Migra para **Tauri 2 / WebView2 (HTML5 + CSS3 moderno + Rust)**.
+  3. **Runtime WebView2:** Utiliza o Evergreen Runtime nativo do Windows 10 e 11 (custo zero, sem Electron, sem download adicional).
+  4. **Núcleo em Rust:** Mantém toda a lógica de rede QUIC iroh, criptografia Ed25519, segurança Zero-Trust e comunicação de sinalização em Rust nativo de alta performance via IPC.
