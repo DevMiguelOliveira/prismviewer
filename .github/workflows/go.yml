@@ -6,17 +6,23 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   go-gates:
-    name: Gates Go (gofmt, vet, test)
+    name: Gates Go (gofmt, vet, test, govulncheck)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
-          go-version: '1.22'
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
 
       - name: Gate 1 - Gofmt Check
         working-directory: server
@@ -34,3 +40,9 @@ jobs:
       - name: Gate 3 - Go Test
         working-directory: server
         run: go test -v ./...
+
+      - name: Gate 4 - Govulncheck (S-18)
+        working-directory: server
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...

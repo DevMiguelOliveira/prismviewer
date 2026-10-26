@@ -35,3 +35,20 @@
 ## 4. Requisitos Inegociáveis de Auditoria
 - Os logs de auditoria registram: ID do operador, ID do PDV, data/hora de início e fim, motivo declarado, status do consentimento e total de bytes transferidos.
 - **PROIBIDO EM LOGS:** Jamais registrar imagens de tela, texto digitado, senhas, códigos de sessão ou conteúdo de arquivos.
+
+---
+
+## 5. Administrador Local (Cenário do Franqueado — S-10)
+
+### Controles Implementados:
+1. **ACL do Diretório e Arquivos:** Permissões NTFS em `C:\Program Files\PrysmView` e `C:\ProgramData\PrysmView` restritas a `SYSTEM` e `Administrators` (Full Control); usuários comuns possuem apenas Read/Execute.
+2. **Proteção da Chave Privada do PDV:** A chave privada Ed25519 é protegida por DPAPI no escopo de máquina (`CryptProtectData`) e guardada em arquivo com ACL restrita. A chave em memória é zerada via `ZeroizeOnDrop`.
+3. **Recuperação Automática do Serviço:** O serviço `prysmview-svc` é configurado no SCM com recuperação automática em caso de falha (`Restart=on-failure`, com reinicialização em 5s, 10s e 60s).
+4. **Detecção Central de Adulteração e Parada:** A API de sinalização monitora a cadência de heartbeats dos hosts. Se uma máquina interromper seus heartbeats por mais de 90 segundos sem encerramento gracioso, o status do PDV passa a `offline` e um alerta de desconexão anômala é emitido para a equipe de suporte.
+
+### Limitações Técnicas Inevitáveis (Fronteira de Segurança):
+- **Privilégios de Administrador Local:** Como o franqueado possui direitos de Administrador Local na máquina e o dispositivo não faz parte de um domínio Active Directory gerenciado centralmente, um usuário com privilégios de Administrador pode:
+  - Parar o serviço Windows via `sc stop prysmview-svc` ou desativá-lo via `sc config start=disabled`.
+  - Bloquear tráfego de rede no Firewall do Windows.
+  - Finalizar processos do sistema ou desinstalar o programa.
+- **O que o software garante:** O software garante que **nenhuma chave privada é exfiltrada** (ela é protegida por DPAPI), que **nenhuma sessão é estabelecida sem ticket assinado válido** e que qualquer adulteração ou tentativa de parada é **imediatamente detectada e auditada pelo servidor de sinalização** através da ausência do heartbeat assinado.

@@ -15,16 +15,14 @@ jobs:
     environment: release
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@a54c7fe9363c9033d2732179678318b53d3960c2 # stable
         with:
           toolchain: stable
-          profile: minimal
-          override: true
 
       - name: Build release binaries
         run: |
@@ -79,7 +77,7 @@ with open(r'$sigPath', 'wb') as f:
           "
 
       - name: Publish release assets
-        uses: softprops/action-gh-release@v2.0.0
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.2.1
         with:
           files: |
             dist/*.exe
