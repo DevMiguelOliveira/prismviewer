@@ -253,6 +253,126 @@ impl ViewerState {
         self.session_code_input.clear();
         self.status_message = Some("Sessão finalizada.".to_string());
     }
+
+    /// Exporta os registros de auditoria em formato CSV com encadeamento criptográfico SHA-256 (D-05).
+    pub fn export_audit_csv(&self) -> String {
+        use sha2::{Digest, Sha256};
+
+        let mut csv = String::from("id,timestamp,operator_name,pdv_id,store_name,duration,reason,status,bytes_transferred,prev_hash,record_hash\n");
+        let mut prev_hash = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+
+        for r in &self.audit_records {
+            let mut hasher = Sha256::new();
+            hasher.update(prev_hash.as_bytes());
+            hasher.update(r.id.as_bytes());
+            hasher.update(r.timestamp.as_bytes());
+            hasher.update(r.operator_name.as_bytes());
+            hasher.update(r.pdv_id.as_bytes());
+            hasher.update(r.store_name.as_bytes());
+            hasher.update(r.duration.as_bytes());
+            hasher.update(r.reason.as_bytes());
+            hasher.update(r.status.as_bytes());
+            hasher.update(r.bytes_transferred.as_bytes());
+            let record_hash = format!("{:x}", hasher.finalize());
+
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},\"{}\",{},{},{},{}\n",
+                r.id,
+                r.timestamp,
+                r.operator_name,
+                r.pdv_id,
+                r.store_name,
+                r.duration,
+                r.reason.replace('"', "\"\""),
+                r.status,
+                r.bytes_transferred,
+                prev_hash,
+                record_hash
+            ));
+
+            prev_hash = record_hash;
+        }
+
+        csv
+    }
+
+    /// Valida a integridade da cadeia de hash de um conteúdo CSV de auditoria (D-05).
+    pub fn verify_audit_csv_chain(csv_content: &str) -> Result<usize, String> {
+        use sha2::{Digest, Sha256};
+
+        let mut lines = csv_content.lines();
+        let header = lines.next().ok_or("CSV vazio")?;
+        if !header.starts_with("id,timestamp,operator_name") {
+            return Err("Cabeçalho CSV inválido".to_string());
+        }
+
+        let mut count = 0;
+        let mut expected_prev = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+
+        for (idx, line) in lines.enumerate() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let cols: Vec<&str> = line.split(',').collect();
+            if cols.len() < 11 {
+                return Err(format!("Linha {} incompleta", idx + 1));
+            }
+            let (id, timestamp, op, pdv, store, dur, reason_raw, status, bytes, prev_hash, record_hash) = (
+                cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8], cols[9], cols[10],
+            );
+
+            if prev_hash != expected_prev {
+                return Err(format!("Quebra de elo na linha {}: prev_hash inconsistente", idx + 1));
+            }
+
+            let mut hasher = Sha256::new();
+            hasher.update(prev_hash.as_bytes());
+            hasher.update(id.as_bytes());
+            hasher.update(timestamp.as_bytes());
+            hasher.update(op.as_bytes());
+            hasher.update(pdv.as_bytes());
+            hasher.update(store.as_bytes());
+            hasher.update(dur.as_bytes());
+            let clean_reason = reason_raw.trim_matches('"');
+            hasher.update(clean_reason.as_bytes());
+            hasher.update(status.as_bytes());
+            hasher.update(bytes.as_bytes());
+            let computed = format!("{:x}", hasher.finalize());
+
+            if computed != record_hash {
+                return Err(format!("Adulteração detectada na linha {}: hash diverge", idx + 1));
+            }
+
+            expected_prev = record_hash.to_string();
+            count += 1;
+        }
+
+        Ok(count)
+    }
+
+    /// Filtra registros de auditoria por operador e máquina (D-05).
+    pub fn filter_audit_records(
+        &self,
+        operator_query: Option<&str>,
+        pdv_query: Option<&str>,
+    ) -> Vec<&AuditRecord> {
+        self.audit_records
+            .iter()
+            .filter(|r| {
+                if let Some(op) = operator_query {
+                    if !op.is_empty() && !r.operator_name.to_lowercase().contains(&op.to_lowercase()) {
+                        return false;
+                    }
+                }
+                if let Some(pdv) = pdv_query {
+                    if !pdv.is_empty() && !r.pdv_id.to_lowercase().contains(&pdv.to_lowercase()) {
+                        return false;
+                    }
+                }
+                true
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -391,5 +511,104 @@ mod tests {
 
         state.remember_user = false;
         assert!(!state.remember_user);
+    }
+
+    #[test]
+    fn test_fleet_management_filtering_with_1000_machines() {
+        let mut state = ViewerState::new();
+
+        // Gera 1.000 máquinas distribuídas em 20 lojas/franquias (D-04)
+        for i in 1..=1000 {
+            let store_idx = (i % 20) + 1;
+            let is_online = i % 3 != 0; // ~66% online
+            state.pdvs.push(PdvItem {
+                id: format!("PDV-{:04}", i),
+                store_name: format!("Loja Franquia {:02}", store_idx),
+                is_online,
+                agent_version: "0.1.0".to_string(),
+                public_key: format!("pub_key_{:04}", i),
+                last_seen: "Agora".to_string(),
+                ip_address: format!("10.0.{}.{}", store_idx, i % 250),
+                os_info: "Windows 11 Pro 23H2".to_string(),
+                resolution: "1920x1080 @ 60Hz".to_string(),
+            });
+        }
+
+        assert_eq!(state.pdvs.len(), 1000);
+        assert_eq!(state.unique_stores().len(), 20);
+
+        // 1. Filtro sem busca: retorna todas
+        assert_eq!(state.filter_pdvs().len(), 1000);
+
+        // 2. Filtro por status online
+        state.filter_status = FilterStatus::OnlineOnly;
+        let online_machines = state.filter_pdvs();
+        assert_eq!(online_machines.len(), state.online_count());
+        assert!(online_machines.iter().all(|p| p.is_online));
+
+        // 3. Filtro por status offline
+        state.filter_status = FilterStatus::OfflineOnly;
+        let offline_machines = state.filter_pdvs();
+        assert_eq!(offline_machines.len(), state.offline_count());
+        assert!(offline_machines.iter().all(|p| !p.is_online));
+
+        // 4. Filtro por loja específica
+        state.filter_status = FilterStatus::All;
+        state.selected_store = Some("Loja Franquia 05".to_string());
+        let store_machines = state.filter_pdvs();
+        assert_eq!(store_machines.len(), 50); // 1000 / 20 = 50 máquinas por loja
+        assert!(store_machines.iter().all(|p| p.store_name == "Loja Franquia 05"));
+
+        // 5. Busca textual combinada
+        state.selected_store = None;
+        state.search_query = "PDV-0005".to_string();
+        let searched = state.filter_pdvs();
+        assert_eq!(searched.len(), 1);
+        assert_eq!(searched[0].id, "PDV-0005");
+    }
+
+    #[test]
+    fn test_audit_csv_export_and_hash_chain_verification() {
+        let mut state = ViewerState::new();
+
+        // Adiciona 5 registros históricos de auditoria (D-05)
+        for i in 1..=5 {
+            state.audit_records.push(AuditRecord {
+                id: format!("AUD-{:03}", i),
+                timestamp: format!("2026-10-25 14:0{}:00", i),
+                operator_name: format!("tecnico_{}", (i % 2) + 1),
+                pdv_id: format!("PDV-{:02}", i),
+                store_name: "Loja Central 01".to_string(),
+                duration: "04m 32s".to_string(),
+                reason: format!("Atendimento chamado #100{}", i),
+                status: "Concluído".to_string(),
+                bytes_transferred: "1.4 MB".to_string(),
+            });
+        }
+
+        // Exporta para CSV
+        let csv = state.export_audit_csv();
+        assert!(csv.contains("id,timestamp,operator_name"));
+        assert!(csv.contains("AUD-001"));
+        assert!(csv.contains("AUD-005"));
+
+        // Valida que a cadeia de hash original é 100% íntegra
+        let verified_count = ViewerState::verify_audit_csv_chain(&csv).expect("Cadeia deveria ser válida");
+        assert_eq!(verified_count, 5);
+
+        // Testa adulteração: alterar o motivo do chamado 1 deve quebrar a validação criptográfica
+        let tampered_csv = csv.replace("chamado #1001", "chamado #1001 ADULTERADO");
+        let result = ViewerState::verify_audit_csv_chain(&tampered_csv);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Adulteração detectada"));
+
+        // Testa filtragem por operador
+        let op1_records = state.filter_audit_records(Some("tecnico_1"), None);
+        assert_eq!(op1_records.len(), 2); // i = 2 e 4
+
+        // Testa filtragem por PDV
+        let pdv2_records = state.filter_audit_records(None, Some("PDV-02"));
+        assert_eq!(pdv2_records.len(), 1);
+        assert_eq!(pdv2_records[0].id, "AUD-002");
     }
 }

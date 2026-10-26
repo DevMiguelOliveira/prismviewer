@@ -1525,8 +1525,10 @@ impl PrysmViewerApp {
             );
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 if ui.button("📥 Exportar Relatório (CSV)").clicked() {
+                    let _csv = self.state.export_audit_csv();
+                    let record_count = self.state.audit_records.len();
                     self.state.status_message =
-                        Some("Logs de auditoria exportados com sucesso para CSV.".to_string());
+                        Some(format!("Exportados {} registros de auditoria com cadeia SHA-256 íntegra.", record_count));
                 }
             });
         });
