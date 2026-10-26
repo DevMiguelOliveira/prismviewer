@@ -173,4 +173,50 @@ mod tests {
         let res = Header::decode(&bytes);
         assert!(matches!(res, Err(HeaderError::LimitExceeded(_))));
     }
+
+    #[test]
+    fn test_protocol_hex_examples() {
+        fn to_hex_spaced(bytes: &[u8]) -> String {
+            bytes
+                .iter()
+                .map(|b| format!("{:02X}", b))
+                .collect::<Vec<_>>()
+                .join(" ")
+        }
+
+        // Exemplo 1: Controle (64 KiB = 65536)
+        let h_ctrl = Header::new(MessageType::Control, 65536).unwrap();
+        assert_eq!(
+            to_hex_spaced(&h_ctrl.encode()),
+            "50 52 53 4D 00 01 00 00 01 00 00"
+        );
+
+        // Exemplo 2: Vídeo (8 MiB = 8388608)
+        let h_video = Header::new(MessageType::Video, 8 * 1024 * 1024).unwrap();
+        assert_eq!(
+            to_hex_spaced(&h_video.encode()),
+            "50 52 53 4D 00 01 01 00 80 00 00"
+        );
+
+        // Exemplo 3: Entrada (255 bytes)
+        let h_input = Header::new(MessageType::Input, 255).unwrap();
+        assert_eq!(
+            to_hex_spaced(&h_input.encode()),
+            "50 52 53 4D 00 01 02 00 00 00 FF"
+        );
+
+        // Exemplo 4: Chat (4095 bytes)
+        let h_chat = Header::new(MessageType::Chat, 4095).unwrap();
+        assert_eq!(
+            to_hex_spaced(&h_chat.encode()),
+            "50 52 53 4D 00 01 03 00 00 0F FF"
+        );
+
+        // Exemplo 5: Arquivo (1 MiB = 1048576)
+        let h_file = Header::new(MessageType::File, 1024 * 1024).unwrap();
+        assert_eq!(
+            to_hex_spaced(&h_file.encode()),
+            "50 52 53 4D 00 01 04 00 10 00 00"
+        );
+    }
 }

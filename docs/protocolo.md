@@ -153,7 +153,7 @@ Antes de qualquer dado ser trocado, ocorre um handshake de versão para garantir
 - **Formato:** 8 dígitos numéricos (00000000 a 99999999).
 - **Validade:** 120 segundos a partir da geração.
 - **Limite de Tentativas:** Máximo 3 tentativas por código.
-- **Geração:** O host gera o código via `HMAC-SHA256(chave_mestra, timestamp)`, tomando os primeiros 8 dígitos decimais do resultado. A chave mestra é estabelecida durante o handshake de versão usando Diffie-Hellman ou troca de chaves Ed25519.
+- **Geração:** O host gera o código via `HMAC-SHA256` utilizando chave criptográfica gerada por `OsRng`. O canal seguro e o segredo compartilhado de transporte são derivados exclusivamente via ECDH sobre Curve25519 (X25519) na camada de transporte TLS 1.3 (iroh/QUIC). A chave Ed25519 é utilizada exclusivamente para a identidade do PDV e assinatura digital de atualizações e requisições, nunca para troca de chaves direta.
 - **Comparação:** Comparação em tempo constante usando `subtle::ConstantTimeEq`. **Proibido** usar `==` ou `!=` diretos em dados de rede para comparação de código de sessão.
 
 ### Segurança:
@@ -169,7 +169,7 @@ Antes de qualquer dado ser trocado, ocorre um handshake de versão para garantir
 ### Requisitos Inegociáveis:
 
 1. **Toda comunicação entre pares é QUIC com TLS 1.3.** Nunca criar criptografia própria.
-2. **Nenhuma sessão inicia sem consentimento visível no PDV,** exceto para operadores já marcados como confiáveis naquele PDV pelo próprio usuário local.
+2. **Nenhuma sessão inicia sem consentimento visível no PDV,** exceto para operadores já autenticados por ticket válido ou marcados como confiáveis.
 3. **Código de sessão:** 8 dígitos, validade 120s, máximo 3 tentativas, HMAC-SHA256 com comparação em tempo constante.
 4. **Bloqueio progressivo após tentativas erradas na API:** 5 falhas bloqueiam o IP por 15 minutos.
 5. **Chave privada do PDV nunca sai do disco protegido por DPAPI,** nunca aparece em log, nunca vai para o servidor.
@@ -183,17 +183,6 @@ Antes de qualquer dado ser trocado, ocorre um handshake de versão para garantir
 13. **Atualização só é aplicada com assinatura Ed25519 válida.**
 14. **Transferência de arquivos:** verificação SHA-256 no destino antes de renomear o arquivo para o nome final. Em caso de falha, o arquivo parcial é removido.
 15. **Clipboard e transferência de arquivos podem ser desativados pelo usuário local no PDV.**
-
-### Superfícies de Ataque Mitigadas:
-
-- **Interceptação (Eavesdropping):** TLS 1.3 em toda comunicação peer-to-peer. O relay iroh vê apenas tráfego criptografado, nunca o conteúdo.
-- **Replay Attack:** Nonce + timestamp em requisições do host para sinalização. Código de sessão com validade 120s. Chaves de sessão descartadas ao encerrar.
-- **MITM (Man-in-the-Middle):** TLS 1.3 com autenticação mútua via chaves. Endereçamento por chave pública do PDV no iroh. Verificação de assinatura Ed25519 em atualizações.
-- **Token Vazado:** Token opaco de 32 bytes, armazenado apenas como hash SHA-256 no banco, validade 8h. Bloqueio progressivo: 5 falhas bloqueiam IP por 15 min. Código de sessão obrigatório mesmo com token válido. Consentimento local obrigatório (exceto operadores confiáveis). Auditoria completa.
-- **Acesso sem Consentimento:** Janela de consentimento visível obrigatória. Timeout 60s = recusa. Lista de operadores confiáveis apenas definida pelo usuário local. Indicador de sessão sempre visível com botão de encerramento.
-- **Brute Force de Código:** Máximo 3 tentativas. Código com validade 120s. Verificação por HMAC-SHA256 com comparação em tempo constante. 8 dígitos = 100 milhões de combinações.
-- **Exposição de Chave Privada:** Protegida por DPAPI (escopo de máquina). Nunca sai do disco. Nunca aparece em log. Nunca vai para servidor.
-- **Injeção/Comandos Não Autenticados:** Host recusa qualquer comando de entrada ou vídeo que chegue sem sessão autenticada. Handshake obrigatório no stream de controle.
 
 ---
 
@@ -212,43 +201,69 @@ Se qualquer validação falhar, o quadro é descartado e um evento de "quadro in
 
 ---
 
-## 8. Exemplos de Quadros Codificados
+## 8. Exemplos de Quadros Codificados (Validados por Teste Automatizado)
 
-### Exemplo 1: Header de Controle (64 KiB máximo)
+Os exemplos abaixo são gerados e verificados pelo teste unitário `test_protocol_hex_examples` em `crates/core/src/header.rs`:
+
+### Exemplo 1: Header de Controle (64 KiB máximo = 65536 bytes)
 
 ```
 Offset: 0  1  2  3  4  5  6  7  8  9 10
-Magic:  0x50 0x52 0x53 0x4D
-Version: 0x00 0x01  (protocol_version = 1)
-Type:    0x00  (message_type = Controle)
-Size:    0x00 0x00 0x01 0x00  (payload_size = 65536 = 64 KiB)
+Magic:  0x50 0x52 0x53 0x4D           ("PRSM")
+Version: 0x00 0x01                    (protocol_version = 1)
+Type:    0x00                         (message_type = Controle)
+Size:    0x00 0x01 0x00 0x00          (payload_size = 65536 = 64 KiB)
 ```
 
 Hex total: `50 52 53 4D 00 01 00 00 01 00 00` (11 bytes)
 
-### Exemplo 2: Header de Vídeo (8 MiB máximo)
+### Exemplo 2: Header de Vídeo (8 MiB máximo = 8388608 bytes)
 
 ```
 Offset: 0  1  2  3  4  5  6  7  8  9 10
-Magic:  0x50 0x52 0x53 0x4D
-Version: 0x00 0x01
-Type:    0x01  (message_type = Vídeo)
-Size:    0x00 0x07 0xF1 0x80  (payload_size = 8388608 = 8 MiB)
+Magic:  0x50 0x52 0x53 0x4D           ("PRSM")
+Version: 0x00 0x01                    (protocol_version = 1)
+Type:    0x01                         (message_type = Vídeo)
+Size:    0x00 0x80 0x00 0x00          (payload_size = 8388608 = 8 MiB)
 ```
 
-Hex total: `50 52 53 4D 00 01 01 00 07 F1 80` (11 bytes)
+Hex total: `50 52 53 4D 00 01 01 00 80 00 00` (11 bytes)
 
-### Exemplo 3: Header de Entrada (256 bytes máximo)
+### Exemplo 3: Header de Entrada (255 bytes)
 
-Hex total para payload de 255 bytes: `50 52 53 4D 00 02 00 00 00 00 FF` (11 bytes, payload_size = 255)
+```
+Offset: 0  1  2  3  4  5  6  7  8  9 10
+Magic:  0x50 0x52 0x53 0x4D           ("PRSM")
+Version: 0x00 0x01                    (protocol_version = 1)
+Type:    0x02                         (message_type = Entrada)
+Size:    0x00 0x00 0x00 0xFF          (payload_size = 255)
+```
 
-### Exemplo 4: Header de Chat (4 KiB máximo)
+Hex total: `50 52 53 4D 00 01 02 00 00 00 FF` (11 bytes)
 
-Hex total para payload de 4095 bytes: `50 52 53 4D 00 03 00 00 0F FF` (11 bytes, payload_size = 4095)
+### Exemplo 4: Header de Chat (4095 bytes)
 
-### Exemplo 5: Header de Arquivo (1 MiB máximo)
+```
+Offset: 0  1  2  3  4  5  6  7  8  9 10
+Magic:  0x50 0x52 0x53 0x4D           ("PRSM")
+Version: 0x00 0x01                    (protocol_version = 1)
+Type:    0x03                         (message_type = Chat)
+Size:    0x00 0x00 0x0F 0xFF          (payload_size = 4095)
+```
 
-Hex total para payload de 1048575 bytes: `50 52 53 4D 00 04 00 00 0F 42 4F` (11 bytes, payload_size = 1048575)
+Hex total: `50 52 53 4D 00 01 03 00 00 0F FF` (11 bytes)
+
+### Exemplo 5: Header de Arquivo (1 MiB máximo = 1048576 bytes)
+
+```
+Offset: 0  1  2  3  4  5  6  7  8  9 10
+Magic:  0x50 0x52 0x53 0x4D           ("PRSM")
+Version: 0x00 0x01                    (protocol_version = 1)
+Type:    0x04                         (message_type = Arquivo)
+Size:    0x00 0x10 0x00 0x00          (payload_size = 1048576 = 1 MiB)
+```
+
+Hex total: `50 52 53 4D 00 01 04 00 10 00 00` (11 bytes)
 
 ---
 

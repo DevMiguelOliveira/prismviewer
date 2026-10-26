@@ -25,6 +25,7 @@
 | **Replay Attack na Sinalização** | Reenvio de solicitações de conexão antigas | Requisições autenticadas por assinatura Ed25519 contendo nonce aleatório de uso único e timestamp de validade curta. |
 | **Acesso Não Autorizado ao Caixa** | Operador conecta em caixa de loja sem autorização | Consentimento obrigatório e visível na tela com timeout de 60s + código de sessão de 8 dígitos com HMAC-SHA256 em tempo constante. |
 | **Força Bruta no Código de Sessão** | Adivinhação de código de 8 dígitos | Código expira em 120s e é bloqueado permanentemente após 3 tentativas inválidas. |
+| **Força Bruta na API de Sinalização** | Tentativas repetidas de autenticação ou requisições forjadas | Bloqueio progressivo de IP: 5 falhas consecutivas bloqueiam o IP de origem por 15 minutos. |
 | **Vazamento da Chave do PDV em Disco** | Clonagem de identidade do caixa | Chave privada cifrada via DPAPI do Windows com escopo de máquina (`CryptProtectData`). Chave em memória limpa com `zeroize`. |
 | **Exfiltração de Arquivos / Malware** | Envio de binários corrompidos | Todo bloco de arquivo é verificado contra hash SHA-256 no destino. Falha de hash exclui o arquivo temporário imediatamente. |
 | **Teclas Presas após Desconexão** | Teclas de atalho maliciosas ficarem pressionadas | Ao término de sessão (normal ou abrupto), o host solta compulsoriamente todas as teclas e modificadores via SendInput. |
