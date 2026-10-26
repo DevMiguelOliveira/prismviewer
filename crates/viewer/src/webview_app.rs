@@ -54,7 +54,8 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     // Constrói a WebView vinculada à janela nativa do Windows
-    let _webview = WebViewBuilder::new()
+    let webview = WebViewBuilder::new()
+        .with_devtools(true)
         .with_html(&bundled_html)
         .with_ipc_handler(|msg| {
             let body = msg.body();
@@ -69,6 +70,8 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     info!("Janela PrysmAdmin inicializada com sucesso em modo WebView2.");
 
     event_loop.run(move |event, _, control_flow| {
+        // Garante que a WebView permaneça viva durante toda a execução da interface
+        let _ = &webview;
         *control_flow = ControlFlow::Wait;
 
         if let Event::WindowEvent {

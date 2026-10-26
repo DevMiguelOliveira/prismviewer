@@ -397,15 +397,28 @@ function closeModal() {
 // =============================================================================
 // GERENCIADOR DE TEMA VISUAL (MODO ESCURO / CLARO / AUTO)
 // =============================================================================
+let _currentTheme = 'dark';
+
 const ThemeManager = {
   storageKey: 'prysm_theme',
 
   getSavedTheme() {
-    return localStorage.getItem(this.storageKey) || 'dark';
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(this.storageKey) || _currentTheme;
+      }
+    } catch (e) {
+      console.warn('LocalStorage inacessível no contexto WebView2:', e);
+    }
+    return _currentTheme;
   },
 
   getSystemTheme() {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    try {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    } catch (e) {
+      return 'dark';
+    }
   },
 
   resolveEffectiveTheme(mode) {
@@ -416,9 +429,24 @@ const ThemeManager = {
   },
 
   applyTheme(mode, notify = false) {
+    _currentTheme = mode;
     const effective = this.resolveEffectiveTheme(mode);
-    document.documentElement.setAttribute('data-theme', effective);
-    localStorage.setItem(this.storageKey, mode);
+
+    try {
+      if (document.documentElement) {
+        document.documentElement.setAttribute('data-theme', effective);
+      }
+    } catch (e) {
+      console.warn('Erro ao definir atributo data-theme:', e);
+    }
+
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(this.storageKey, mode);
+      }
+    } catch (e) {
+      // Ignora erro de storage em WebView2
+    }
 
     // Atualiza ícones do botão rápido no header
     const sunIcon = document.getElementById('themeIconSun');
@@ -462,43 +490,46 @@ const ThemeManager = {
   },
 
   init() {
-    const saved = this.getSavedTheme();
-    this.applyTheme(saved, false);
+    try {
+      const saved = this.getSavedTheme();
+      this.applyTheme(saved, false);
+    } catch (e) {
+      console.warn('Erro no carregamento inicial do tema:', e);
+    }
 
     // Botão de alternância rápida no Header
     const btnToggle = document.getElementById('btnThemeToggle');
     if (btnToggle) {
-      btnToggle.addEventListener('click', () => {
+      btnToggle.onclick = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         this.toggle();
-      });
+      };
     }
 
     // Cliques nos Cards de seleção em Configurações
     document.querySelectorAll('.theme-option-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.onclick = () => {
         const mode = card.dataset.themeMode;
-        if (mode) {
-          this.applyTheme(mode, true);
-        }
-      });
+        if (mode) this.applyTheme(mode, true);
+      };
     });
 
     // Mudança nos inputs de rádio
     document.querySelectorAll('input[name="uiTheme"]').forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          this.applyTheme(e.target.value, true);
-        }
-      });
+      radio.onchange = (e) => {
+        if (e.target.checked) this.applyTheme(e.target.value, true);
+      };
     });
 
     // Listener para quando o tema do Windows muda dinamicamente
     if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (this.getSavedTheme() === 'auto') {
-          this.applyTheme('auto', false);
-        }
-      });
+      try {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          if (this.getSavedTheme() === 'auto') {
+            this.applyTheme('auto', false);
+          }
+        });
+      } catch (e) {}
     }
 
     // Atalho de teclado rápido: Alt+T para alternar
@@ -512,33 +543,57 @@ const ThemeManager = {
 };
 
 // =============================================================================
-// INICIALIZAÇÃO E EVENT LISTENERS
+// REGISTRO GLOBAL DE FUNÇÕES (GARANTIA TOTAL DE ACESSO ONCLICK E EVENT LISTENERS)
 // =============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+window.switchTab = switchTab;
+window.startSession = startSession;
+window.closeModal = closeModal;
+window.selectPdvForInspection = selectPdvForInspection;
+window.filterByStore = filterByStore;
+window.showToast = showToast;
+window.ThemeManager = ThemeManager;
+
+// =============================================================================
+// INICIALIZAÇÃO E EVENT LISTENERS RESILIENTES
+// =============================================================================
+let _appInitialized = false;
+
+function initApp() {
+  if (_appInitialized) return;
+  _appInitialized = true;
+  console.log('[PrysmView] Inicializando interface do operador...');
+
   // Inicializa gerenciador de temas (Dark / Light / Auto)
-  ThemeManager.init();
+  try {
+    ThemeManager.init();
+  } catch (err) {
+    console.error('Falha em ThemeManager.init:', err);
+  }
 
   // Navegação na Sidebar
   document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    btn.onclick = (e) => {
+      if (e) e.preventDefault();
+      switchTab(btn.dataset.tab);
+    };
   });
 
   // KPI Clicks para filtro rápido
   document.querySelectorAll('.kpi-card[data-filter]').forEach(card => {
-    card.addEventListener('click', () => {
+    card.onclick = () => {
       state.filterStatus = card.dataset.filter;
       updateFilterPills();
       renderDashboard();
-    });
+    };
   });
 
   // Filtros Pills
   document.querySelectorAll('.pill-btn[data-filter]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       state.filterStatus = btn.dataset.filter;
       updateFilterPills();
       renderDashboard();
-    });
+    };
   });
 
   function updateFilterPills() {
@@ -548,144 +603,196 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Filtro de Grupo
-  document.getElementById('storeSelectFilter').addEventListener('change', (e) => {
-    state.selectedStore = e.target.value;
-    renderDashboard();
-  });
+  const storeSelect = document.getElementById('storeSelectFilter');
+  if (storeSelect) {
+    storeSelect.onchange = (e) => {
+      state.selectedStore = e.target.value;
+      renderDashboard();
+    };
+  }
 
   // Busca Global
-  document.getElementById('globalSearchInput').addEventListener('input', (e) => {
-    state.searchQuery = e.target.value;
-    renderDashboard();
-  });
+  const searchInput = document.getElementById('globalSearchInput');
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      state.searchQuery = e.target.value;
+      renderDashboard();
+    };
+  }
 
   // Ações do Drawer
-  document.getElementById('btnDrawerConnect').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    if (pdv && pdv.isOnline) startSession(pdv.id, pdv.storeName);
-  });
+  const btnDrawerConnect = document.getElementById('btnDrawerConnect');
+  if (btnDrawerConnect) {
+    btnDrawerConnect.onclick = () => {
+      const pdv = getInspectedPdv();
+      if (pdv && pdv.isOnline) startSession(pdv.id, pdv.storeName);
+    };
+  }
 
-  document.getElementById('btnQuickCode').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    if (pdv) startSession(pdv.id, pdv.storeName);
-  });
+  const btnQuickCode = document.getElementById('btnQuickCode');
+  if (btnQuickCode) {
+    btnQuickCode.onclick = () => {
+      const pdv = getInspectedPdv();
+      if (pdv) startSession(pdv.id, pdv.storeName);
+    };
+  }
 
-  document.getElementById('btnQuickRestartAgent').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    sendRustCommand('restart_agent', { pdv_id: pdv.id });
-    showToast(`Sinal de reinício enviado ao serviço do ${pdv.id}`);
-  });
+  const btnRestartAgent = document.getElementById('btnQuickRestartAgent');
+  if (btnRestartAgent) {
+    btnRestartAgent.onclick = () => {
+      const pdv = getInspectedPdv();
+      sendRustCommand('restart_agent', { pdv_id: pdv.id });
+      showToast(`Sinal de reinício enviado ao serviço do ${pdv.id}`);
+    };
+  }
 
-  document.getElementById('btnQuickRebootSystem').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    sendRustCommand('reboot_system', { pdv_id: pdv.id });
-    showToast(`Solicitação de reinício do sistema enviada ao ${pdv.id}`);
-  });
+  const btnRebootSystem = document.getElementById('btnQuickRebootSystem');
+  if (btnRebootSystem) {
+    btnRebootSystem.onclick = () => {
+      const pdv = getInspectedPdv();
+      sendRustCommand('reboot_system', { pdv_id: pdv.id });
+      showToast(`Solicitação de reinício do sistema enviada ao ${pdv.id}`);
+    };
+  }
 
-  document.getElementById('btnQuickCtrlAltDel').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    sendRustCommand('send_sas', { pdv_id: pdv.id });
-    showToast(`Comando SAS Ctrl+Alt+Del enviado ao ${pdv.id}`);
-  });
+  const btnCtrlAltDel = document.getElementById('btnQuickCtrlAltDel');
+  if (btnCtrlAltDel) {
+    btnCtrlAltDel.onclick = () => {
+      const pdv = getInspectedPdv();
+      sendRustCommand('send_sas', { pdv_id: pdv.id });
+      showToast(`Comando SAS Ctrl+Alt+Del enviado ao ${pdv.id}`);
+    };
+  }
 
-  document.getElementById('btnQuickPing').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    sendRustCommand('ping_pdv', { pdv_id: pdv.id, ip: pdv.ipAddress });
-    showToast(`Ping em ${pdv.ipAddress}: RTT 18 ms (QUIC OK)`);
-  });
+  const btnQuickPing = document.getElementById('btnQuickPing');
+  if (btnQuickPing) {
+    btnQuickPing.onclick = () => {
+      const pdv = getInspectedPdv();
+      sendRustCommand('ping_pdv', { pdv_id: pdv.id, ip: pdv.ipAddress });
+      showToast(`Ping em ${pdv.ipAddress}: RTT 18 ms (QUIC OK)`);
+    };
+  }
 
   // Salvar Notas Técnicas
-  document.getElementById('btnSaveNotes').addEventListener('click', () => {
-    const pdv = getInspectedPdv();
-    const notes = document.getElementById('notesTextarea').value;
-    pdv.notes = notes;
-    sendRustCommand('save_notes', { pdv_id: pdv.id, notes });
-    showToast(`Notas técnicas do dispositivo ${pdv.id} gravadas.`);
-  });
+  const btnSaveNotes = document.getElementById('btnSaveNotes');
+  if (btnSaveNotes) {
+    btnSaveNotes.onclick = () => {
+      const pdv = getInspectedPdv();
+      const notes = document.getElementById('notesTextarea').value;
+      pdv.notes = notes;
+      sendRustCommand('save_notes', { pdv_id: pdv.id, notes });
+      showToast(`Notas técnicas do dispositivo ${pdv.id} gravadas.`);
+    };
+  }
 
   // Testar Ping na API
-  document.getElementById('btnTestPing').addEventListener('click', () => {
-    sendRustCommand('test_api_ping');
-    showToast('Servidor de Sinalização: HTTP 200 OK (18 ms de RTT via TLS 1.3)');
-  });
+  const btnTestPing = document.getElementById('btnTestPing');
+  if (btnTestPing) {
+    btnTestPing.onclick = () => {
+      sendRustCommand('test_api_ping');
+      showToast('Servidor de Sinalização: HTTP 200 OK (18 ms de RTT via TLS 1.3)');
+    };
+  }
 
   // Salvar Preferências
-  document.getElementById('btnSaveAllSettings').addEventListener('click', () => {
-    const techName = document.getElementById('cfgTechName').value;
-    const techRole = document.getElementById('cfgTechRole').value;
-    const techDept = document.getElementById('cfgTechDept').value;
-    
-    document.getElementById('headerOperatorName').textContent = techName;
-    document.getElementById('sidebarTechRole').textContent = techRole;
-    document.getElementById('sidebarTechDept').textContent = techDept;
+  const btnSaveAllSettings = document.getElementById('btnSaveAllSettings');
+  if (btnSaveAllSettings) {
+    btnSaveAllSettings.onclick = () => {
+      const techName = document.getElementById('cfgTechName').value;
+      const techRole = document.getElementById('cfgTechRole').value;
+      const techDept = document.getElementById('cfgTechDept').value;
+      
+      document.getElementById('headerOperatorName').textContent = techName;
+      document.getElementById('sidebarTechRole').textContent = techRole;
+      document.getElementById('sidebarTechDept').textContent = techDept;
 
-    sendRustCommand('save_settings', { techName, techRole, techDept });
-    showToast('Configurações e parâmetros de suporte salvos com sucesso.');
-  });
+      sendRustCommand('save_settings', { techName, techRole, techDept });
+      showToast('Configurações e parâmetros de suporte salvos com sucesso.');
+    };
+  }
 
   // Exportar Auditoria CSV
   const handleExportCsv = () => {
     sendRustCommand('export_audit_csv');
     showToast('Relatório de auditoria exportado para a pasta de Downloads.');
   };
-  document.getElementById('btnExportAudit').addEventListener('click', handleExportCsv);
-  document.getElementById('btnExportAudit2').addEventListener('click', handleExportCsv);
+  const btnExportAudit = document.getElementById('btnExportAudit');
+  if (btnExportAudit) btnExportAudit.onclick = handleExportCsv;
+  const btnExportAudit2 = document.getElementById('btnExportAudit2');
+  if (btnExportAudit2) btnExportAudit2.onclick = handleExportCsv;
 
   // Limpar Cache
-  document.getElementById('btnClearCache').addEventListener('click', () => {
-    sendRustCommand('clear_cache');
-    showToast('Cache de telemetria e diagnósticos temporários liberados.');
-  });
+  const btnClearCache = document.getElementById('btnClearCache');
+  if (btnClearCache) {
+    btnClearCache.onclick = () => {
+      sendRustCommand('clear_cache');
+      showToast('Cache de telemetria e diagnósticos temporários liberados.');
+    };
+  }
 
   // Sincronizar / Atualizar
-  document.getElementById('btnRefresh').addEventListener('click', () => {
-    sendRustCommand('refresh_fleet');
-    showToast('Sincronização de dispositivos concluída (18 ms)');
-    renderDashboard();
-  });
+  const btnRefresh = document.getElementById('btnRefresh');
+  if (btnRefresh) {
+    btnRefresh.onclick = () => {
+      sendRustCommand('refresh_fleet');
+      showToast('Sincronização de dispositivos concluída (18 ms)');
+      renderDashboard();
+    };
+  }
 
   // Logout
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    showToast('Sessão do operador encerrada com segurança.');
-  });
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.onclick = () => {
+      showToast('Sessão do operador encerrada com segurança.');
+    };
+  }
 
   // Modal Inputs (Digitação com auto-avanço)
   const codeInputs = document.querySelectorAll('.code-digit');
   codeInputs.forEach((input, index) => {
-    input.addEventListener('input', (e) => {
+    input.oninput = (e) => {
       if (e.target.value.length === 1 && index < codeInputs.length - 1) {
         codeInputs[index + 1].focus();
       }
-    });
+    };
 
-    input.addEventListener('keydown', (e) => {
+    input.onkeydown = (e) => {
       if (e.key === 'Backspace' && !e.target.value && index > 0) {
         codeInputs[index - 1].focus();
       }
-    });
+    };
   });
 
-  document.getElementById('btnModalClose').addEventListener('click', closeModal);
-  document.getElementById('btnModalAuthorize').addEventListener('click', () => {
-    const code = Array.from(codeInputs).map(i => i.value).join('');
-    if (code.length < 8) {
-      showToast('Por favor, insira o código completo de 8 dígitos.');
-      return;
-    }
-    closeModal();
-    showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'} via QUIC...`);
-  });
+  const btnModalClose = document.getElementById('btnModalClose');
+  if (btnModalClose) btnModalClose.onclick = closeModal;
+
+  const btnModalAuthorize = document.getElementById('btnModalAuthorize');
+  if (btnModalAuthorize) {
+    btnModalAuthorize.onclick = () => {
+      const code = Array.from(codeInputs).map(i => i.value).join('');
+      if (code.length < 8) {
+        showToast('Por favor, insira o código completo de 8 dígitos.');
+        return;
+      }
+      closeModal();
+      showToast(`Código validado com sucesso! Conectando a ${activeSessionTarget?.pdvId || 'Dispositivo'} via QUIC...`);
+    };
+  }
 
   // Conexão Direta Submit
-  document.getElementById('btnDirectSubmit').addEventListener('click', () => {
-    const pdvId = document.getElementById('directPdvInput').value.trim();
-    const code = document.getElementById('directCodeInput').value.trim();
-    if (!pdvId || code.length < 8) {
-      showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
-      return;
-    }
-    showToast(`Conectando diretamente a ${pdvId} via QUIC TLS 1.3...`);
-  });
+  const btnDirectSubmit = document.getElementById('btnDirectSubmit');
+  if (btnDirectSubmit) {
+    btnDirectSubmit.onclick = () => {
+      const pdvId = document.getElementById('directPdvInput').value.trim();
+      const code = document.getElementById('directCodeInput').value.trim();
+      if (!pdvId || code.length < 8) {
+        showToast('Preencha o identificador do dispositivo e o código de 8 dígitos.');
+        return;
+      }
+      showToast(`Conectando diretamente a ${pdvId} via QUIC TLS 1.3...`);
+    };
+  }
 
   // =========================================================================
   // SISTEMA DE ATUALIZAÇÃO AUTOMÁTICA (IN-APP AUTO-UPDATE)
@@ -701,85 +808,99 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateProgressPercent = document.getElementById('updateProgressPercent');
 
   // Ao clicar no badge do header, abre as configurações e foca no card de atualização
-  headerUpdateBadge.addEventListener('click', () => {
-    switchTab('settings');
-    const card = document.getElementById('cardAutoUpdate');
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth' });
-      card.style.borderColor = 'var(--accent-cyan)';
-      card.style.boxShadow = 'var(--shadow-cyan)';
-      setTimeout(() => {
-        card.style.borderColor = 'var(--border-subtle)';
-        card.style.boxShadow = 'none';
-      }, 2500);
-    }
-  });
+  if (headerUpdateBadge) {
+    headerUpdateBadge.onclick = () => {
+      switchTab('settings');
+      const card = document.getElementById('cardAutoUpdate');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth' });
+        card.style.borderColor = 'var(--accent-cyan)';
+        card.style.boxShadow = 'var(--shadow-cyan)';
+        setTimeout(() => {
+          card.style.borderColor = 'var(--border-subtle)';
+          card.style.boxShadow = 'none';
+        }, 2500);
+      }
+    };
+  }
 
-  checkUpdatesBtn.addEventListener('click', () => {
-    checkUpdatesBtn.disabled = true;
-    checkUpdatesBtn.innerHTML = `
-      <svg class="spin-animation" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-      <span>Verificando...</span>
-    `;
-
-    sendRustCommand('check_updates', { channel: 'stable' });
-
-    setTimeout(() => {
-      checkUpdatesBtn.disabled = false;
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.onclick = () => {
+      checkUpdatesBtn.disabled = true;
       checkUpdatesBtn.innerHTML = `
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-        <span>Verificar Atualizações Agora</span>
+        <svg class="spin-animation" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        <span>Verificando...</span>
       `;
 
-      // Simula / processa resultado: Nova versão disponível
-      updateAvailableBox.style.display = 'flex';
-      headerUpdateBadge.style.display = 'flex';
-      updateStatusText.innerHTML = `<span style="color: var(--accent-cyan);">⚡ Nova versão v0.1.1 disponível para instalação imediata!</span>`;
-      showToast('Nova versão v0.1.1 encontrada! Você pode atualizar agora com 1 clique.');
-    }, 1200);
-  });
+      sendRustCommand('check_updates', { channel: 'stable' });
 
-  btnApplyUpdate.addEventListener('click', () => {
-    btnApplyUpdate.disabled = true;
-    btnApplyUpdate.innerHTML = `<span>Instalando Atualização...</span>`;
-    updateProgressContainer.style.display = 'flex';
+      setTimeout(() => {
+        checkUpdatesBtn.disabled = false;
+        checkUpdatesBtn.innerHTML = `
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          <span>Verificar Atualizações Agora</span>
+        `;
 
-    let currentStep = 0;
-    const steps = [
-      { p: 25, label: "Baixando pacote oficial de atualização (3.2 MB)..." },
-      { p: 55, label: "Validando integridade SHA-256 em tempo constante..." },
-      { p: 80, label: "Validando assinatura digital Ed25519..." },
-      { p: 95, label: "Aplicando substituição atômica in-place (Windows NTFS)..." },
-      { p: 100, label: "Atualização aplicada com sucesso! Reiniciando software..." }
-    ];
+        // Simula / processa resultado: Nova versão disponível
+        if (updateAvailableBox) updateAvailableBox.style.display = 'flex';
+        if (headerUpdateBadge) headerUpdateBadge.style.display = 'flex';
+        if (updateStatusText) updateStatusText.innerHTML = `<span style="color: var(--accent-cyan);">⚡ Nova versão v0.1.1 disponível para instalação imediata!</span>`;
+        showToast('Nova versão v0.1.1 encontrada! Você pode atualizar agora com 1 clique.');
+      }, 1200);
+    };
+  }
 
-    const interval = setInterval(() => {
-      if (currentStep < steps.length) {
-        const item = steps[currentStep];
-        updateProgressBar.style.width = `${item.p}%`;
-        updateProgressPercent.textContent = `${item.p}%`;
-        updateProgressLabel.textContent = item.label;
-        currentStep++;
-      } else {
-        clearInterval(interval);
-        sendRustCommand('apply_update', { version: '0.1.1' });
-        showToast('Atualização v0.1.1 instalada! O software foi atualizado sem reinstalação manual.');
-        setTimeout(() => {
-          document.getElementById('currentVersionTag').textContent = 'v0.1.1';
-          updateAvailableBox.style.display = 'none';
-          headerUpdateBadge.style.display = 'none';
-          updateStatusText.innerHTML = `● Sistema Atualizado (v0.1.1 instalada com sucesso)`;
-          btnApplyUpdate.disabled = false;
-          btnApplyUpdate.innerHTML = `
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            <span>Instalar Atualização Automaticamente</span>
-          `;
-        }, 2000);
-      }
-    }, 600);
-  });
+  if (btnApplyUpdate) {
+    btnApplyUpdate.onclick = () => {
+      btnApplyUpdate.disabled = true;
+      btnApplyUpdate.innerHTML = `<span>Instalando Atualização...</span>`;
+      if (updateProgressContainer) updateProgressContainer.style.display = 'flex';
+
+      let currentStep = 0;
+      const steps = [
+        { p: 25, label: "Baixando pacote oficial de atualização (3.2 MB)..." },
+        { p: 55, label: "Validando integridade SHA-256 em tempo constante..." },
+        { p: 80, label: "Validando assinatura digital Ed25519..." },
+        { p: 95, label: "Aplicando substituição atômica in-place (Windows NTFS)..." },
+        { p: 100, label: "Atualização aplicada com sucesso! Reiniciando software..." }
+      ];
+
+      const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+          const item = steps[currentStep];
+          if (updateProgressBar) updateProgressBar.style.width = `${item.p}%`;
+          if (updateProgressPercent) updateProgressPercent.textContent = `${item.p}%`;
+          if (updateProgressLabel) updateProgressLabel.textContent = item.label;
+          currentStep++;
+        } else {
+          clearInterval(interval);
+          sendRustCommand('apply_update', { version: '0.1.1' });
+          showToast('Atualização v0.1.1 instalada! O software foi atualizado sem reinstalação manual.');
+          setTimeout(() => {
+            const vtag = document.getElementById('currentVersionTag');
+            if (vtag) vtag.textContent = 'v0.1.1';
+            if (updateAvailableBox) updateAvailableBox.style.display = 'none';
+            if (headerUpdateBadge) headerUpdateBadge.style.display = 'none';
+            if (updateStatusText) updateStatusText.innerHTML = `● Sistema Atualizado (v0.1.1 instalada com sucesso)`;
+            btnApplyUpdate.disabled = false;
+            btnApplyUpdate.innerHTML = `
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Instalar Atualização Automaticamente</span>
+            `;
+          }, 2000);
+        }
+      }, 600);
+    };
+  }
 
   // Render inicial
   renderDashboard();
-});
+}
+
+// Inicia imediatamente se o DOM já estiver pronto, ou escuta DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
