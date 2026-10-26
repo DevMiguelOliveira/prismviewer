@@ -29,10 +29,11 @@ jobs:
           cargo build --release --locked
           cargo test --release --locked
 
-      - name: Package installer (Inno Setup)
-        # Requer Inno Setup 6 instalado no runner Windows.
+      - name: Package installers (Inno Setup 6)
+        # Compila os dois instaladores distintos: PrysmHost (PDV) e PrysmAdmin (Técnico)
         run: |
-          iscc installer/prysmview.iss
+          iscc installer/prysm-host.iss
+          iscc installer/prysm-admin.iss
         shell: pwsh
 
       - name: Generate signed update manifest

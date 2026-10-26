@@ -6,6 +6,8 @@ members = [
     "crates/tray",
     "crates/viewer",
     "crates/relay",
+]
+exclude = [
     "crates/spikes/s1_dxgi",
     "crates/spikes/s2_tiles",
     "crates/spikes/s3_iroh",
