@@ -93,10 +93,38 @@ pub struct ViewerState {
     pub zstd_level: i32,
     pub remember_user: bool,
     pub show_password: bool,
+    // Campos úteis para Helpdesk & Configurações
+    pub relay_url: String,
+    pub helpdesk_operator_role: String,
+    pub helpdesk_department: String,
+    pub helpdesk_phone: String,
+    pub default_ticket_reason: String,
+    pub auto_reconnect_seconds: u32,
+    pub clipboard_enabled: bool,
+    pub view_only_mode: bool,
+    pub block_remote_input: bool,
+    pub download_dir: String,
+    pub pdv_notes: std::collections::HashMap<String, String>,
+    pub current_pdv_note_input: String,
 }
 
 impl Default for ViewerState {
     fn default() -> Self {
+        let mut notes = std::collections::HashMap::new();
+        notes.insert(
+            "PDV-01".to_string(),
+            "Caixa Frente 01: SAT Fiscal Ativo (COM2). Pinpad Gertec USB. Impressora Bematech MP-4200.".to_string(),
+        );
+        notes.insert(
+            "PDV-02".to_string(),
+            "Caixa Rápido 02: Leitor Honeywell 2D para QR Code e PIX. Gaveta automática conectada na RJ11.".to_string(),
+        );
+        notes.insert(
+            "PDV-03".to_string(),
+            "Caixa Preferencial 03: Monitor Touch 15''. SAT reserva configurado na COM4."
+                .to_string(),
+        );
+
         Self {
             operator_name: "Técnico".to_string(),
             auth_token: None,
@@ -124,6 +152,18 @@ impl Default for ViewerState {
             zstd_level: 1,
             remember_user: true,
             show_password: false,
+            relay_url: "quic://relay.prysmview.com:4433".to_string(),
+            helpdesk_operator_role: "N1 - Suporte a Lojas".to_string(),
+            helpdesk_department: "Central de Suporte Varejo".to_string(),
+            helpdesk_phone: "(11) 4004-0000".to_string(),
+            default_ticket_reason: "Manutenção Preventiva de Frente de Caixa".to_string(),
+            auto_reconnect_seconds: 15,
+            clipboard_enabled: true,
+            view_only_mode: false,
+            block_remote_input: false,
+            download_dir: "C:\\Users\\Suporte\\Downloads\\PrysmView".to_string(),
+            pdv_notes: notes,
+            current_pdv_note_input: String::new(),
         }
     }
 }
@@ -213,6 +253,16 @@ impl ViewerState {
     /// Limpa o PDV em inspeção.
     pub fn close_inspector(&mut self) {
         self.inspected_pdv = None;
+    }
+
+    /// Obtém as notas de suporte técnico de um PDV.
+    pub fn get_pdv_note(&self, pdv_id: &str) -> &str {
+        self.pdv_notes.get(pdv_id).map(|s| s.as_str()).unwrap_or("")
+    }
+
+    /// Salva ou atualiza a nota de suporte de um PDV.
+    pub fn save_pdv_note(&mut self, pdv_id: &str, note: String) {
+        self.pdv_notes.insert(pdv_id.to_string(), note);
     }
 
     /// Seleciona um PDV para iniciar fluxo de conexão e abre o modal de código.

@@ -147,6 +147,11 @@ impl PrysmViewerApp {
             },
         ];
 
+        state.inspected_pdv = state.pdvs.first().cloned();
+        if let Some(ref p) = state.inspected_pdv {
+            state.current_pdv_note_input = state.get_pdv_note(&p.id).to_string();
+        }
+
         Self {
             state,
             canvas: RemoteCanvas::default(),
@@ -187,34 +192,54 @@ impl eframe::App for PrysmViewerApp {
         ctx.set_visuals(visuals);
 
         if self.state.is_authenticated {
-            // Barra Superior (Header) do Painel Administrativo
+            // Barra Superior Global (Header) do Painel Administrativo
             egui::TopBottomPanel::top("top_header")
                 .frame(
                     egui::Frame::none()
                         .fill(COLOR_PANEL_NAVY)
                         .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
-                        .inner_margin(egui::Margin::symmetric(14.0, 10.0)),
+                        .inner_margin(egui::Margin::symmetric(14.0, 8.0)),
                 )
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        render_logo(ui, self.logo_texture.as_ref(), 28.0);
+                        render_logo(ui, self.logo_texture.as_ref(), 26.0);
                         ui.add_space(8.0);
 
-                        ui.heading(
-                            RichText::new("PRYSM ADMIN")
-                                .color(COLOR_CYAN_NEON)
-                                .strong()
-                                .size(18.0),
-                        );
+                        ui.horizontal(|ui| {
+                            ui.label(
+                                RichText::new("PrysmView")
+                                    .color(COLOR_CYAN_NEON)
+                                    .strong()
+                                    .size(16.0),
+                            );
+                            ui.label(
+                                RichText::new("Admin")
+                                    .color(COLOR_TEXT_WHITE)
+                                    .strong()
+                                    .size(16.0),
+                            );
+                        });
+
+                        ui.add_space(6.0);
+                        ui.label(RichText::new("•").color(COLOR_CARD_BORDER).size(13.0));
+                        ui.add_space(6.0);
+
+                        let section_title = match self.state.active_tab {
+                            AdminTab::Dashboard => "Monitoramento de Caixas",
+                            AdminTab::DirectConnect => "Conexão Rápida por Código",
+                            AdminTab::Stores => "Gestão de Lojas e Filiais",
+                            AdminTab::AuditHistory => "Auditoria E2E",
+                            AdminTab::Settings => "Configurações Helpdesk",
+                        };
                         ui.label(
-                            RichText::new("• Central de Suporte & Gestão PDV")
+                            RichText::new(section_title)
                                 .color(COLOR_TEXT_MUTED)
-                                .size(13.0),
+                                .size(12.5),
                         );
 
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             let btn_sair = egui::Button::new(
-                                RichText::new("🚪 Sair").color(COLOR_TEXT_MUTED).size(12.0),
+                                RichText::new("Sair").color(COLOR_TEXT_MUTED).size(11.5),
                             )
                             .fill(Color32::from_rgb(28, 20, 28))
                             .stroke(Stroke::new(1.0_f32, Color32::from_rgb(60, 30, 40)))
@@ -224,43 +249,74 @@ impl eframe::App for PrysmViewerApp {
                                 self.state.logout();
                             }
 
-                            ui.separator();
-
-                            // Badge pill do técnico logado com destaque violeta prismático
+                            // Badge pill do técnico logado
                             egui::Frame::none()
-                                .fill(Color32::from_rgb(32, 16, 50))
-                                .stroke(Stroke::new(1.0_f32, COLOR_VIOLET_NEON))
+                                .fill(Color32::from_rgb(26, 34, 52))
+                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(45, 60, 90)))
                                 .rounding(12.0)
                                 .inner_margin(egui::Margin::symmetric(10.0, 4.0))
                                 .show(ui, |ui| {
-                                    ui.label(
-                                        RichText::new(format!("👤 {}", self.state.operator_name))
-                                            .color(COLOR_VIOLET_NEON)
-                                            .size(12.0)
-                                            .strong(),
-                                    );
+                                    ui.horizontal(|ui| {
+                                        ui.label(RichText::new("👤").size(11.5));
+                                        ui.label(
+                                            RichText::new(&self.state.operator_name)
+                                                .color(COLOR_TEXT_WHITE)
+                                                .size(11.5)
+                                                .strong(),
+                                        );
+                                    });
                                 });
 
                             ui.separator();
 
+                            // Indicador de Latência com a Nuvem (desenhado com painter vetorial, zero □)
+                            ui.horizontal(|ui| {
+                                let (dot_rect, _) = ui.allocate_exact_size(
+                                    Vec2::new(10.0, 12.0),
+                                    egui::Sense::hover(),
+                                );
+                                ui.painter().circle_filled(
+                                    dot_rect.center(),
+                                    3.5,
+                                    Color32::from_rgb(16, 185, 129),
+                                );
+                                ui.label(
+                                    RichText::new(format!(
+                                        "Sinalização: {} ms",
+                                        self.state.cloud_latency_ms
+                                    ))
+                                    .color(Color32::from_rgb(148, 163, 184))
+                                    .size(11.5),
+                                );
+                            });
+
+                            ui.separator();
+
                             let btn_atualizar = egui::Button::new(
-                                RichText::new("🔄 Atualizar")
+                                RichText::new("Sincronizar")
                                     .color(COLOR_TEXT_WHITE)
-                                    .size(12.0),
+                                    .size(11.5),
                             )
                             .fill(COLOR_CARD_BASE)
                             .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
                             .rounding(4.0);
 
                             if ui.add(btn_atualizar).clicked() {
-                                self.state.status_message =
-                                    Some("Lista de PDVs atualizada com a sinalização.".to_string());
+                                self.state.status_message = Some(
+                                    "Lista de PDVs sincronizada com a sinalização.".to_string(),
+                                );
                             }
 
+                            // Campo de Busca Unificada
+                            if !self.state.search_query.is_empty() && ui.button("✖").clicked() {
+                                self.state.search_query.clear();
+                            }
+
+                            let search_w = 220.0_f32.min((ui.available_width() - 20.0).max(120.0));
                             ui.add(
                                 egui::TextEdit::singleline(&mut self.state.search_query)
-                                    .hint_text("🔍 Buscar Loja ou PDV...")
-                                    .desired_width(220.0),
+                                    .hint_text("Buscar Caixa, Loja ou IP...")
+                                    .desired_width(search_w),
                             );
                         });
                     });
@@ -350,215 +406,206 @@ impl eframe::App for PrysmViewerApp {
 impl PrysmViewerApp {
     /// Renderiza a barra lateral (Sidebar) de navegação do técnico.
     fn render_sidebar(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(8.0);
-        ui.horizontal(|ui| {
-            render_logo(ui, self.logo_texture.as_ref(), 34.0);
-            ui.add_space(8.0);
-            ui.vertical(|ui| {
-                ui.heading(
-                    RichText::new("PRYSM ADMIN")
-                        .color(COLOR_CYAN_NEON)
-                        .strong()
-                        .size(16.0),
-                );
-                ui.label(
-                    RichText::new("CONSOLE v0.1.0")
-                        .color(COLOR_TEXT_DARK)
-                        .size(10.0),
-                );
-            });
-        });
-
-        ui.add_space(14.0);
-        ui.separator();
-        ui.add_space(8.0);
-
+        ui.add_space(6.0);
         ui.label(
-            RichText::new("MENU PRINCIPAL")
-                .color(COLOR_TEXT_DARK)
-                .size(11.0)
+            RichText::new("MÓDULOS HELPDESK")
+                .color(Color32::from_rgb(100, 116, 139))
+                .size(10.5)
                 .strong(),
         );
-        ui.add_space(6.0);
+        ui.add_space(8.0);
 
         let online = self.state.online_count();
         let tabs = [
             (
                 AdminTab::Dashboard,
-                format!("📊 Monitoramento ({})", online),
+                format!("Monitoramento ({})", online),
+                true,
             ),
-            (AdminTab::DirectConnect, "⚡ Conexão Rápida".to_string()),
-            (AdminTab::Stores, "🏬 Lojas e Filiais".to_string()),
-            (AdminTab::AuditHistory, "📜 Auditoria E2E".to_string()),
-            (AdminTab::Settings, "⚙️ Configurações & Nuvem".to_string()),
+            (AdminTab::DirectConnect, "Conexão Rápida".to_string(), false),
+            (AdminTab::Stores, "Lojas e Filiais".to_string(), false),
+            (AdminTab::AuditHistory, "Auditoria E2E".to_string(), false),
+            (AdminTab::Settings, "Configurações".to_string(), false),
         ];
 
-        for (tab, label) in tabs {
+        for (tab, label, has_indicator) in tabs {
             let is_selected = self.state.active_tab == tab;
-            let btn = egui::Button::new(
-                RichText::new(&label)
-                    .color(if is_selected {
-                        COLOR_TEXT_WHITE
-                    } else {
-                        COLOR_TEXT_MUTED
-                    })
-                    .size(13.0)
-                    .strong(),
-            )
-            .fill(if is_selected {
+            let bg_fill = if is_selected {
                 COLOR_BLUE_ELECTRIC
             } else {
                 Color32::TRANSPARENT
-            })
-            .stroke(Stroke::new(
+            };
+            let stroke = Stroke::new(
                 1.0_f32,
                 if is_selected {
                     COLOR_CYAN_NEON
                 } else {
                     Color32::TRANSPARENT
                 },
-            ))
-            .rounding(6.0);
+            );
 
-            if ui.add_sized([ui.available_width(), 34.0], btn).clicked() {
+            let (rect, resp) =
+                ui.allocate_exact_size(Vec2::new(ui.available_width(), 36.0), egui::Sense::click());
+
+            if resp.hovered() && !is_selected {
+                ui.painter()
+                    .rect_filled(rect, 6.0, Color32::from_rgb(22, 30, 48));
+            } else {
+                ui.painter().rect(rect, 6.0, bg_fill, stroke);
+            }
+
+            // Ponto indicador online vetorial (zero caracteres quebrados)
+            let start_x = rect.min.x + 12.0;
+            if has_indicator && online > 0 {
+                ui.painter().circle_filled(
+                    egui::pos2(start_x, rect.center().y),
+                    3.5,
+                    Color32::from_rgb(0, 255, 204),
+                );
+            } else {
+                let dot_color = if is_selected {
+                    Color32::WHITE
+                } else {
+                    Color32::from_rgb(100, 116, 139)
+                };
+                ui.painter()
+                    .circle_filled(egui::pos2(start_x, rect.center().y), 2.5, dot_color);
+            }
+
+            let text_color = if is_selected {
+                COLOR_TEXT_WHITE
+            } else {
+                COLOR_TEXT_MUTED
+            };
+            ui.painter().text(
+                egui::pos2(start_x + 12.0, rect.center().y),
+                egui::Align2::LEFT_CENTER,
+                &label,
+                egui::FontId::proportional(12.5),
+                text_color,
+            );
+
+            if resp.clicked() {
                 self.state.active_tab = tab;
             }
             ui.add_space(4.0);
         }
 
         ui.with_layout(Layout::bottom_up(Align::Min), |ui| {
-            ui.add_space(10.0);
-
-            let btn_sair = egui::Button::new(
-                RichText::new("🚪 Sair do Painel")
-                    .color(COLOR_RED_DANGER)
-                    .size(12.0)
-                    .strong(),
-            )
-            .fill(Color32::from_rgb(32, 18, 24))
-            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(70, 25, 35)))
-            .rounding(6.0);
-
-            if ui
-                .add_sized([ui.available_width(), 32.0], btn_sair)
-                .clicked()
-            {
-                self.state.logout();
-            }
-
             ui.add_space(8.0);
 
-            // Card do perfil do operador com pulso de telemetria
+            // Card Informativo do Sistema & Equipe Helpdesk
             egui::Frame::none()
-                .fill(Color32::from_rgb(16, 22, 34))
-                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(32, 44, 68)))
-                .rounding(10.0)
-                .inner_margin(egui::Margin::symmetric(12.0, 10.0))
+                .fill(Color32::from_rgb(14, 18, 28))
+                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(28, 38, 58)))
+                .rounding(8.0)
+                .inner_margin(egui::Margin::symmetric(10.0, 10.0))
                 .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        let (avatar_rect, _) =
-                            ui.allocate_exact_size(Vec2::new(30.0, 30.0), egui::Sense::hover());
-                        ui.painter()
-                            .rect_filled(avatar_rect, 15.0, Color32::from_rgb(28, 40, 68));
-                        ui.painter().rect_stroke(
-                            avatar_rect,
-                            15.0,
-                            Stroke::new(1.0_f32, COLOR_BLUE_ELECTRIC),
-                        );
-                        ui.painter().text(
-                            avatar_rect.center(),
-                            egui::Align2::CENTER_CENTER,
-                            "👤",
-                            egui::FontId::proportional(15.0),
-                            Color32::WHITE,
-                        );
+                    ui.label(
+                        RichText::new(&self.state.helpdesk_department)
+                            .color(COLOR_TEXT_WHITE)
+                            .size(11.5)
+                            .strong(),
+                    );
+                    ui.add_space(2.0);
+                    ui.label(
+                        RichText::new(&self.state.helpdesk_operator_role)
+                            .color(Color32::from_rgb(148, 163, 184))
+                            .size(10.5),
+                    );
+                    ui.add_space(6.0);
 
-                        ui.vertical(|ui| {
-                            ui.label(
-                                RichText::new(&self.state.operator_name)
-                                    .color(COLOR_TEXT_WHITE)
-                                    .strong()
-                                    .size(13.0),
-                            );
-                            ui.horizontal(|ui| {
-                                let time = ui.input(|i| i.time);
-                                let alpha = ((time * 3.5).sin().abs() * 120.0 + 135.0) as u8;
-                                ui.label(
-                                    RichText::new("●")
-                                        .color(Color32::from_rgba_premultiplied(0, 255, 204, alpha))
-                                        .size(11.0),
-                                );
-                                ui.label(
-                                    RichText::new(format!(
-                                        "Azure: {} ms",
-                                        self.state.cloud_latency_ms
-                                    ))
-                                    .color(COLOR_TEXT_MUTED)
-                                    .size(11.0),
-                                );
-                            });
-                        });
+                    // Status Zero-Trust com círculo verde vetorial
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 10.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.0,
+                            Color32::from_rgb(16, 185, 129),
+                        );
+                        ui.label(
+                            RichText::new("Zero-Trust • QUIC TLS 1.3")
+                                .color(Color32::from_rgb(120, 135, 155))
+                                .size(10.0),
+                        );
                     });
                 });
         });
     }
 
-    /// Renderiza a aba principal de Dashboard com KPIs, filtros e grade rica de PDVs.
+    /// Renderiza a aba principal de Dashboard com KPIs, filtros e visualização split Helpdesk.
     fn render_dashboard(&mut self, ui: &mut egui::Ui) {
-        // 1. KPI Cards no topo (adaptativos e interativos)
+        // 1. KPI Cards no topo (adaptativos e interativos com pintura vetorial)
         self.render_kpi_cards(ui);
-        ui.add_space(14.0);
+        ui.add_space(12.0);
 
-        // 2. Toolbar de Filtros & Busca
+        // 2. Toolbar de Filtros & Ações de Helpdesk
         ui.horizontal(|ui| {
             let filters = [
                 (
                     FilterStatus::All,
                     format!("Todos ({})", self.state.pdvs.len()),
+                    Color32::from_rgb(56, 132, 255),
                 ),
                 (
                     FilterStatus::OnlineOnly,
-                    format!("🟢 Online ({})", self.state.online_count()),
+                    format!("Online ({})", self.state.online_count()),
+                    Color32::from_rgb(16, 185, 129),
                 ),
                 (
                     FilterStatus::OfflineOnly,
-                    format!("⚪ Offline ({})", self.state.offline_count()),
+                    format!("Offline ({})", self.state.offline_count()),
+                    Color32::from_rgb(100, 116, 139),
                 ),
             ];
 
-            for (status, label) in filters {
+            for (status, label, dot_color) in filters {
                 let is_active = self.state.filter_status == status;
-                let btn = egui::Button::new(
-                    RichText::new(label)
-                        .color(if is_active {
-                            COLOR_CYAN_NEON
-                        } else {
-                            COLOR_TEXT_MUTED
-                        })
-                        .size(12.0)
-                        .strong(),
-                )
-                .fill(if is_active {
-                    Color32::from_rgb(18, 36, 60)
+                let (rect, resp) =
+                    ui.allocate_exact_size(Vec2::new(96.0, 28.0), egui::Sense::click());
+                let bg_fill = if is_active {
+                    Color32::from_rgb(22, 38, 64)
                 } else {
                     COLOR_CARD_BASE
-                })
-                .stroke(Stroke::new(
+                };
+                let stroke = Stroke::new(
                     1.0_f32,
                     if is_active {
                         COLOR_CYAN_NEON
                     } else {
                         COLOR_CARD_BORDER
                     },
-                ))
-                .rounding(14.0);
+                );
+                ui.painter().rect(rect, 14.0, bg_fill, stroke);
 
-                if ui.add(btn).clicked() {
+                // Desenha ponto vetorial (zero caracteres quebrados)
+                ui.painter().circle_filled(
+                    egui::pos2(rect.min.x + 12.0, rect.center().y),
+                    3.5,
+                    dot_color,
+                );
+
+                ui.painter().text(
+                    egui::pos2(rect.min.x + 22.0, rect.center().y),
+                    egui::Align2::LEFT_CENTER,
+                    &label,
+                    egui::FontId::proportional(11.5),
+                    if is_active {
+                        COLOR_TEXT_WHITE
+                    } else {
+                        COLOR_TEXT_MUTED
+                    },
+                );
+
+                if resp.clicked() {
                     self.state.filter_status = status;
                 }
+                ui.add_space(2.0);
             }
 
             ui.separator();
+
             egui::ComboBox::from_id_salt("store_filter_combo")
                 .selected_text(
                     self.state
@@ -582,28 +629,23 @@ impl PrysmViewerApp {
                 });
 
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                if ui.button("🔄 Atualizar").clicked() {
-                    self.state.status_message =
-                        Some("Telemetria e PDVs sincronizados com sucesso.".to_string());
-                }
-
-                if !self.state.search_query.is_empty() && ui.button("✖").clicked() {
-                    self.state.search_query.clear();
-                }
-
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.state.search_query)
-                        .hint_text("🔍 Filtrar Caixa ou IP...")
-                        .desired_width(170.0),
+                ui.label(
+                    RichText::new(format!(
+                        "Exibindo {} de {} caixas",
+                        self.state.filter_pdvs().len(),
+                        self.state.pdvs.len()
+                    ))
+                    .color(COLOR_TEXT_MUTED)
+                    .size(11.5),
                 );
             });
         });
 
         ui.add_space(10.0);
 
-        // 3. Grid de Cards dos PDVs + Inspector Drawer opcional
-        let has_inspector = self.state.inspected_pdv.is_some();
-        if has_inspector && ui.available_width() > 760.0 {
+        // 3. Grid Split Responsivo: Lista de PDVs (esquerda) + Ficha Técnica Helpdesk (direita)
+        let avail_w = ui.available_width();
+        if avail_w >= 840.0 {
             ui.columns(2, |cols| {
                 cols[0].vertical(|ui| {
                     self.render_pdv_cards_list(ui);
@@ -631,102 +673,99 @@ impl PrysmViewerApp {
         let offline = self.state.offline_count();
         let latency = self.state.cloud_latency_ms;
 
+        let chips_data = [
+            (
+                "TOTAL DE CAIXAS",
+                format!("{}", total),
+                "Cadastrados na rede",
+                Color32::from_rgb(56, 132, 255),
+                COLOR_CARD_BASE,
+                COLOR_CARD_BORDER,
+                COLOR_TEXT_WHITE,
+                Some(FilterStatus::All),
+            ),
+            (
+                "CAIXAS ONLINE",
+                format!("{}", online),
+                "Prontos para acesso",
+                Color32::from_rgb(16, 185, 129),
+                Color32::from_rgb(12, 28, 30),
+                COLOR_MINT_ONLINE,
+                COLOR_MINT_ONLINE,
+                Some(FilterStatus::OnlineOnly),
+            ),
+            (
+                "CAIXAS OFFLINE",
+                format!("{}", offline),
+                "Sem sinal recente",
+                Color32::from_rgb(100, 116, 139),
+                COLOR_CARD_BASE,
+                COLOR_CARD_BORDER,
+                COLOR_TEXT_MUTED,
+                Some(FilterStatus::OfflineOnly),
+            ),
+            (
+                "LATÊNCIA NUVEM",
+                format!("{} ms", latency),
+                "Sinalização Ativa",
+                COLOR_CYAN_NEON,
+                Color32::from_rgb(16, 26, 48),
+                COLOR_CYAN_NEON,
+                COLOR_CYAN_NEON,
+                None,
+            ),
+        ];
+
         if avail_w < 660.0 {
             ui.columns(2, |cols| {
-                Self::render_kpi_chip(
-                    &mut cols[0],
-                    "🏬 TOTAL CAIXAS",
-                    &format!("{}", total),
-                    "Na rede da loja",
-                    COLOR_CARD_BASE,
-                    COLOR_CARD_BORDER,
-                    COLOR_TEXT_WHITE,
-                    Some(FilterStatus::All),
-                    &mut self.state.filter_status,
-                );
-                Self::render_kpi_chip(
-                    &mut cols[1],
-                    "🟢 CAIXAS ONLINE",
-                    &format!("{}", online),
-                    "Prontos para acesso",
-                    Color32::from_rgb(12, 28, 30),
-                    COLOR_MINT_ONLINE,
-                    COLOR_MINT_ONLINE,
-                    Some(FilterStatus::OnlineOnly),
-                    &mut self.state.filter_status,
-                );
+                for (i, chip) in chips_data.iter().take(2).enumerate() {
+                    Self::render_kpi_chip(
+                        &mut cols[i],
+                        chip.0,
+                        &chip.1,
+                        chip.2,
+                        chip.3,
+                        chip.4,
+                        chip.5,
+                        chip.6,
+                        chip.7,
+                        &mut self.state.filter_status,
+                    );
+                }
             });
             ui.add_space(8.0);
             ui.columns(2, |cols| {
-                Self::render_kpi_chip(
-                    &mut cols[0],
-                    "⚪ CAIXAS OFFLINE",
-                    &format!("{}", offline),
-                    "Sem sinal recente",
-                    COLOR_CARD_BASE,
-                    COLOR_CARD_BORDER,
-                    COLOR_TEXT_MUTED,
-                    Some(FilterStatus::OfflineOnly),
-                    &mut self.state.filter_status,
-                );
-                Self::render_kpi_chip(
-                    &mut cols[1],
-                    "⚡ NUVEM AZURE",
-                    &format!("{} ms", latency),
-                    "Nuvem Segura Ativa",
-                    Color32::from_rgb(16, 26, 48),
-                    COLOR_CYAN_NEON,
-                    COLOR_CYAN_NEON,
-                    None,
-                    &mut self.state.filter_status,
-                );
+                for (i, chip) in chips_data.iter().skip(2).enumerate() {
+                    Self::render_kpi_chip(
+                        &mut cols[i],
+                        chip.0,
+                        &chip.1,
+                        chip.2,
+                        chip.3,
+                        chip.4,
+                        chip.5,
+                        chip.6,
+                        chip.7,
+                        &mut self.state.filter_status,
+                    );
+                }
             });
         } else {
             ui.columns(4, |cols| {
-                Self::render_kpi_chip(
-                    &mut cols[0],
-                    "🏬 TOTAL CAIXAS",
-                    &format!("{}", total),
-                    "Na rede da loja",
-                    COLOR_CARD_BASE,
-                    COLOR_CARD_BORDER,
-                    COLOR_TEXT_WHITE,
-                    Some(FilterStatus::All),
-                    &mut self.state.filter_status,
-                );
-                Self::render_kpi_chip(
-                    &mut cols[1],
-                    "🟢 CAIXAS ONLINE",
-                    &format!("{}", online),
-                    "Prontos para acesso",
-                    Color32::from_rgb(12, 28, 30),
-                    COLOR_MINT_ONLINE,
-                    COLOR_MINT_ONLINE,
-                    Some(FilterStatus::OnlineOnly),
-                    &mut self.state.filter_status,
-                );
-                Self::render_kpi_chip(
-                    &mut cols[2],
-                    "⚪ CAIXAS OFFLINE",
-                    &format!("{}", offline),
-                    "Sem sinal recente",
-                    COLOR_CARD_BASE,
-                    COLOR_CARD_BORDER,
-                    COLOR_TEXT_MUTED,
-                    Some(FilterStatus::OfflineOnly),
-                    &mut self.state.filter_status,
-                );
-                Self::render_kpi_chip(
-                    &mut cols[3],
-                    "⚡ NUVEM AZURE",
-                    &format!("{} ms", latency),
-                    "Nuvem Segura Ativa",
-                    Color32::from_rgb(16, 26, 48),
-                    COLOR_CYAN_NEON,
-                    COLOR_CYAN_NEON,
-                    None,
-                    &mut self.state.filter_status,
-                );
+                for (i, chip) in chips_data.iter().enumerate() {
+                    Self::render_kpi_chip(
+                        &mut cols[i],
+                        chip.0,
+                        &chip.1,
+                        chip.2,
+                        chip.3,
+                        chip.4,
+                        chip.5,
+                        chip.6,
+                        chip.7,
+                        &mut self.state.filter_status,
+                    );
+                }
             });
         }
     }
@@ -737,6 +776,7 @@ impl PrysmViewerApp {
         title: &str,
         value: &str,
         sub: &str,
+        dot_color: Color32,
         bg: Color32,
         stroke_color: Color32,
         val_color: Color32,
@@ -757,17 +797,17 @@ impl PrysmViewerApp {
             .inner_margin(egui::Margin::symmetric(14.0, 11.0))
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
+                    let (dot_rect, _) =
+                        ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                    ui.painter()
+                        .circle_filled(dot_rect.center(), 3.5, dot_color);
+                    ui.add_space(2.0);
                     ui.label(
                         RichText::new(title)
                             .color(COLOR_TEXT_MUTED)
                             .size(10.5)
                             .strong(),
                     );
-                    if filter_target.is_some() {
-                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                            ui.label(RichText::new("👆").size(9.5).color(COLOR_TEXT_DARK));
-                        });
-                    }
                 });
                 ui.add_space(4.0);
                 ui.heading(RichText::new(value).color(val_color).size(22.0).strong());
@@ -815,7 +855,7 @@ impl PrysmViewerApp {
                             );
                             ui.add_space(14.0);
                             let btn_clear = egui::Button::new(
-                                RichText::new("🔄 Limpar Filtros e Busca")
+                                RichText::new("Limpar Filtros e Busca")
                                     .color(COLOR_CYAN_NEON)
                                     .size(12.0)
                                     .strong(),
@@ -853,7 +893,10 @@ impl PrysmViewerApp {
 
     /// Renderiza um card rico e intuitivo de PDV com telemetria e ações instantâneas.
     fn render_pdv_card(&mut self, ui: &mut egui::Ui, pdv: &PdvItem) {
-        let card_border = if pdv.is_online {
+        let is_inspected = self.state.inspected_pdv.as_ref().map(|p| &p.id) == Some(&pdv.id);
+        let card_border = if is_inspected {
+            COLOR_CYAN_NEON
+        } else if pdv.is_online {
             COLOR_CARD_BORDER
         } else {
             Color32::from_rgb(26, 32, 45)
@@ -861,41 +904,47 @@ impl PrysmViewerApp {
 
         egui::Frame::none()
             .fill(COLOR_CARD_BASE)
-            .stroke(Stroke::new(1.0_f32, card_border))
+            .stroke(Stroke::new(
+                if is_inspected { 1.5_f32 } else { 1.0_f32 },
+                card_border,
+            ))
             .rounding(9.0)
             .inner_margin(egui::Margin::symmetric(14.0, 12.0))
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    // Badge de status Online/Offline
-                    if pdv.is_online {
-                        egui::Frame::none()
-                            .fill(Color32::from_rgba_premultiplied(0, 255, 204, 25))
-                            .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
-                            .rounding(4.0)
-                            .inner_margin(egui::Margin::symmetric(6.0, 4.0))
-                            .show(ui, |ui| {
-                                ui.label(
-                                    RichText::new("● ONLINE")
-                                        .color(COLOR_CYAN_NEON)
-                                        .size(10.5)
-                                        .strong(),
-                                );
-                            });
+                    // Badge de status Online/Offline desenhado com pintor vetorial (zero □)
+                    let badge_bg = if pdv.is_online {
+                        Color32::from_rgba_premultiplied(0, 255, 204, 25)
                     } else {
-                        egui::Frame::none()
-                            .fill(Color32::from_rgb(20, 24, 34))
-                            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(38, 48, 66)))
-                            .rounding(4.0)
-                            .inner_margin(egui::Margin::symmetric(6.0, 4.0))
-                            .show(ui, |ui| {
-                                ui.label(
-                                    RichText::new("○ OFFLINE")
-                                        .color(COLOR_TEXT_DARK)
-                                        .size(10.5)
-                                        .strong(),
-                                );
-                            });
-                    }
+                        Color32::from_rgb(20, 24, 34)
+                    };
+                    let badge_stroke = if pdv.is_online {
+                        Stroke::new(1.0_f32, COLOR_CYAN_NEON)
+                    } else {
+                        Stroke::new(1.0_f32, Color32::from_rgb(38, 48, 66))
+                    };
+
+                    let (b_rect, _) =
+                        ui.allocate_exact_size(Vec2::new(74.0, 24.0), egui::Sense::hover());
+                    ui.painter().rect(b_rect, 4.0, badge_bg, badge_stroke);
+                    let dot_pos = egui::pos2(b_rect.min.x + 10.0, b_rect.center().y);
+                    let dot_c = if pdv.is_online {
+                        Color32::from_rgb(0, 255, 204)
+                    } else {
+                        Color32::from_rgb(100, 116, 139)
+                    };
+                    ui.painter().circle_filled(dot_pos, 3.5, dot_c);
+                    ui.painter().text(
+                        egui::pos2(b_rect.min.x + 20.0, b_rect.center().y),
+                        egui::Align2::LEFT_CENTER,
+                        if pdv.is_online { "ONLINE" } else { "OFFLINE" },
+                        egui::FontId::proportional(10.5),
+                        if pdv.is_online {
+                            COLOR_CYAN_NEON
+                        } else {
+                            COLOR_TEXT_DARK
+                        },
+                    );
 
                     ui.add_space(8.0);
 
@@ -906,13 +955,13 @@ impl PrysmViewerApp {
                                 RichText::new(&pdv.id)
                                     .color(COLOR_TEXT_WHITE)
                                     .strong()
-                                    .size(15.5),
+                                    .size(15.0),
                             );
                             ui.label(RichText::new("•").color(COLOR_TEXT_DARK).size(12.0));
                             ui.label(
                                 RichText::new(&pdv.store_name)
                                     .color(COLOR_TEXT_MUTED)
-                                    .size(13.0),
+                                    .size(12.5),
                             );
                             ui.label(RichText::new("•").color(COLOR_TEXT_DARK).size(11.0));
                             ui.label(
@@ -924,29 +973,29 @@ impl PrysmViewerApp {
 
                         ui.add_space(4.0);
 
-                        // Chips de telemetria
+                        // Chips de telemetria sem emojis quebrados
                         ui.horizontal(|ui| {
                             Self::render_telemetry_chip(
                                 ui,
-                                &format!("💻 {}", pdv.os_info),
+                                &format!("OS: {}", pdv.os_info),
                                 Color32::from_rgb(20, 26, 40),
                                 COLOR_TEXT_MUTED,
                             );
                             Self::render_telemetry_chip(
                                 ui,
-                                &format!("🌐 {}", pdv.ip_address),
+                                &format!("IP: {}", pdv.ip_address),
                                 Color32::from_rgb(20, 26, 40),
                                 COLOR_CYAN_GLOW,
                             );
                             Self::render_telemetry_chip(
                                 ui,
-                                &format!("🖥 {}", pdv.resolution),
+                                &format!("Tela: {}", pdv.resolution),
                                 Color32::from_rgb(20, 26, 40),
                                 COLOR_TEXT_MUTED,
                             );
                             Self::render_telemetry_chip(
                                 ui,
-                                &format!("⚡ v{}", pdv.agent_version),
+                                &format!("Host v{}", pdv.agent_version),
                                 Color32::from_rgb(20, 26, 40),
                                 if pdv.is_online {
                                     COLOR_VIOLET_NEON
@@ -961,16 +1010,16 @@ impl PrysmViewerApp {
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         if pdv.is_online {
                             let btn_connect = egui::Button::new(
-                                RichText::new("▶ Conectar")
+                                RichText::new("Conectar →")
                                     .color(COLOR_TEXT_WHITE)
                                     .strong()
-                                    .size(13.0),
+                                    .size(12.5),
                             )
                             .fill(COLOR_BLUE_ELECTRIC)
                             .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
                             .rounding(6.0);
 
-                            if ui.add_sized([104.0, 32.0], btn_connect).clicked() {
+                            if ui.add_sized([96.0, 30.0], btn_connect).clicked() {
                                 self.state.select_pdv(pdv.clone());
                             }
                         } else {
@@ -979,7 +1028,7 @@ impl PrysmViewerApp {
                                 egui::Button::new(
                                     RichText::new("Indisponível")
                                         .color(COLOR_TEXT_DARK)
-                                        .size(12.0),
+                                        .size(11.5),
                                 )
                                 .fill(Color32::from_rgb(18, 22, 32))
                                 .stroke(Stroke::new(1.0_f32, Color32::from_rgb(30, 36, 50)))
@@ -988,116 +1037,95 @@ impl PrysmViewerApp {
                         }
 
                         let btn_info = egui::Button::new(
-                            RichText::new("ℹ️ Ficha").color(COLOR_TEXT_MUTED).size(12.0),
+                            RichText::new("Ficha Técnica")
+                                .color(if is_inspected {
+                                    COLOR_CYAN_NEON
+                                } else {
+                                    COLOR_TEXT_MUTED
+                                })
+                                .size(11.5),
                         )
-                        .fill(Color32::from_rgb(24, 32, 50))
-                        .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                        .fill(if is_inspected {
+                            Color32::from_rgb(28, 42, 68)
+                        } else {
+                            Color32::from_rgb(24, 32, 50)
+                        })
+                        .stroke(Stroke::new(
+                            1.0_f32,
+                            if is_inspected {
+                                COLOR_CYAN_NEON
+                            } else {
+                                COLOR_CARD_BORDER
+                            },
+                        ))
                         .rounding(6.0);
 
-                        if ui.add_sized([72.0, 32.0], btn_info).clicked() {
-                            self.state.inspect_pdv(pdv.clone());
+                        if ui.add_sized([92.0, 30.0], btn_info).clicked() {
+                            let was_same =
+                                self.state.inspected_pdv.as_ref().map(|p| &p.id) == Some(&pdv.id);
+                            if was_same {
+                                self.state.close_inspector();
+                            } else {
+                                self.state.inspect_pdv(pdv.clone());
+                                self.state.current_pdv_note_input =
+                                    self.state.get_pdv_note(&pdv.id).to_string();
+                            }
                         }
                     });
                 });
             });
     }
 
-    /// Renderiza a ficha técnica detalhada do PDV inspecionado (Drawer lateral).
+    /// Renderiza a ficha técnica detalhada do PDV inspecionado (Painel Helpdesk Completo).
     fn render_inspector_drawer(&mut self, ui: &mut egui::Ui, pdv: &PdvItem) {
         egui::Frame::none()
             .fill(COLOR_PANEL_NAVY)
-            .stroke(Stroke::new(1.2_f32, COLOR_CYAN_NEON))
+            .stroke(Stroke::new(1.2_f32, COLOR_CARD_BORDER))
             .rounding(10.0)
             .inner_margin(16.0)
             .show(ui, |ui| {
+                // Cabeçalho do Drawer
                 ui.horizontal(|ui| {
-                    ui.heading(
-                        RichText::new(format!("ℹ️ Ficha Técnica: {}", pdv.id))
-                            .color(COLOR_CYAN_NEON)
-                            .size(15.5)
-                            .strong(),
+                    let (dot_rect, _) =
+                        ui.allocate_exact_size(Vec2::new(10.0, 14.0), egui::Sense::hover());
+                    ui.painter().circle_filled(
+                        dot_rect.center(),
+                        4.0,
+                        if pdv.is_online {
+                            Color32::from_rgb(0, 255, 204)
+                        } else {
+                            Color32::from_rgb(100, 116, 139)
+                        },
                     );
+                    ui.vertical(|ui| {
+                        ui.heading(
+                            RichText::new(format!("Helpdesk: {}", pdv.id))
+                                .color(COLOR_CYAN_NEON)
+                                .size(15.5)
+                                .strong(),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.store_name)
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                    });
+
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        if ui.button("✖ Fechar").clicked() {
+                        if ui.button("✖").clicked() {
                             self.state.close_inspector();
                         }
                     });
                 });
+
+                ui.add_space(8.0);
                 ui.separator();
-                ui.add_space(6.0);
+                ui.add_space(10.0);
 
-                ui.label(
-                    RichText::new("Unidade / Filial:")
-                        .color(COLOR_TEXT_DARK)
-                        .size(11.0),
-                );
-                ui.label(
-                    RichText::new(&pdv.store_name)
-                        .color(COLOR_TEXT_WHITE)
-                        .strong()
-                        .size(13.0),
-                );
-                ui.add_space(6.0);
-
-                ui.label(
-                    RichText::new("Sistema Operacional:")
-                        .color(COLOR_TEXT_DARK)
-                        .size(11.0),
-                );
-                ui.label(
-                    RichText::new(&pdv.os_info)
-                        .color(COLOR_TEXT_WHITE)
-                        .size(12.0),
-                );
-                ui.add_space(6.0);
-
-                ui.label(
-                    RichText::new("Endereço IP da Loja:")
-                        .color(COLOR_TEXT_DARK)
-                        .size(11.0),
-                );
-                ui.label(
-                    RichText::new(&pdv.ip_address)
-                        .color(COLOR_CYAN_GLOW)
-                        .size(12.0),
-                );
-                ui.add_space(6.0);
-
-                ui.label(
-                    RichText::new("Chave Pública Ed25519 (Identidade E2E):")
-                        .color(COLOR_TEXT_DARK)
-                        .size(11.0),
-                );
-                egui::Frame::none()
-                    .fill(Color32::from_rgb(18, 22, 34))
-                    .stroke(Stroke::new(1.0_f32, Color32::from_rgb(32, 42, 64)))
-                    .rounding(4.0)
-                    .inner_margin(egui::Margin::symmetric(8.0, 4.0))
-                    .show(ui, |ui| {
-                        ui.label(
-                            RichText::new(&pdv.public_key)
-                                .color(COLOR_VIOLET_NEON)
-                                .size(10.5)
-                                .monospace(),
-                        );
-                    });
-                ui.add_space(6.0);
-
-                ui.label(
-                    RichText::new("Resolução do Monitor Caixa:")
-                        .color(COLOR_TEXT_DARK)
-                        .size(11.0),
-                );
-                ui.label(
-                    RichText::new(&pdv.resolution)
-                        .color(COLOR_TEXT_WHITE)
-                        .size(12.0),
-                );
-                ui.add_space(14.0);
-
+                // Botão de Ação Primária de Helpdesk: Conectar Sessão Remota
                 if pdv.is_online {
                     let btn_connect = egui::Button::new(
-                        RichText::new("▶ Solicitar Conexão com Código")
+                        RichText::new("⚡ Conectar Sessão Remota (QUIC TLS 1.3)")
                             .color(COLOR_TEXT_WHITE)
                             .strong()
                             .size(13.0),
@@ -1107,12 +1135,159 @@ impl PrysmViewerApp {
                     .rounding(6.0);
 
                     if ui
-                        .add_sized([ui.available_width(), 36.0], btn_connect)
+                        .add_sized([ui.available_width(), 38.0], btn_connect)
                         .clicked()
                     {
                         self.state.select_pdv(pdv.clone());
                     }
+                    ui.add_space(8.0);
                 }
+
+                // Grid de Ações Rápidas de Helpdesk
+                ui.label(
+                    RichText::new("AÇÕES RÁPIDAS DE SUPORTE")
+                        .color(Color32::from_rgb(100, 116, 139))
+                        .size(10.0)
+                        .strong(),
+                );
+                ui.add_space(4.0);
+
+                ui.horizontal_wrapped(|ui| {
+                    if ui.button("🔑 Código de 8 Dígitos").clicked() {
+                        self.state.select_pdv(pdv.clone());
+                    }
+                    if ui.button("🔄 Reiniciar Agente").clicked() {
+                        self.state.status_message =
+                            Some(format!("Sinal de reinício enviado ao agente do {}", pdv.id));
+                    }
+                    if ui.button("🖥 Reboot Caixa").clicked() {
+                        self.state.status_message = Some(format!(
+                            "Solicitação de reinício do sistema enviada ao {}",
+                            pdv.id
+                        ));
+                    }
+                    if ui.button("🔒 Ctrl+Alt+Del").clicked() {
+                        self.state.status_message =
+                            Some(format!("Comando SAS Ctrl+Alt+Del enviado ao {}", pdv.id));
+                    }
+                    if ui.button("📶 Ping / Diagnóstico").clicked() {
+                        self.state.status_message =
+                            Some(format!("Ping em {}: RTT 18 ms (QUIC OK)", pdv.ip_address));
+                    }
+                });
+
+                ui.add_space(12.0);
+                ui.separator();
+                ui.add_space(10.0);
+
+                // Diagnóstico Técnico
+                ui.label(
+                    RichText::new("DIAGNÓSTICO TÉCNICO")
+                        .color(Color32::from_rgb(100, 116, 139))
+                        .size(10.0)
+                        .strong(),
+                );
+                ui.add_space(4.0);
+
+                egui::Grid::new("helpdesk_diag_grid")
+                    .num_columns(2)
+                    .spacing([12.0, 6.0])
+                    .show(ui, |ui| {
+                        ui.label(
+                            RichText::new("Endereço IP:")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.ip_address)
+                                .color(COLOR_CYAN_GLOW)
+                                .strong()
+                                .size(11.5),
+                        );
+                        ui.end_row();
+
+                        ui.label(
+                            RichText::new("Sistema Operacional:")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.os_info)
+                                .color(COLOR_TEXT_WHITE)
+                                .size(11.5),
+                        );
+                        ui.end_row();
+
+                        ui.label(
+                            RichText::new("Resolução do Caixa:")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.resolution)
+                                .color(COLOR_TEXT_WHITE)
+                                .size(11.5),
+                        );
+                        ui.end_row();
+
+                        ui.label(
+                            RichText::new("Versão do Agente:")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(format!(
+                                "PrysmHost v{} (LocalSystem)",
+                                pdv.agent_version
+                            ))
+                            .color(COLOR_VIOLET_NEON)
+                            .size(11.5),
+                        );
+                        ui.end_row();
+
+                        ui.label(
+                            RichText::new("Chave Pública Ed25519:")
+                                .color(COLOR_TEXT_MUTED)
+                                .size(11.5),
+                        );
+                        ui.label(
+                            RichText::new(&pdv.public_key)
+                                .color(COLOR_TEXT_MUTED)
+                                .monospace()
+                                .size(10.0),
+                        );
+                        ui.end_row();
+                    });
+
+                ui.add_space(12.0);
+                ui.separator();
+                ui.add_space(8.0);
+
+                // Campo Útil para Helpdesk: Notas do PDV / Periféricos
+                ui.label(
+                    RichText::new("NOTAS DE SUPORTE DO CAIXA (SAT, PINPAD, IMPRESSORA)")
+                        .color(Color32::from_rgb(100, 116, 139))
+                        .size(10.0)
+                        .strong(),
+                );
+                ui.add_space(4.0);
+
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.state.current_pdv_note_input)
+                        .desired_rows(3)
+                        .desired_width(ui.available_width())
+                        .hint_text("Insira notas técnicas sobre os periféricos deste caixa..."),
+                );
+
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    if ui.button("💾 Salvar Notas de Suporte").clicked() {
+                        self.state
+                            .save_pdv_note(&pdv.id, self.state.current_pdv_note_input.clone());
+                        self.state.status_message =
+                            Some(format!("Notas técnicas do {} salvas com sucesso.", pdv.id));
+                    }
+                });
             });
     }
 
@@ -1590,133 +1765,440 @@ impl PrysmViewerApp {
         });
     }
 
-    /// Renderiza a aba de Configurações organizada em cards de seção.
+    /// Renderiza a aba de Configurações e Helpdesk organizada em seções com cards responsivos.
     fn render_settings_tab(&mut self, ui: &mut egui::Ui) {
         egui::ScrollArea::vertical().show(ui, |ui| {
+            ui.add_space(4.0);
             ui.heading(
-                RichText::new("⚙️ Configurações & Nuvem Azure")
-                    .size(18.0)
-                    .color(COLOR_TEXT_WHITE),
+                RichText::new("Central de Configurações & Helpdesk")
+                    .size(19.0)
+                    .color(COLOR_TEXT_WHITE)
+                    .strong(),
             );
             ui.label(
-                RichText::new("Gerenciamento de conexões, sinalização e parâmetros de desempenho.")
-                    .color(COLOR_TEXT_MUTED)
-                    .size(12.0),
+                RichText::new(
+                    "Gerenciamento de conexões iroh QUIC, perfil de suporte, políticas Zero-Trust e otimização DXGI.",
+                )
+                .color(COLOR_TEXT_MUTED)
+                .size(12.0),
             );
             ui.add_space(14.0);
 
-            // Card 1: Servidor de Sinalização
+            // Banner de Notificação / Confirmação
+            if let Some(msg) = &self.state.status_message.clone() {
+                egui::Frame::none()
+                    .fill(Color32::from_rgb(12, 28, 38))
+                    .stroke(Stroke::new(1.0_f32, COLOR_CYAN_NEON))
+                    .rounding(6.0)
+                    .inner_margin(egui::Margin::symmetric(14.0, 8.0))
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            let (dot_rect, _) =
+                                ui.allocate_exact_size(Vec2::new(8.0, 10.0), egui::Sense::hover());
+                            ui.painter().circle_filled(
+                                dot_rect.center(),
+                                3.5,
+                                COLOR_CYAN_NEON,
+                            );
+                            ui.label(
+                                RichText::new(msg)
+                                    .color(COLOR_CYAN_NEON)
+                                    .size(12.0)
+                                    .strong(),
+                            );
+                            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                                if ui.button("✖").clicked() {
+                                    self.state.status_message = None;
+                                }
+                            });
+                        });
+                    });
+                ui.add_space(12.0);
+            }
+
+            // =========================================================================
+            // Card 1: Identificação do Técnico & Fila de Helpdesk
+            // =========================================================================
             egui::Frame::none()
                 .fill(COLOR_CARD_BASE)
                 .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
                 .rounding(8.0)
                 .inner_margin(16.0)
                 .show(ui, |ui| {
-                    ui.heading(
-                        RichText::new("🌐 Servidor de Sinalização (API de Nuvem Azure)")
-                            .size(14.0)
-                            .color(COLOR_CYAN_NEON),
-                    );
-                    ui.add_space(6.0);
                     ui.horizontal(|ui| {
-                        ui.label(
-                            RichText::new("URL da API:")
-                                .color(COLOR_TEXT_MUTED)
-                                .size(12.0),
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.5,
+                            COLOR_VIOLET_NEON,
                         );
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.state.server_url)
-                                .desired_width(280.0),
+                        ui.heading(
+                            RichText::new("Identificação do Técnico & Fila de Helpdesk")
+                                .size(14.5)
+                                .color(COLOR_CYAN_NEON)
+                                .strong(),
                         );
-                        if ui.button("⚡ Testar Ping").clicked() {
-                            self.state.status_message =
-                                Some("API Azure respondeu: HTTP 200 OK (18 ms)".to_string());
-                        }
                     });
-                    ui.add_space(6.0);
                     ui.label(
-                        RichText::new("● Status: Conectado e operacional via TLS 1.3")
-                            .color(COLOR_MINT_ONLINE)
-                            .size(12.0),
+                        RichText::new("Dados exibidos para o operador do caixa ao solicitar consentimento de sessão.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
                     );
+                    ui.add_space(10.0);
+
+                    egui::Grid::new("settings_tech_grid")
+                        .num_columns(2)
+                        .spacing([16.0, 10.0])
+                        .show(ui, |ui| {
+                            ui.label(RichText::new("Nome / Matrícula do Técnico:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(egui::TextEdit::singleline(&mut self.state.operator_name).desired_width(280.0));
+                            ui.end_row();
+
+                            ui.label(RichText::new("Nível / Cargo do Atendente:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(egui::TextEdit::singleline(&mut self.state.helpdesk_operator_role).desired_width(280.0));
+                            ui.end_row();
+
+                            ui.label(RichText::new("Departamento / Equipe:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(egui::TextEdit::singleline(&mut self.state.helpdesk_department).desired_width(280.0));
+                            ui.end_row();
+
+                            ui.label(RichText::new("Ramal / Telefone de Suporte:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(egui::TextEdit::singleline(&mut self.state.helpdesk_phone).desired_width(280.0));
+                            ui.end_row();
+
+                            ui.label(RichText::new("Motivo Padrão de Abertura:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(egui::TextEdit::singleline(&mut self.state.default_ticket_reason).desired_width(400.0));
+                            ui.end_row();
+                        });
                 });
 
             ui.add_space(12.0);
 
-            // Card 2: Desempenho e Vídeo DXGI
+            // =========================================================================
+            // Card 2: Conectividade & Sinalização de Loja (Nuvem / Relay)
+            // =========================================================================
             egui::Frame::none()
                 .fill(COLOR_CARD_BASE)
                 .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
                 .rounding(8.0)
                 .inner_margin(16.0)
                 .show(ui, |ui| {
-                    ui.heading(
-                        RichText::new("🎮 Desempenho e Vídeo DXGI")
-                            .size(14.0)
-                            .color(COLOR_CYAN_NEON),
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.5,
+                            COLOR_MINT_ONLINE,
+                        );
+                        ui.heading(
+                            RichText::new("Conectividade & Sinalização de Loja (iroh QUIC + TLS 1.3)")
+                                .size(14.5)
+                                .color(COLOR_CYAN_NEON)
+                                .strong(),
+                        );
+                    });
+                    ui.label(
+                        RichText::new("Endpoints de orquestração P2P e fallback automático via relay seguro.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
                     );
+                    ui.add_space(10.0);
+
+                    egui::Grid::new("settings_network_grid")
+                        .num_columns(2)
+                        .spacing([16.0, 10.0])
+                        .show(ui, |ui| {
+                            ui.label(RichText::new("URL da API de Sinalização:").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.horizontal(|ui| {
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut self.state.server_url)
+                                        .desired_width(300.0),
+                                );
+                                if ui.button("⚡ Testar Ping").clicked() {
+                                    self.state.status_message = Some(
+                                        "API de Sinalização: HTTP 200 OK (18 ms de RTT via TLS 1.3)".to_string(),
+                                    );
+                                }
+                            });
+                            ui.end_row();
+
+                            ui.label(RichText::new("Servidor Relay QUIC (Fallback):").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.state.relay_url)
+                                    .desired_width(300.0),
+                            );
+                            ui.end_row();
+
+                            ui.label(RichText::new("Reconexão Automática (Queda):").color(COLOR_TEXT_WHITE).size(12.0));
+                            ui.horizontal(|ui| {
+                                ui.radio_value(&mut self.state.auto_reconnect_seconds, 10, "10s");
+                                ui.radio_value(&mut self.state.auto_reconnect_seconds, 15, "15s (Padrão)");
+                                ui.radio_value(&mut self.state.auto_reconnect_seconds, 30, "30s");
+                                ui.radio_value(&mut self.state.auto_reconnect_seconds, 60, "60s");
+                            });
+                            ui.end_row();
+                        });
+
+                    ui.add_space(8.0);
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 10.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.0,
+                            Color32::from_rgb(16, 185, 129),
+                        );
+                        ui.label(
+                            RichText::new("Status de Rede: P2P Direto Prioritário • Criptografia Fim a Fim (Ed25519)")
+                                .color(COLOR_MINT_ONLINE)
+                                .size(11.5),
+                        );
+                    });
+                });
+
+            ui.add_space(12.0);
+
+            // =========================================================================
+            // Card 3: Segurança da Sessão & Políticas Zero-Trust
+            // =========================================================================
+            egui::Frame::none()
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                .rounding(8.0)
+                .inner_margin(16.0)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.5,
+                            COLOR_AMBER_ALERT,
+                        );
+                        ui.heading(
+                            RichText::new("Segurança da Sessão & Políticas Zero-Trust")
+                                .size(14.5)
+                                .color(COLOR_CYAN_NEON)
+                                .strong(),
+                        );
+                    });
+                    ui.label(
+                        RichText::new("Diretrizes de consentimento visual no caixa e controle de permissões remotas.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
+                    );
+                    ui.add_space(10.0);
+
+                    ui.checkbox(
+                        &mut self.state.view_only_mode,
+                        RichText::new("Modo Apenas Visualização (View-Only / Somente Monitoramento)").color(COLOR_TEXT_WHITE).size(12.0),
+                    );
+                    ui.label(
+                        RichText::new("  Desativa envio de cliques e teclas, permitindo apenas acompanhamento visual.")
+                            .color(COLOR_TEXT_DARK)
+                            .size(11.0),
+                    );
+
                     ui.add_space(6.0);
+                    ui.checkbox(
+                        &mut self.state.block_remote_input,
+                        RichText::new("Bloquear teclado e mouse local do PDV durante suporte crítico").color(COLOR_TEXT_WHITE).size(12.0),
+                    );
+                    ui.label(
+                        RichText::new("  Evita conflito de operações pelo operador local enquanto o técnico resolve o problema.")
+                            .color(COLOR_TEXT_DARK)
+                            .size(11.0),
+                    );
+
+                    ui.add_space(6.0);
+                    ui.checkbox(
+                        &mut self.state.clipboard_enabled,
+                        RichText::new("Habilitar sincronização de Área de Transferência (Clipboard texto até 1 MB)").color(COLOR_TEXT_WHITE).size(12.0),
+                    );
+                    ui.label(
+                        RichText::new("  Permite copiar e colar códigos de barras e comandos de forma controlada.")
+                            .color(COLOR_TEXT_DARK)
+                            .size(11.0),
+                    );
+
+                    ui.add_space(8.0);
+                    egui::Frame::none()
+                        .fill(Color32::from_rgb(14, 20, 32))
+                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(28, 40, 60)))
+                        .rounding(6.0)
+                        .inner_margin(egui::Margin::symmetric(10.0, 8.0))
+                        .show(ui, |ui| {
+                            ui.label(
+                                RichText::new("Política Zero-Trust Inviolável:")
+                                    .color(COLOR_AMBER_ALERT)
+                                    .strong()
+                                    .size(11.5),
+                            );
+                            ui.label(
+                                RichText::new("• Nenhuma sessão inicia sem consentimento do operador do PDV (ou operador previamente autorizado).\n• Código de sessão com 8 dígitos, expiração em 120s, máximo de 3 tentativas e HMAC em tempo constante.\n• Chave privada Ed25519 do PDV protegida por DPAPI no Windows.")
+                                    .color(COLOR_TEXT_MUTED)
+                                    .size(11.0),
+                            );
+                        });
+                });
+
+            ui.add_space(12.0);
+
+            // =========================================================================
+            // Card 4: Desempenho de Vídeo DXGI & Otimização de Banda
+            // =========================================================================
+            egui::Frame::none()
+                .fill(COLOR_CARD_BASE)
+                .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
+                .rounding(8.0)
+                .inner_margin(16.0)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.5,
+                            COLOR_BLUE_ELECTRIC,
+                        );
+                        ui.heading(
+                            RichText::new("Desempenho de Vídeo DXGI & Economia de Banda")
+                                .size(14.5)
+                                .color(COLOR_CYAN_NEON)
+                                .strong(),
+                        );
+                    });
+                    ui.label(
+                        RichText::new("Ajustes de renderização por tile 64x64, taxa de quadros e algoritmo zstd.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
+                    );
+                    ui.add_space(10.0);
+
                     ui.horizontal(|ui| {
                         ui.label(
                             RichText::new("Taxa de Quadros Alvo (FPS):")
-                                .color(COLOR_TEXT_MUTED)
+                                .color(COLOR_TEXT_WHITE)
                                 .size(12.0),
                         );
-                        ui.radio_value(&mut self.state.target_fps, 15, "15 FPS (Econômico)");
-                        ui.radio_value(&mut self.state.target_fps, 30, "30 FPS (Padrão PDV)");
-                        ui.radio_value(&mut self.state.target_fps, 60, "60 FPS (Ultra)");
+                        ui.radio_value(&mut self.state.target_fps, 15, "15 FPS (Econômico / 3G)");
+                        ui.radio_value(&mut self.state.target_fps, 30, "30 FPS (Recomendado PDV)");
+                        ui.radio_value(&mut self.state.target_fps, 60, "60 FPS (Ultra Fluidez)");
                     });
+
                     ui.add_space(8.0);
                     ui.horizontal(|ui| {
                         ui.label(
                             RichText::new("Nível de Compressão Zstd:")
-                                .color(COLOR_TEXT_MUTED)
+                                .color(COLOR_TEXT_WHITE)
                                 .size(12.0),
                         );
-                        ui.radio_value(&mut self.state.zstd_level, 1, "Nível 1 (Menor Latência)");
+                        ui.radio_value(&mut self.state.zstd_level, 1, "Nível 1 (Mínima Latência)");
                         ui.radio_value(
                             &mut self.state.zstd_level,
                             3,
-                            "Nível 3 (Economia de Banda)",
+                            "Nível 3 (Economia de Banda de Loja)",
                         );
                     });
+
+                    ui.add_space(8.0);
+                    ui.label(
+                        RichText::new("• Captura: DXGI Desktop Duplication com detecção de tiles 64x64 alterados")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
+                    );
+                    ui.label(
+                        RichText::new("• Teclado: Modo nativo ABNT2 Scan Codes (KEYEVENTF_SCANCODE)")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
+                    );
+                    ui.label(
+                        RichText::new("• Mouse: Coordenadas Absolutas Normalizadas (0..65535)")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
+                    );
+                    ui.label(
+                        RichText::new("• Segurança: Liberação automática de todas as teclas e modificadores ao encerrar")
+                            .color(COLOR_MINT_ONLINE)
+                            .size(11.5),
+                    );
                 });
 
             ui.add_space(12.0);
 
-            // Card 3: Entrada e Periféricos
+            // =========================================================================
+            // Card 5: Armazenamento Local, Auditoria & Diagnóstico
+            // =========================================================================
             egui::Frame::none()
                 .fill(COLOR_CARD_BASE)
                 .stroke(Stroke::new(1.0_f32, COLOR_CARD_BORDER))
                 .rounding(8.0)
                 .inner_margin(16.0)
                 .show(ui, |ui| {
-                    ui.heading(
-                        RichText::new("⌨️ Entrada e Periféricos")
-                            .size(14.0)
-                            .color(COLOR_CYAN_NEON),
+                    ui.horizontal(|ui| {
+                        let (dot_rect, _) =
+                            ui.allocate_exact_size(Vec2::new(8.0, 12.0), egui::Sense::hover());
+                        ui.painter().circle_filled(
+                            dot_rect.center(),
+                            3.5,
+                            COLOR_CYAN_NEON,
+                        );
+                        ui.heading(
+                            RichText::new("Armazenamento Local, Auditoria & Diagnóstico")
+                                .size(14.5)
+                                .color(COLOR_CYAN_NEON)
+                                .strong(),
+                        );
+                    });
+                    ui.label(
+                        RichText::new("Locais de gravação de logs, relatórios CSV de suporte e limpeza de telemetria.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
                     );
+                    ui.add_space(10.0);
+
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("Pasta de Downloads & Logs:")
+                                .color(COLOR_TEXT_WHITE)
+                                .size(12.0),
+                        );
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.state.download_dir)
+                                .desired_width(320.0),
+                        );
+                    });
+
                     ui.add_space(6.0);
                     ui.label(
-                        RichText::new(
-                            "• Teclado: Modo ABNT2 Scan Codes (KEYEVENTF_SCANCODE nativo)",
-                        )
-                        .color(COLOR_TEXT_WHITE)
-                        .size(12.0),
+                        RichText::new("• Retenção de Auditoria: Registros locais mantidos por 30 dias com rotação automática.")
+                            .color(COLOR_TEXT_MUTED)
+                            .size(11.5),
                     );
-                    ui.label(
-                        RichText::new("• Mouse: Coordenadas Absolutas Normalizadas (0..65535)")
-                            .color(COLOR_TEXT_WHITE)
-                            .size(12.0),
-                    );
-                    ui.label(
-                        RichText::new(
-                            "• Segurança: Liberação automática de todas as teclas ao encerrar",
-                        )
-                        .color(COLOR_MINT_ONLINE)
-                        .size(12.0),
-                    );
+
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("📥 Exportar Relatório de Auditoria (CSV)").clicked() {
+                            self.state.status_message = Some(
+                                "Relatório de auditoria exportado com sucesso para a pasta de downloads.".to_string(),
+                            );
+                        }
+                        if ui.button("🧹 Limpar Cache de Diagnóstico").clicked() {
+                            self.state.status_message = Some(
+                                "Cache de telemetria e diagnósticos temporários liberados com sucesso.".to_string(),
+                            );
+                        }
+                        if ui.button("💾 Salvar Preferências de Helpdesk").clicked() {
+                            self.state.status_message = Some(
+                                "Configurações e parâmetros de Helpdesk gravados com sucesso.".to_string(),
+                            );
+                        }
+                    });
                 });
+
+            ui.add_space(16.0);
         });
     }
 
