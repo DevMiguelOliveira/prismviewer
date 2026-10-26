@@ -294,63 +294,10 @@ impl eframe::App for PrysmViewerApp {
 
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             ui.label(
-                                RichText::new("PrysmView Admin v0.1.0 • R$ 0,00 • QUIC TLS 1.3")
+                                RichText::new("PrysmView Admin v0.1.0")
                                     .color(COLOR_TEXT_DARK)
                                     .size(11.0),
                             );
-                        });
-                    });
-                });
-        } else {
-            // Barra Superior de Identificação (Estilo Enterprise)
-            egui::TopBottomPanel::top("login_header")
-                .frame(
-                    egui::Frame::none()
-                        .fill(COLOR_BG_OBSIDIAN)
-                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(20, 26, 40)))
-                        .inner_margin(egui::Margin::symmetric(18.0, 12.0)),
-                )
-                .show(ctx, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label(
-                            RichText::new("●")
-                                .color(Color32::from_rgb(59, 130, 246))
-                                .size(13.0),
-                        );
-                        ui.add_space(4.0);
-                        ui.label(
-                            RichText::new("PrysmView Enterprise")
-                                .color(Color32::from_rgb(148, 163, 184))
-                                .size(12.5)
-                                .strong(),
-                        );
-
-                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                            let btn_close = egui::Button::new(
-                                RichText::new("✕")
-                                    .color(Color32::from_rgb(148, 163, 184))
-                                    .size(13.0),
-                            )
-                            .fill(Color32::TRANSPARENT)
-                            .stroke(Stroke::NONE);
-
-                            if ui.add(btn_close).clicked() {
-                                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                            }
-
-                            ui.add_space(8.0);
-
-                            let btn_min = egui::Button::new(
-                                RichText::new("—")
-                                    .color(Color32::from_rgb(148, 163, 184))
-                                    .size(13.0),
-                            )
-                            .fill(Color32::TRANSPARENT)
-                            .stroke(Stroke::NONE);
-
-                            if ui.add(btn_min).clicked() {
-                                ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
-                            }
                         });
                     });
                 });
@@ -1527,8 +1474,10 @@ impl PrysmViewerApp {
                 if ui.button("📥 Exportar Relatório (CSV)").clicked() {
                     let _csv = self.state.export_audit_csv();
                     let record_count = self.state.audit_records.len();
-                    self.state.status_message =
-                        Some(format!("Exportados {} registros de auditoria com cadeia SHA-256 íntegra.", record_count));
+                    self.state.status_message = Some(format!(
+                        "Exportados {} registros de auditoria com cadeia SHA-256 íntegra.",
+                        record_count
+                    ));
                 }
             });
         });
@@ -1964,323 +1913,528 @@ impl PrysmViewerApp {
             });
     }
 
-    /// Renderiza a tela de login do operador / administrador inspirada no design BipDesk Enterprise.
-    fn render_admin_login(&mut self, ui: &mut egui::Ui) {
+    /// Renderiza a tela de login do operador / administrador com layout responsivo Cyber-Prism.
+    pub fn render_admin_login(&mut self, ui: &mut egui::Ui) {
+        let avail_w = ui.available_width();
+        let avail_h = ui.available_height();
+
         egui::ScrollArea::vertical()
             .auto_shrink([false; 2])
             .show(ui, |ui| {
-                ui.vertical_centered(|ui| {
-                    // Centraliza verticalmente com respiro refinado e adaptativo
-                    let avail_h = ui.available_height();
-                    ui.add_space((avail_h - 530.0).max(16.0) * 0.35);
+                let is_wide = avail_w >= 820.0;
+                let card_w = if is_wide {
+                    780.0_f32.min(avail_w - 48.0)
+                } else {
+                    410.0_f32.min(avail_w - 32.0).max(300.0)
+                };
+                let card_h = if is_wide { 480.0_f32 } else { 560.0_f32 };
+                let pad_y = ((avail_h - card_h) * 0.45).max(18.0);
+                let pad_x = ((avail_w - card_w) * 0.5).max(0.0);
 
-                    // 1. Badge superior com ícone do monitor e raio
-                    self.render_admin_login_badge(ui);
+                ui.add_space(pad_y);
 
-                    ui.add_space(14.0);
+                ui.horizontal(|ui| {
+                    ui.add_space(pad_x);
 
-                    // 2. Título "PrysmView Admin" e Subtítulo
+                    // Card principal com cantos arredondados, fundo escuro e borda refinada
+                    egui::Frame::none()
+                        .fill(Color32::from_rgb(15, 20, 32))
+                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(32, 45, 75)))
+                        .rounding(16.0)
+                        .show(ui, |ui| {
+                            ui.set_width(card_w);
+                            if is_wide {
+                                // Layout 2 Colunas: Hero à esquerda + Formulário à direita
+                                ui.horizontal(|ui| {
+                                    let col_left_w = 320.0_f32;
+                                    let col_right_w = card_w - col_left_w - 1.0;
+
+                                    // Coluna Esquerda: Hero & Identidade
+                                    egui::Frame::none()
+                                        .fill(Color32::from_rgb(11, 15, 25))
+                                        .stroke(Stroke::NONE)
+                                        .rounding(egui::Rounding {
+                                            nw: 16.0,
+                                            sw: 16.0,
+                                            ne: 0.0,
+                                            se: 0.0,
+                                        })
+                                        .inner_margin(egui::Margin::symmetric(24.0, 28.0))
+                                        .show(ui, |ui| {
+                                            ui.set_width(col_left_w);
+                                            ui.set_min_height(460.0);
+                                            self.render_login_hero_column(ui);
+                                        });
+
+                                    // Separador sutil vertical
+                                    let (sep_rect, _) = ui.allocate_exact_size(
+                                        Vec2::new(1.0, 460.0),
+                                        egui::Sense::hover(),
+                                    );
+                                    ui.painter().rect_filled(
+                                        sep_rect,
+                                        0.0,
+                                        Color32::from_rgb(26, 36, 58),
+                                    );
+
+                                    // Coluna Direita: Formulário de Login & Ações
+                                    egui::Frame::none()
+                                        .fill(Color32::from_rgb(15, 20, 32))
+                                        .stroke(Stroke::NONE)
+                                        .inner_margin(egui::Margin::symmetric(28.0, 24.0))
+                                        .show(ui, |ui| {
+                                            ui.set_width(col_right_w);
+                                            self.render_login_form_fields(ui);
+                                        });
+                                });
+                            } else {
+                                // Layout 1 Coluna Centralizada (Compacto)
+                                egui::Frame::none()
+                                    .fill(Color32::from_rgb(15, 20, 32))
+                                    .stroke(Stroke::NONE)
+                                    .inner_margin(egui::Margin::symmetric(24.0, 24.0))
+                                    .show(ui, |ui| {
+                                        ui.set_width(card_w);
+                                        self.render_login_compact_header(ui);
+                                        ui.add_space(14.0);
+                                        self.render_login_form_fields(ui);
+                                    });
+                            }
+                        });
+
+                    ui.add_space(pad_x);
+                });
+
+                ui.add_space(20.0);
+            });
+    }
+
+    /// Coluna Hero da tela de login (marca, logotipo e pontos de confiança).
+    fn render_login_hero_column(&self, ui: &mut egui::Ui) {
+        ui.vertical(|ui| {
+            // Logotipo e Identidade visual
+            ui.horizontal(|ui| {
+                render_logo(ui, self.logo_texture.as_ref(), 42.0);
+                ui.add_space(10.0);
+                ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.label(
                             RichText::new("PrysmView")
                                 .color(Color32::from_rgb(56, 132, 255))
-                                .size(26.0)
+                                .size(20.0)
                                 .strong(),
                         );
                         ui.label(
                             RichText::new("Admin")
                                 .color(Color32::WHITE)
-                                .size(26.0)
+                                .size(20.0)
                                 .strong(),
                         );
                     });
-                    ui.add_space(3.0);
                     ui.label(
-                        RichText::new("Central de Suporte & Gestão Remota")
+                        RichText::new("Console de Gestão PDV")
                             .color(Color32::from_rgb(148, 163, 184))
-                            .size(12.5),
+                            .size(11.0),
                     );
+                });
+            });
 
-                    ui.add_space(20.0);
+            ui.add_space(24.0);
+            ui.label(
+                RichText::new("SEGURANÇA & ARQUITETURA")
+                    .color(Color32::from_rgb(100, 116, 139))
+                    .size(10.5)
+                    .strong(),
+            );
+            ui.add_space(12.0);
 
-                    // 3. Card Container Escuro com Borda e Cantos Arredondados
-                    let card_w = 390.0_f32.min(ui.available_width() - 32.0).max(300.0);
-                    egui::Frame::none()
-                        .fill(Color32::from_rgb(19, 25, 38))
-                        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(33, 44, 65)))
-                        .rounding(16.0)
-                        .inner_margin(egui::Margin::symmetric(28.0, 24.0))
-                        .show(ui, |ui| {
-                            ui.set_max_width(card_w);
-                            ui.set_min_width(card_w.min(320.0));
+            // Pontos de Confiança desenhados com círculos vetoriais anti-aliasing
+            self.render_trust_item(
+                ui,
+                Color32::from_rgb(16, 185, 129),
+                "QUIC TLS 1.3 Criptografia Fim a Fim",
+            );
+            ui.add_space(10.0);
+            self.render_trust_item(
+                ui,
+                COLOR_CYAN_NEON,
+                "Zero-Trust & Consentimento Obrigatório",
+            );
+            ui.add_space(10.0);
+            self.render_trust_item(ui, COLOR_BLUE_ELECTRIC, "Auditoria Centralizada & Hash E2E");
+            ui.add_space(10.0);
+            self.render_trust_item(ui, COLOR_VIOLET_NEON, "Ultra Leve para PDVs Modestos");
 
-                            // Campo: NOME DE USUÁRIO
-                            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                                ui.label(
-                                    RichText::new("NOME DE USUÁRIO")
-                                        .color(Color32::from_rgb(148, 163, 184))
-                                        .size(11.0)
-                                        .strong(),
-                                );
-                            });
-                            ui.add_space(6.0);
+            ui.add_space(28.0);
 
-                            egui::Frame::none()
-                                .fill(Color32::from_rgb(14, 18, 28))
-                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(30, 40, 60)))
-                                .rounding(8.0)
-                                .inner_margin(egui::Margin::symmetric(12.0, 9.0))
-                                .show(ui, |ui| {
-                                    ui.horizontal(|ui| {
-                                        ui.label(
-                                            RichText::new("👤")
-                                                .color(Color32::from_rgb(140, 150, 170))
-                                                .size(14.0),
-                                        );
-                                        ui.add_space(6.0);
-                                        ui.add(
-                                            egui::TextEdit::singleline(
-                                                &mut self.state.login_operator_id,
-                                            )
-                                            .hint_text("admin")
-                                            .frame(false)
-                                            .desired_width(f32::INFINITY)
-                                            .text_color(Color32::WHITE),
-                                        );
-                                    });
-                                });
+            // Rodapé da coluna esquerda
+            ui.with_layout(Layout::bottom_up(Align::Min), |ui| {
+                ui.label(
+                    RichText::new("v0.1.0 • Enterprise Edition")
+                        .color(Color32::from_rgb(80, 95, 120))
+                        .size(10.5),
+                );
+                ui.label(
+                    RichText::new("Oracle Cloud & Windows 10/11")
+                        .color(Color32::from_rgb(100, 116, 139))
+                        .size(11.0),
+                );
+            });
+        });
+    }
 
-                            ui.add_space(14.0);
+    /// Item de confiança desenhado com círculo vetorial.
+    fn render_trust_item(&self, ui: &mut egui::Ui, dot_color: Color32, text: &str) {
+        ui.horizontal(|ui| {
+            let (dot_rect, _) = ui.allocate_exact_size(Vec2::new(10.0, 14.0), egui::Sense::hover());
+            ui.painter().circle_filled(
+                egui::pos2(dot_rect.center().x, dot_rect.center().y),
+                3.5,
+                dot_color,
+            );
+            ui.add_space(6.0);
+            ui.label(
+                RichText::new(text)
+                    .color(Color32::from_rgb(203, 213, 225))
+                    .size(11.5),
+            );
+        });
+    }
 
-                            // Campo: SENHA DE ACESSO
-                            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                                ui.label(
-                                    RichText::new("SENHA DE ACESSO")
-                                        .color(Color32::from_rgb(148, 163, 184))
-                                        .size(11.0)
-                                        .strong(),
-                                );
-                            });
-                            ui.add_space(6.0);
+    /// Cabeçalho compacto para telas menores.
+    fn render_login_compact_header(&self, ui: &mut egui::Ui) {
+        ui.vertical_centered(|ui| {
+            render_logo(ui, self.logo_texture.as_ref(), 40.0);
+            ui.add_space(8.0);
+            ui.horizontal(|ui| {
+                ui.add_space((ui.available_width() - 170.0).max(0.0) * 0.5);
+                ui.label(
+                    RichText::new("PrysmView")
+                        .color(Color32::from_rgb(56, 132, 255))
+                        .size(20.0)
+                        .strong(),
+                );
+                ui.label(
+                    RichText::new("Admin")
+                        .color(Color32::WHITE)
+                        .size(20.0)
+                        .strong(),
+                );
+            });
+            ui.label(
+                RichText::new("Central de Suporte & Gestão PDV")
+                    .color(Color32::from_rgb(148, 163, 184))
+                    .size(11.5),
+            );
+        });
+    }
 
-                            let mut enter_pressed = false;
-                            egui::Frame::none()
-                                .fill(Color32::from_rgb(14, 18, 28))
-                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(30, 40, 60)))
-                                .rounding(8.0)
-                                .inner_margin(egui::Margin::symmetric(12.0, 9.0))
-                                .show(ui, |ui| {
-                                    ui.horizontal(|ui| {
-                                        ui.label(
-                                            RichText::new("🔒")
-                                                .color(Color32::from_rgb(140, 150, 170))
-                                                .size(14.0),
-                                        );
-                                        ui.add_space(6.0);
+    /// Formulário de credenciais e ações de autenticação.
+    fn render_login_form_fields(&mut self, ui: &mut egui::Ui) {
+        ui.vertical(|ui| {
+            ui.label(
+                RichText::new("Acesso de Operador")
+                    .color(COLOR_TEXT_WHITE)
+                    .size(18.0)
+                    .strong(),
+            );
+            ui.add_space(2.0);
+            ui.label(
+                RichText::new("Entre com suas credenciais corporativas")
+                    .color(Color32::from_rgb(148, 163, 184))
+                    .size(12.0),
+            );
 
-                                        let pwd_resp = ui.add(
-                                            egui::TextEdit::singleline(
-                                                &mut self.state.login_password,
-                                            )
-                                            .password(!self.state.show_password)
-                                            .hint_text("••••••••")
-                                            .frame(false)
-                                            .desired_width(ui.available_width() - 34.0)
-                                            .text_color(Color32::WHITE),
-                                        );
+            ui.add_space(14.0);
 
-                                        if pwd_resp.lost_focus()
-                                            && ui.input(|i| i.key_pressed(egui::Key::Enter))
-                                        {
-                                            enter_pressed = true;
-                                        }
+            // Botão Microsoft Entra ID (S-11)
+            let btn_entra_h = 36.0;
+            let (entra_rect, entra_resp) = ui.allocate_exact_size(
+                Vec2::new(ui.available_width(), btn_entra_h),
+                egui::Sense::click(),
+            );
+            let entra_bg = if entra_resp.is_pointer_button_down_on() {
+                Color32::from_rgb(30, 42, 60)
+            } else if entra_resp.hovered() {
+                Color32::from_rgb(38, 52, 75)
+            } else {
+                Color32::from_rgb(24, 32, 48)
+            };
+            let entra_stroke = Stroke::new(
+                1.0_f32,
+                if entra_resp.hovered() {
+                    COLOR_CYAN_NEON
+                } else {
+                    Color32::from_rgb(45, 60, 90)
+                },
+            );
+            ui.painter().rect(entra_rect, 6.0, entra_bg, entra_stroke);
 
-                                        ui.with_layout(
-                                            Layout::right_to_left(Align::Center),
-                                            |ui| {
-                                                let eye_btn = egui::Button::new(
-                                                    RichText::new("👁")
-                                                        .color(if self.state.show_password {
-                                                            COLOR_CYAN_NEON
-                                                        } else {
-                                                            Color32::from_rgb(148, 163, 184)
-                                                        })
-                                                        .size(14.0),
-                                                )
-                                                .fill(Color32::TRANSPARENT)
-                                                .stroke(Stroke::NONE);
+            // Desenha os 4 quadrados oficiais da Microsoft via painter (sem caracteres quebrados)
+            let logo_x = entra_rect.min.x + 14.0;
+            let logo_y = entra_rect.center().y - 7.0;
+            let sq_size = 6.0;
+            let sq_gap = 2.0;
+            // Vermelho (superior esquerdo)
+            ui.painter().rect_filled(
+                egui::Rect::from_min_size(egui::pos2(logo_x, logo_y), Vec2::new(sq_size, sq_size)),
+                0.0,
+                Color32::from_rgb(242, 80, 34),
+            );
+            // Verde (superior direito)
+            ui.painter().rect_filled(
+                egui::Rect::from_min_size(
+                    egui::pos2(logo_x + sq_size + sq_gap, logo_y),
+                    Vec2::new(sq_size, sq_size),
+                ),
+                0.0,
+                Color32::from_rgb(127, 186, 0),
+            );
+            // Azul (inferior esquerdo)
+            ui.painter().rect_filled(
+                egui::Rect::from_min_size(
+                    egui::pos2(logo_x, logo_y + sq_size + sq_gap),
+                    Vec2::new(sq_size, sq_size),
+                ),
+                0.0,
+                Color32::from_rgb(0, 164, 239),
+            );
+            // Amarelo (inferior direito)
+            ui.painter().rect_filled(
+                egui::Rect::from_min_size(
+                    egui::pos2(logo_x + sq_size + sq_gap, logo_y + sq_size + sq_gap),
+                    Vec2::new(sq_size, sq_size),
+                ),
+                0.0,
+                Color32::from_rgb(255, 185, 0),
+            );
 
-                                                if ui.add(eye_btn).clicked() {
-                                                    self.state.show_password =
-                                                        !self.state.show_password;
-                                                }
-                                            },
-                                        );
-                                    });
-                                });
+            // Texto do botão Entra ID
+            ui.painter().text(
+                egui::pos2(
+                    logo_x + sq_size * 2.0 + sq_gap + 10.0,
+                    entra_rect.center().y,
+                ),
+                egui::Align2::LEFT_CENTER,
+                "Entrar com Microsoft Entra ID",
+                egui::FontId::proportional(12.5),
+                Color32::WHITE,
+            );
 
-                            ui.add_space(10.0);
+            if entra_resp.clicked() {
+                self.state.login_operator_id = "operador.azure".to_string();
+                self.state
+                    .login_success("operador.azure", "token_entra_id_oauth2".to_string());
+            }
 
-                            // Checkbox "Lembrar meu usuário neste dispositivo"
-                            ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                                ui.checkbox(
-                                    &mut self.state.remember_user,
-                                    RichText::new("Lembrar meu usuário neste dispositivo")
-                                        .color(Color32::from_rgb(148, 163, 184))
-                                        .size(12.0),
-                                );
-                            });
+            ui.add_space(12.0);
 
-                            // Atalhos de demonstração / suporte rápido
-                            ui.add_space(4.0);
-                            ui.horizontal(|ui| {
-                                ui.label(
-                                    RichText::new("Acesso rápido:")
-                                        .color(COLOR_TEXT_DARK)
-                                        .size(10.5),
-                                );
-                                if ui.button("👤 admin").clicked() {
-                                    self.state.login_operator_id = "admin".to_string();
-                                    self.state.login_password = "admin".to_string();
-                                }
-                                if ui.button("⚡ op-01").clicked() {
-                                    self.state.login_operator_id = "op-01".to_string();
-                                    self.state.login_password = "demo".to_string();
-                                }
-                            });
+            // Divisor "OU CREDENCIAIS LOCAIS"
+            ui.horizontal(|ui| {
+                let line_w = (ui.available_width() - 150.0).max(10.0) * 0.5;
+                let (l1, _) = ui.allocate_exact_size(Vec2::new(line_w, 1.0), egui::Sense::hover());
+                ui.painter()
+                    .rect_filled(l1, 0.0, Color32::from_rgb(35, 48, 72));
+                ui.label(
+                    RichText::new("OU COM CREDENCIAIS")
+                        .color(Color32::from_rgb(100, 116, 139))
+                        .size(10.0)
+                        .strong(),
+                );
+                let (l2, _) = ui.allocate_exact_size(Vec2::new(line_w, 1.0), egui::Sense::hover());
+                ui.painter()
+                    .rect_filled(l2, 0.0, Color32::from_rgb(35, 48, 72));
+            });
 
-                            // Mensagem de Erro (se houver)
-                            if let Some(ref err) = self.state.login_error {
-                                ui.add_space(8.0);
-                                ui.horizontal(|ui| {
-                                    ui.label(
-                                        RichText::new("⚠️").color(COLOR_RED_DANGER).size(13.0),
-                                    );
-                                    ui.label(RichText::new(err).color(COLOR_RED_DANGER).size(12.0));
-                                });
-                            }
+            ui.add_space(10.0);
 
-                            ui.add_space(16.0);
+            // Campo: NOME DE USUÁRIO
+            ui.label(
+                RichText::new("NOME DE USUÁRIO")
+                    .color(Color32::from_rgb(148, 163, 184))
+                    .size(10.5)
+                    .strong(),
+            );
+            ui.add_space(4.0);
 
-                            // Botão "Entrar no Console" (Vibrant Royal Blue)
-                            let btn_login = egui::Button::new(
-                                RichText::new("Entrar no Console")
-                                    .color(Color32::WHITE)
-                                    .size(15.0)
-                                    .strong(),
-                            )
-                            .fill(Color32::from_rgb(37, 99, 235)) // #2563eb
-                            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(59, 130, 246)))
-                            .rounding(8.0);
+            let mut enter_pressed = false;
 
-                            if ui
-                                .add_sized([ui.available_width(), 44.0], btn_login)
-                                .clicked()
-                                || enter_pressed
-                            {
-                                let op_id = self.state.login_operator_id.trim().to_string();
-                                if op_id.is_empty() {
-                                    self.state.login_error =
-                                        Some("Informe o Nome de Usuário".to_string());
-                                } else {
-                                    let token = format!("token_{}", op_id);
-                                    self.state.login_success(&op_id, token);
-                                }
-                            }
-                        });
-
-                    ui.add_space(24.0);
-
-                    // 4. Rodapé de Conexão Segura Criptografada (Zero-Trust)
+            egui::Frame::none()
+                .fill(Color32::from_rgb(10, 14, 24))
+                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(32, 44, 68)))
+                .rounding(6.0)
+                .inner_margin(egui::Margin::symmetric(10.0, 8.0))
+                .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(
-                            RichText::new("●")
-                                .color(Color32::from_rgb(16, 185, 129))
-                                .size(11.0),
+                            RichText::new("👤")
+                                .color(Color32::from_rgb(140, 150, 170))
+                                .size(13.0),
                         );
                         ui.add_space(4.0);
-                        ui.label(
-                            RichText::new("Conexão Segura Criptografada (Zero-Trust)")
-                                .color(Color32::from_rgb(120, 135, 155))
-                                .size(11.5),
+                        let resp = ui.add(
+                            egui::TextEdit::singleline(&mut self.state.login_operator_id)
+                                .hint_text("ex: operador.suporte")
+                                .frame(false)
+                                .desired_width(f32::INFINITY)
+                                .text_color(Color32::WHITE),
                         );
+                        if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                            enter_pressed = true;
+                        }
                     });
+                });
 
-                    ui.add_space(8.0);
+            ui.add_space(10.0);
 
-                    // Opções Avançadas discretas para Servidor de Sinalização
+            // Campo: SENHA DE ACESSO
+            ui.label(
+                RichText::new("SENHA DE ACESSO")
+                    .color(Color32::from_rgb(148, 163, 184))
+                    .size(10.5)
+                    .strong(),
+            );
+            ui.add_space(4.0);
+
+            egui::Frame::none()
+                .fill(Color32::from_rgb(10, 14, 24))
+                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(32, 44, 68)))
+                .rounding(6.0)
+                .inner_margin(egui::Margin::symmetric(10.0, 8.0))
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("🔒")
+                                .color(Color32::from_rgb(140, 150, 170))
+                                .size(13.0),
+                        );
+                        ui.add_space(4.0);
+
+                        let pwd_resp = ui.add(
+                            egui::TextEdit::singleline(&mut self.state.login_password)
+                                .password(!self.state.show_password)
+                                .hint_text("••••••••")
+                                .frame(false)
+                                .desired_width(ui.available_width() - 32.0)
+                                .text_color(Color32::WHITE),
+                        );
+
+                        if pwd_resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                            enter_pressed = true;
+                        }
+
+                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                            let eye_btn = egui::Button::new(
+                                RichText::new("👁")
+                                    .color(if self.state.show_password {
+                                        COLOR_CYAN_NEON
+                                    } else {
+                                        Color32::from_rgb(148, 163, 184)
+                                    })
+                                    .size(13.0),
+                            )
+                            .fill(Color32::TRANSPARENT)
+                            .stroke(Stroke::NONE);
+
+                            if ui.add(eye_btn).clicked() {
+                                self.state.show_password = !self.state.show_password;
+                            }
+                        });
+                    });
+                });
+
+            ui.add_space(8.0);
+
+            // Checkbox: Lembrar meu usuário
+            ui.horizontal(|ui| {
+                ui.checkbox(
+                    &mut self.state.remember_user,
+                    RichText::new("Lembrar meu usuário neste dispositivo")
+                        .color(Color32::from_rgb(148, 163, 184))
+                        .size(11.5),
+                );
+            });
+
+            // Exibição de Erro
+            if let Some(ref err) = self.state.login_error {
+                ui.add_space(6.0);
+                egui::Frame::none()
+                    .fill(Color32::from_rgb(45, 18, 26))
+                    .stroke(Stroke::new(1.0_f32, COLOR_RED_DANGER))
+                    .rounding(6.0)
+                    .inner_margin(egui::Margin::symmetric(10.0, 6.0))
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label(RichText::new("⚠️").color(COLOR_RED_DANGER).size(12.0));
+                            ui.label(RichText::new(err).color(COLOR_RED_DANGER).size(11.5));
+                        });
+                    });
+            }
+
+            ui.add_space(14.0);
+
+            // Botão de Login "Entrar no Console"
+            let btn_login = egui::Button::new(
+                RichText::new("Entrar no Console →")
+                    .color(Color32::WHITE)
+                    .size(14.0)
+                    .strong(),
+            )
+            .fill(Color32::from_rgb(37, 99, 235)) // #2563eb
+            .stroke(Stroke::new(1.0_f32, Color32::from_rgb(59, 130, 246)))
+            .rounding(6.0);
+
+            if ui
+                .add_sized([ui.available_width(), 40.0], btn_login)
+                .clicked()
+                || enter_pressed
+            {
+                let op_id = self.state.login_operator_id.trim().to_string();
+                if op_id.is_empty() {
+                    self.state.login_error = Some("Informe o Nome de Usuário".to_string());
+                } else {
+                    let token = format!("token_{}", op_id);
+                    self.state.login_success(&op_id, token);
+                }
+            }
+
+            ui.add_space(12.0);
+
+            // Rodapé do Card: Status da Sinalização com círculo vetorial
+            ui.horizontal(|ui| {
+                let (status_rect, _) =
+                    ui.allocate_exact_size(Vec2::new(10.0, 12.0), egui::Sense::hover());
+                ui.painter().circle_filled(
+                    egui::pos2(status_rect.center().x, status_rect.center().y),
+                    3.5,
+                    Color32::from_rgb(16, 185, 129),
+                );
+                ui.add_space(4.0);
+                ui.label(
+                    RichText::new("Sinalização Online (Zero-Trust)")
+                        .color(Color32::from_rgb(120, 135, 155))
+                        .size(11.0),
+                );
+
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     ui.collapsing(
-                        RichText::new("⚙ Servidor de Sinalização")
-                            .color(Color32::from_rgb(70, 85, 105))
+                        RichText::new("⚙ Configurações")
+                            .color(Color32::from_rgb(100, 116, 139))
                             .size(10.5),
                         |ui| {
                             ui.horizontal(|ui| {
-                                ui.label(RichText::new("URL:").color(COLOR_TEXT_DARK).size(11.0));
+                                ui.label(RichText::new("API:").color(COLOR_TEXT_DARK).size(11.0));
                                 ui.add(
                                     egui::TextEdit::singleline(&mut self.state.server_url)
                                         .hint_text("https://api.prysmview.com")
-                                        .desired_width(220.0),
+                                        .desired_width(180.0),
                                 );
                             });
                         },
                     );
-                    ui.add_space(20.0);
                 });
             });
-    }
-
-    /// Renderiza o badge de monitor com raio inspirado na identidade visual.
-    fn render_admin_login_badge(&self, ui: &mut egui::Ui) {
-        let size = Vec2::new(70.0, 70.0);
-        let (rect, _resp) = ui.allocate_exact_size(size, egui::Sense::hover());
-        let painter = ui.painter();
-
-        // Fundo azul marinho escuro com borda azul vibrante arredondada
-        let bg_color = Color32::from_rgb(13, 29, 54);
-        let border_stroke = Stroke::new(1.8_f32, Color32::from_rgb(37, 99, 235));
-        painter.rect(rect, 18.0, bg_color, border_stroke);
-
-        // Contorno do monitor de computador
-        let screen_width = 36.0;
-        let screen_height = 23.0;
-        let screen_center = egui::pos2(rect.center().x, rect.center().y - 3.5);
-        let screen_rect =
-            egui::Rect::from_center_size(screen_center, Vec2::new(screen_width, screen_height));
-        let screen_stroke = Stroke::new(1.8_f32, Color32::from_rgb(56, 132, 255));
-        painter.rect(
-            screen_rect,
-            4.0,
-            Color32::from_rgb(8, 18, 36),
-            screen_stroke,
-        );
-
-        // Suporte e base do monitor
-        let stand_y_start = screen_rect.bottom();
-        let stand_y_end = stand_y_start + 6.0;
-        painter.line_segment(
-            [
-                egui::pos2(rect.center().x, stand_y_start),
-                egui::pos2(rect.center().x, stand_y_end),
-            ],
-            screen_stroke,
-        );
-        let base_width = 16.0;
-        painter.line_segment(
-            [
-                egui::pos2(rect.center().x - base_width / 2.0, stand_y_end),
-                egui::pos2(rect.center().x + base_width / 2.0, stand_y_end),
-            ],
-            screen_stroke,
-        );
-
-        // Ícone de raio elétrico no centro da tela do monitor
-        painter.text(
-            screen_center,
-            egui::Align2::CENTER_CENTER,
-            "⚡",
-            egui::FontId::proportional(14.0),
-            Color32::WHITE,
-        );
+        });
     }
 }
 
@@ -2408,4 +2562,3 @@ mod tests {
         }
     }
 }
-

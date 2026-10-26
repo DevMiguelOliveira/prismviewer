@@ -101,7 +101,7 @@ impl Default for ViewerState {
             operator_name: "Técnico".to_string(),
             auth_token: None,
             server_url: "https://api.prysmview.com".to_string(),
-            login_operator_id: "admin".to_string(),
+            login_operator_id: String::new(),
             login_password: String::new(),
             is_authenticated: false,
             login_error: None,
@@ -259,7 +259,8 @@ impl ViewerState {
         use sha2::{Digest, Sha256};
 
         let mut csv = String::from("id,timestamp,operator_name,pdv_id,store_name,duration,reason,status,bytes_transferred,prev_hash,record_hash\n");
-        let mut prev_hash = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+        let mut prev_hash =
+            "0000000000000000000000000000000000000000000000000000000000000000".to_string();
 
         for r in &self.audit_records {
             let mut hasher = Sha256::new();
@@ -307,7 +308,8 @@ impl ViewerState {
         }
 
         let mut count = 0;
-        let mut expected_prev = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+        let mut expected_prev =
+            "0000000000000000000000000000000000000000000000000000000000000000".to_string();
 
         for (idx, line) in lines.enumerate() {
             if line.trim().is_empty() {
@@ -317,12 +319,28 @@ impl ViewerState {
             if cols.len() < 11 {
                 return Err(format!("Linha {} incompleta", idx + 1));
             }
-            let (id, timestamp, op, pdv, store, dur, reason_raw, status, bytes, prev_hash, record_hash) = (
-                cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8], cols[9], cols[10],
+            let (
+                id,
+                timestamp,
+                op,
+                pdv,
+                store,
+                dur,
+                reason_raw,
+                status,
+                bytes,
+                prev_hash,
+                record_hash,
+            ) = (
+                cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8],
+                cols[9], cols[10],
             );
 
             if prev_hash != expected_prev {
-                return Err(format!("Quebra de elo na linha {}: prev_hash inconsistente", idx + 1));
+                return Err(format!(
+                    "Quebra de elo na linha {}: prev_hash inconsistente",
+                    idx + 1
+                ));
             }
 
             let mut hasher = Sha256::new();
@@ -340,7 +358,10 @@ impl ViewerState {
             let computed = format!("{:x}", hasher.finalize());
 
             if computed != record_hash {
-                return Err(format!("Adulteração detectada na linha {}: hash diverge", idx + 1));
+                return Err(format!(
+                    "Adulteração detectada na linha {}: hash diverge",
+                    idx + 1
+                ));
             }
 
             expected_prev = record_hash.to_string();
@@ -360,7 +381,9 @@ impl ViewerState {
             .iter()
             .filter(|r| {
                 if let Some(op) = operator_query {
-                    if !op.is_empty() && !r.operator_name.to_lowercase().contains(&op.to_lowercase()) {
+                    if !op.is_empty()
+                        && !r.operator_name.to_lowercase().contains(&op.to_lowercase())
+                    {
                         return false;
                     }
                 }
@@ -557,7 +580,9 @@ mod tests {
         state.selected_store = Some("Loja Franquia 05".to_string());
         let store_machines = state.filter_pdvs();
         assert_eq!(store_machines.len(), 50); // 1000 / 20 = 50 máquinas por loja
-        assert!(store_machines.iter().all(|p| p.store_name == "Loja Franquia 05"));
+        assert!(store_machines
+            .iter()
+            .all(|p| p.store_name == "Loja Franquia 05"));
 
         // 5. Busca textual combinada
         state.selected_store = None;
@@ -593,7 +618,8 @@ mod tests {
         assert!(csv.contains("AUD-005"));
 
         // Valida que a cadeia de hash original é 100% íntegra
-        let verified_count = ViewerState::verify_audit_csv_chain(&csv).expect("Cadeia deveria ser válida");
+        let verified_count =
+            ViewerState::verify_audit_csv_chain(&csv).expect("Cadeia deveria ser válida");
         assert_eq!(verified_count, 5);
 
         // Testa adulteração: alterar o motivo do chamado 1 deve quebrar a validação criptográfica

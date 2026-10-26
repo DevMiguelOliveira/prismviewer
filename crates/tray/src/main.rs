@@ -1,4 +1,4 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![windows_subsystem = "windows"]
 
 //! prysmview-tray - Aplicativo visual do Host no PDV estilo TeamViewer Host
 //!
