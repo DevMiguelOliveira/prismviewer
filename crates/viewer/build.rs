@@ -1,4 +1,4 @@
-//! Build script para embutir recursos nativos do Windows (ícone oficial do PrysmView) no executável.
+//! Build script para embutir recursos nativos do Windows (ícone oficial, manifest e VERSIONINFO) no executável.
 
 fn main() {
     #[cfg(windows)]
@@ -9,6 +9,8 @@ fn main() {
             println!("cargo:rustc-link-arg={}", res_path.display());
         }
         println!("cargo:rerun-if-changed=../../assets/app.res");
+        println!("cargo:rerun-if-changed=../../assets/app.rc");
+        println!("cargo:rerun-if-changed=../../assets/app.manifest");
         println!("cargo:rerun-if-changed=../../assets/icon.ico");
     }
 }

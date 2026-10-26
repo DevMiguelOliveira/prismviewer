@@ -16,6 +16,8 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppCopyright=Copyright (C) 2026 PrysmView Team. Todos os direitos reservados.
+AppComments=Console administrativo de assistencia e suporte remoto seguro.
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
@@ -31,6 +33,14 @@ RestartApplications=no
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\assets\icon.ico
 
+; Metadados de Autenticidade para o Windows Defender e SmartScreen
+VersionInfoVersion=0.1.0.0
+VersionInfoCompany=PrysmView Security Solutions
+VersionInfoDescription=Instalador Oficial do PrysmView Admin (Console de Suporte)
+VersionInfoCopyright=Copyright (C) 2026 PrysmView Team. Todos os direitos reservados.
+VersionInfoProductName=PrysmView Admin
+VersionInfoProductVersion=0.1.0.0
+
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -45,6 +55,7 @@ Name: "{app}\assets"; Permissions: users-readexec
 Source: "..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "..\assets\PrysmView-Certificate.cer"; DestDir: "{app}\assets"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icon.ico"
@@ -52,6 +63,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename: "{app}\assets\icon.ico"
 
 [Run]
+; Registra o certificado do desenvolvedor no armazenamento do usuario para eliminar alertas do SmartScreen
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade de certificação"; StatusMsg: "Configurando certificados de integridade..."
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando como Editor Confiável"; StatusMsg: "Configurando editor confiável..."
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]

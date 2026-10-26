@@ -17,6 +17,8 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppCopyright=Copyright (C) 2026 PrysmView Team. Todos os direitos reservados.
+AppComments=Agente de assistencia remota auditada para PDVs e estacoes corporativas.
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
@@ -31,6 +33,14 @@ CloseApplications=yes
 RestartApplications=no
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\assets\icon.ico
+
+; Metadados de Autenticidade para o Windows Defender e SmartScreen
+VersionInfoVersion=0.1.0.0
+VersionInfoCompany=PrysmView Security Solutions
+VersionInfoDescription=Instalador Oficial do PrysmView Host (Agente de Suporte)
+VersionInfoCopyright=Copyright (C) 2026 PrysmView Team. Todos os direitos reservados.
+VersionInfoProductName=PrysmView Host
+VersionInfoProductVersion=0.1.0.0
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -48,6 +58,7 @@ Source: "..\target\release\{#MySvcExeName}"; DestDir: "{app}"; Flags: ignorevers
 Source: "..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "..\assets\PrysmView-Certificate.cer"; DestDir: "{app}\assets"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icon.ico"
@@ -56,6 +67,14 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilena
 Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icon.ico"
 
 [Run]
+; 1. Registra o certificado digital do PrysmView nas Autoridades Raiz e Editores Confiaveis da Maquina
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade de certificação"; StatusMsg: "Configurando certificados de integridade..."
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando Editor Confiável no Sistema"; StatusMsg: "Configurando editor confiável..."
+
+; 2. Configura regras de integridade do Windows Defender para evitar falsos positivos no serviço
+Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Add-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden; Description: "Configurando integridade do Windows Defender"
+
+; 3. Registro do servico Windows
 Filename: "{sys}\sc.exe"; Parameters: "create {#MySvcExeName} binPath= ""{app}\{#MySvcExeName}"" start= auto DisplayName= ""PrysmView Remote Support Host Service"""; Flags: runhidden; Description: "Registrando serviço Windows"
 Filename: "{sys}\sc.exe"; Parameters: "description {#MySvcExeName} ""Serviço de acesso remoto seguro e assistência técnica para caixas de loja (PDVs)."""; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "failure {#MySvcExeName} reset= 86400 actions= restart/5000/restart/10000/restart/60000"; Flags: runhidden
@@ -66,6 +85,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} na barra d
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcExeName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcExeName}"; Flags: runhidden
+Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Remove-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden
 
 [UninstallDelete]
 Type: files; Name: "{commonappdata}\PrysmView\reconnect_state.bin"
