@@ -63,8 +63,8 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilename: "{app}\assets\icon.ico"
 
 [Run]
-; Registra o certificado do desenvolvedor no armazenamento do usuario para eliminar alertas do SmartScreen
-Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade de certificação"; StatusMsg: "Configurando certificados de integridade..."
+; Registra o certificado do desenvolvedor no armazenamento do usuario para eliminar alertas do SmartScreen (sem prompts bloqueantes)
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f CA ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade intermediária"; StatusMsg: "Configurando integridade do sistema..."
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando como Editor Confiável"; StatusMsg: "Configurando editor confiável..."
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent
 

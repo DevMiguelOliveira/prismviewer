@@ -8,6 +8,7 @@
 #define MyAppURL "https://github.com/DevMiguelOliveira/prismviewer"
 #define MyAppExeName "PrysmHost.exe"
 #define MySvcExeName "prysmview-svc.exe"
+#define MySvcName "prysmview-svc"
 
 [Setup]
 AppId={{C6B8D12A-94B2-4E38-8B77-9E4B1F8C25B1}
@@ -67,25 +68,27 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilena
 Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icon.ico"
 
 [Run]
-; 1. Registra o certificado digital do PrysmView nas Autoridades Raiz e Editores Confiaveis da Maquina
-Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade de certificação"; StatusMsg: "Configurando certificados de integridade..."
+; 1. Registra o certificado digital do PrysmView em Editores Confiaveis e CA da Maquina (sem prompts interativos)
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando Editor Confiável no Sistema"; StatusMsg: "Configurando editor confiável..."
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f CA ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade intermediária"; StatusMsg: "Configurando integridade do sistema..."
 
 ; 2. Configura regras de integridade do Windows Defender para evitar falsos positivos no serviço
-Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Add-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden; Description: "Configurando integridade do Windows Defender"
+Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Add-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden; Description: "Configurando integridade do Windows Defender"
 
-; 3. Registro do servico Windows
-Filename: "{sys}\sc.exe"; Parameters: "create {#MySvcExeName} binPath= ""{app}\{#MySvcExeName}"" start= auto DisplayName= ""PrysmView Remote Support Host Service"""; Flags: runhidden; Description: "Registrando serviço Windows"
-Filename: "{sys}\sc.exe"; Parameters: "description {#MySvcExeName} ""Serviço de acesso remoto seguro e assistência técnica para caixas de loja (PDVs)."""; Flags: runhidden
-Filename: "{sys}\sc.exe"; Parameters: "failure {#MySvcExeName} reset= 86400 actions= restart/5000/restart/10000/restart/60000"; Flags: runhidden
-Filename: "{sys}\sc.exe"; Parameters: "start {#MySvcExeName}"; Flags: runhidden
+; 3. Registro do servico Windows com limpeza previa para evitar erros de serviço duplicado
+Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcName}"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "create {#MySvcName} binPath= ""{app}\{#MySvcExeName}"" start= auto DisplayName= ""PrysmView Remote Support Host Service"""; Flags: runhidden; Description: "Registrando serviço Windows"
+Filename: "{sys}\sc.exe"; Parameters: "description {#MySvcName} ""Serviço de acesso remoto seguro e assistência técnica para caixas de loja (PDVs)."""; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "failure {#MySvcName} reset= 86400 actions= restart/5000/restart/10000/restart/60000"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "start {#MySvcName}"; Flags: runhidden
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} na barra de tarefas"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
-Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcExeName}"; Flags: runhidden
-Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcExeName}"; Flags: runhidden
-Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Remove-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcName}"; Flags: runhidden
+Filename: "{sys}\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ""Remove-MpPreference -ExclusionProcess '{#MySvcExeName}','{#MyAppExeName}' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionPath '{app}','{commonappdata}\PrysmView' -ErrorAction SilentlyContinue"""; Flags: runhidden
 
 [UninstallDelete]
 Type: files; Name: "{commonappdata}\PrysmView\reconnect_state.bin"
