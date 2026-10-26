@@ -308,15 +308,15 @@ function renderFleetCards(pageItems) {
     card.onclick = () => selectPdvForInspection(pdv);
 
     const statusBadge = pdv.isOnline
-      ? `<div class="status-badge online"><div class="pulse-dot"></div> ON</div>`
+      ? `<div class="status-badge online"><span class="badge-dot green"></span> ON</div>`
       : `<div class="status-badge offline">OFF</div>`;
 
     const actionBtn = pdv.isOnline
-      ? `<button class="btn-primary" onclick="event.stopPropagation(); startSession('${pdv.id}', '${pdv.storeName}')">
-           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      ? `<button class="btn-primary btn-connect-card" onclick="event.stopPropagation(); startSession('${pdv.id}', '${pdv.storeName}')">
+           <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
            <span>Conectar</span>
          </button>`
-      : `<button class="btn-disabled" disabled>Off</button>`;
+      : `<button class="btn-disabled btn-connect-card" disabled>Off</button>`;
 
     card.innerHTML = `
       <div class="pdv-info-left">
@@ -324,22 +324,19 @@ function renderFleetCards(pageItems) {
         <div class="pdv-meta-group">
           <div class="pdv-title-row">
             <span class="pdv-id">${pdv.id}</span>
-            <span style="color: var(--text-dim);">•</span>
+            <span class="meta-dot">•</span>
             <span class="pdv-store">${pdv.storeName}</span>
-            <span style="color: var(--text-dim);">•</span>
+            <span class="meta-dot">•</span>
             <span class="pdv-seen">${pdv.lastSeen}</span>
           </div>
           <div class="telemetry-chips">
             <span class="tele-chip highlight">${pdv.ipAddress}</span>
             <span class="tele-chip">${pdv.osInfo}</span>
-            <span class="tele-chip" style="color: var(--accent-violet);">v${pdv.agentVersion}</span>
+            <span class="tele-chip version">v${pdv.agentVersion}</span>
           </div>
         </div>
       </div>
       <div class="pdv-actions">
-        <button class="btn-secondary" onclick="event.stopPropagation(); selectPdvForInspection(${JSON.stringify(pdv).replace(/"/g, '&quot;')})">
-          Ficha
-        </button>
         ${actionBtn}
       </div>
     `;
@@ -445,17 +442,19 @@ function renderInspectorDrawer() {
   }
 
   const btnConnect = document.getElementById('btnDrawerConnect');
-  if (pdv.isOnline) {
-    btnConnect.disabled = false;
-    btnConnect.className = 'btn-primary primary-connect-btn';
-    btnConnect.innerHTML = `
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-      <span>Iniciar Conexão Remota</span>
-    `;
-  } else {
-    btnConnect.disabled = true;
-    btnConnect.className = 'btn-disabled primary-connect-btn';
-    btnConnect.innerHTML = `<span>Dispositivo Offline - Conexão Indisponível</span>`;
+  if (btnConnect) {
+    if (pdv.isOnline) {
+      btnConnect.disabled = false;
+      btnConnect.className = 'btn-primary primary-connect-btn';
+      btnConnect.innerHTML = `
+        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Conectar Sessão Remota (QUIC TLS 1.3)</span>
+      `;
+    } else {
+      btnConnect.disabled = true;
+      btnConnect.className = 'btn-disabled primary-connect-btn';
+      btnConnect.innerHTML = `<span>Dispositivo Offline - Conexão Indisponível</span>`;
+    }
   }
 }
 
