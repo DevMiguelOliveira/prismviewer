@@ -20,6 +20,9 @@ fn load_window_icon() -> Option<Icon> {
 
 /// Inicia o aplicativo desktop PrysmAdmin com o frontend web moderno e IPC nativo.
 pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
+    // Limpeza automática de backups temporários .old gerados por atualizações anteriores
+    crate::updater::cleanup_previous_update_backup();
+
     info!("Inicializando EventLoop do PrysmAdmin (WebView2 / Wry)...");
     let event_loop = EventLoop::new();
 
@@ -54,7 +57,12 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     let _webview = WebViewBuilder::new()
         .with_html(&bundled_html)
         .with_ipc_handler(|msg| {
-            info!("Comando recebido do console de suporte: {}", msg.body());
+            let body = msg.body();
+            info!("Comando recebido do console de suporte: {}", body);
+            if body.contains("check_updates") {
+                let status = crate::updater::check_for_updates("stable");
+                info!("Checagem de atualização executada: {:?}", status);
+            }
         })
         .build(&window)?;
 

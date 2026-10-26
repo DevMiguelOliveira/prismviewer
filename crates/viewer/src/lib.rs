@@ -6,6 +6,7 @@ pub mod canvas;
 pub mod session;
 pub mod strings;
 pub mod theme;
+pub mod updater;
 pub mod webview_app;
 
 pub use api_client::{

@@ -25,4 +25,6 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 sha2 = "0.10"
 tao = "0.34"
 wry = "0.57"
+subtle = "2.6"
+
 
