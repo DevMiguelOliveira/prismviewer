@@ -269,7 +269,7 @@ impl eframe::App for PrysmViewerApp {
 
                             ui.separator();
 
-                            // Indicador de Latência com a Nuvem (desenhado com painter vetorial, zero □)
+                            // Indicador de Latência do Servidor (desenhado com painter vetorial, zero □)
                             ui.horizontal(|ui| {
                                 let (dot_rect, _) = ui.allocate_exact_size(
                                     Vec2::new(10.0, 12.0),
@@ -675,7 +675,7 @@ impl PrysmViewerApp {
 
         let chips_data = [
             (
-                "TOTAL DE CAIXAS",
+                "TOTAL DE DISPOSITIVOS",
                 format!("{}", total),
                 "Cadastrados na rede",
                 Color32::from_rgb(56, 132, 255),
@@ -685,7 +685,7 @@ impl PrysmViewerApp {
                 Some(FilterStatus::All),
             ),
             (
-                "CAIXAS ONLINE",
+                "DISPOSITIVOS ONLINE",
                 format!("{}", online),
                 "Prontos para acesso",
                 Color32::from_rgb(16, 185, 129),
@@ -695,7 +695,7 @@ impl PrysmViewerApp {
                 Some(FilterStatus::OnlineOnly),
             ),
             (
-                "CAIXAS OFFLINE",
+                "DISPOSITIVOS OFFLINE",
                 format!("{}", offline),
                 "Sem sinal recente",
                 Color32::from_rgb(100, 116, 139),
@@ -705,7 +705,7 @@ impl PrysmViewerApp {
                 Some(FilterStatus::OfflineOnly),
             ),
             (
-                "LATÊNCIA NUVEM",
+                "LATÊNCIA SERVIDOR",
                 format!("{} ms", latency),
                 "Sinalização Ativa",
                 COLOR_CYAN_NEON,
@@ -1876,7 +1876,7 @@ impl PrysmViewerApp {
             ui.add_space(12.0);
 
             // =========================================================================
-            // Card 2: Conectividade & Sinalização de Loja (Nuvem / Relay)
+            // Card 2: Conectividade & Sinalização (Servidor / Relay)
             // =========================================================================
             egui::Frame::none()
                 .fill(COLOR_CARD_BASE)
@@ -2557,7 +2557,7 @@ impl PrysmViewerApp {
                         .size(10.5),
                 );
                 ui.label(
-                    RichText::new("Oracle Cloud & Windows 10/11")
+                    RichText::new("PrysmView Enterprise • Windows 10/11")
                         .color(Color32::from_rgb(100, 116, 139))
                         .size(11.0),
                 );

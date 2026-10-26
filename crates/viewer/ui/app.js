@@ -111,10 +111,10 @@ const state = {
     { id: "TERM-03", storeName: "Centro de Distribuição", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host10_key_hash", lastSeen: "42 min atrás", ipAddress: "192.168.4.103", osInfo: "Windows 10 IoT Enterprise", resolution: "1366x768 @ 60Hz", notes: "Conferência Doca 3: Cabo de rede desconectado para troca de switch." },
     { id: "LOG-01", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host11_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.101", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Despacho Rápido: Integração com balança rodoviária serial." },
     { id: "LOG-02", storeName: "Filial Leste - Logística", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host12_key_hash", lastSeen: "Agora", ipAddress: "192.168.5.102", osInfo: "Windows 11 Pro 23H2", resolution: "1920x1080 @ 60Hz", notes: "Rastreamento e Frotas: Monitoramento de entregas ao vivo." },
-    { id: "CAIXA-01", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host13_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 01: PinPad TEF IP configurado." },
-    { id: "CAIXA-02", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host14_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.112", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 02: SAT Fiscal ativo." },
-    { id: "CAIXA-03", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host15_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Balcão de Serviços Sul: Gaveta automática e scanner." },
-    { id: "CAIXA-04", storeName: "Unidade Norte - Operações", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host16_key_hash", lastSeen: "2 horas atrás", ipAddress: "192.168.3.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Terminal Reserva Norte: Desligado no encerramento de turno." }
+    { id: "TERM-04", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host13_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 01: Terminal de autoatendimento integrado." },
+    { id: "TERM-05", storeName: "Matriz - Corporativo", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host14_key_hash", lastSeen: "Agora", ipAddress: "192.168.1.112", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Ponto de Atendimento 02: Impressora fiscal e leitor biométrico." },
+    { id: "BALCAO-01", storeName: "Filial Sul - Escritório", isOnline: true, agentVersion: "0.1.0", publicKey: "ed25519_host15_key_hash", lastSeen: "Agora", ipAddress: "192.168.2.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Balcão de Serviços Sul: Atendimento presencial." },
+    { id: "BALCAO-02", storeName: "Unidade Norte - Operações", isOnline: false, agentVersion: "0.1.0", publicKey: "ed25519_host16_key_hash", lastSeen: "2 horas atrás", ipAddress: "192.168.3.111", osInfo: "Windows 10 Pro 22H2", resolution: "1366x768 @ 60Hz", notes: "Terminal Reserva Norte: Desligado no encerramento de turno." }
   ],
 
   auditRecords: [
@@ -921,22 +921,46 @@ function initApp() {
     };
   }
 
-  // Salvar Preferências
-  const btnSaveAllSettings = document.getElementById('btnSaveAllSettings');
-  if (btnSaveAllSettings) {
-    btnSaveAllSettings.onclick = () => {
-      const techName = document.getElementById('cfgTechName').value;
-      const techRole = document.getElementById('cfgTechRole').value;
-      const techDept = document.getElementById('cfgTechDept').value;
-      
-      document.getElementById('headerOperatorName').textContent = techName;
-      document.getElementById('sidebarTechRole').textContent = techRole;
-      document.getElementById('sidebarTechDept').textContent = techDept;
+  // Salvar Preferências (Ações Topo, Base e Geral)
+  const handleSaveSettings = () => {
+    const techName = document.getElementById('cfgTechName')?.value || 'admin';
+    const techRole = document.getElementById('cfgTechRole')?.value || 'N1 - Suporte Técnico';
+    const techDept = document.getElementById('cfgTechDept')?.value || 'Central de Operações de TI';
+    
+    const headName = document.getElementById('headerOperatorName');
+    if (headName) headName.textContent = techName;
+    const sideRole = document.getElementById('sidebarTechRole');
+    if (sideRole) sideRole.textContent = techRole;
+    const sideDept = document.getElementById('sidebarTechDept');
+    if (sideDept) sideDept.textContent = techDept;
 
-      sendRustCommand('save_settings', { techName, techRole, techDept });
-      showToast('Configurações e parâmetros de suporte salvos com sucesso.');
+    sendRustCommand('save_settings', { techName, techRole, techDept });
+    showToast('Configurações e parâmetros de suporte salvos com sucesso.');
+  };
+
+  const btnSaveTopSettings = document.getElementById('btnSaveTopSettings');
+  if (btnSaveTopSettings) btnSaveTopSettings.onclick = handleSaveSettings;
+  const btnSaveBottomSettings = document.getElementById('btnSaveBottomSettings');
+  if (btnSaveBottomSettings) btnSaveBottomSettings.onclick = handleSaveSettings;
+  const btnSaveAllSettings = document.getElementById('btnSaveAllSettings');
+  if (btnSaveAllSettings) btnSaveAllSettings.onclick = handleSaveSettings;
+
+  // Filtro de Categorias em Configurações (Abas Rápidas)
+  const settingsTabBtns = document.querySelectorAll('.settings-tab-btn');
+  settingsTabBtns.forEach(btn => {
+    btn.onclick = () => {
+      const section = btn.dataset.settingsSection;
+      settingsTabBtns.forEach(b => b.classList.toggle('active', b === btn));
+      
+      document.querySelectorAll('.settings-card[data-settings-group]').forEach(card => {
+        if (section === 'all' || card.dataset.settingsGroup === section) {
+          card.classList.remove('hidden-section');
+        } else {
+          card.classList.add('hidden-section');
+        }
+      });
     };
-  }
+  });
 
   // Exportar Auditoria CSV
   const handleExportCsv = () => {
@@ -1051,6 +1075,8 @@ function initApp() {
   if (headerUpdateBadge) {
     headerUpdateBadge.onclick = () => {
       switchTab('settings');
+      const updatesTabBtn = document.querySelector('.settings-tab-btn[data-settings-section="updates"]');
+      if (updatesTabBtn) updatesTabBtn.click();
       const card = document.getElementById('cardAutoUpdate');
       if (card) {
         card.scrollIntoView({ behavior: 'smooth' });

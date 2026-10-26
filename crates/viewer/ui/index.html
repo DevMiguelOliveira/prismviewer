@@ -346,19 +346,62 @@
       <section class="view-page" id="viewSettings">
         <div class="settings-container">
           
-          <div style="margin-bottom: 4px;">
-            <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Configurações Globais & Perfil de Suporte</h2>
-            <p style="font-size: 13.5px; color: var(--text-muted); margin-top: 4px;">Gerenciamento de aparência visual, conexões iroh QUIC, perfil de atendimento e políticas Zero-Trust.</p>
+          <!-- Cabeçalho Superior de Configurações com Ação Rápida de Salvar -->
+          <div class="settings-header-row">
+            <div>
+              <h2 class="settings-title">Central de Configurações</h2>
+              <p class="settings-subtitle">Gerencie aparência, perfil profissional, segurança Zero-Trust e conectividade.</p>
+            </div>
+            <button class="btn-primary" id="btnSaveTopSettings">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Salvar Preferências</span>
+            </button>
           </div>
 
-          <!-- Card de Aparência: Tema Escuro / Claro / Automático -->
-          <div class="settings-card" id="cardThemeSettings">
+          <!-- Abas de Navegação por Categorias -->
+          <div class="settings-nav-tabs">
+            <button class="settings-tab-btn active" data-settings-section="all">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Todas as Opções</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="appearance">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <span>Aparência</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="profile">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Perfil do Operador</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="security">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span>Segurança Zero-Trust</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="performance">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              <span>Vídeo & Desempenho</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="network">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <span>Rede & Conectividade</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="updates">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Atualizações</span>
+            </button>
+            <button class="settings-tab-btn" data-settings-section="storage">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span>Dados & Auditoria</span>
+            </button>
+          </div>
+
+          <!-- SEÇÃO 1: APARÊNCIA & TEMA -->
+          <div class="settings-card" id="cardThemeSettings" data-settings-group="appearance">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-              <h4>Aparência & Tema da Interface (Modo Escuro / Claro)</h4>
+              <h4>Aparência & Tema da Interface</h4>
             </div>
 
-            <p style="font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5;">
+            <p class="card-desc-text">
               Selecione o estilo visual de sua preferência ou sincronize automaticamente com o modo de cores do Windows 10/11.
             </p>
 
@@ -377,7 +420,7 @@
                   <input type="radio" name="uiTheme" value="dark" checked>
                   <span class="theme-option-title">Modo Escuro</span>
                 </div>
-                <span class="theme-option-desc">Cyber Slate / Obsidian. Reduz fadiga visual em turnos longos.</span>
+                <span class="theme-option-desc">Cyber Slate / Obsidian. Conforto e contraste para uso contínuo.</span>
               </div>
 
               <!-- Opção 2: Modo Claro -->
@@ -394,7 +437,7 @@
                   <input type="radio" name="uiTheme" value="light">
                   <span class="theme-option-title">Modo Claro</span>
                 </div>
-                <span class="theme-option-desc">Fluent Light. Alto contraste e máxima clareza para ambientes iluminados.</span>
+                <span class="theme-option-desc">Fluent Light. Alto contraste para ambientes claros e iluminados.</span>
               </div>
 
               <!-- Opção 3: Automático -->
@@ -410,72 +453,45 @@
                   <input type="radio" name="uiTheme" value="auto">
                   <span class="theme-option-title">Automático (Sistema)</span>
                 </div>
-                <span class="theme-option-desc">Sincroniza automaticamente com a preferência do Windows.</span>
+                <span class="theme-option-desc">Sincroniza dinamicamente com as preferências do Windows.</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 1: Identificação do Técnico -->
-          <div class="settings-card">
+          <!-- SEÇÃO 2: PERFIL DO OPERADOR -->
+          <div class="settings-card" id="cardProfile" data-settings-group="profile">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <h4>1. Identificação do Técnico & Fila de Atendimento</h4>
+              <h4>Perfil do Operador & Identificação de Suporte</h4>
             </div>
 
+            <p class="card-desc-text">
+              Estes dados identificam você perante o usuário local durante a solicitação de autorização de sessão remota.
+            </p>
+
             <div class="form-grid">
-              <label class="form-label">Nome / Matrícula:</label>
+              <label class="form-label">Nome / Identificação:</label>
               <input type="text" class="form-input" id="cfgTechName" value="Técnico Admin">
 
               <label class="form-label">Nível / Cargo:</label>
               <input type="text" class="form-input" id="cfgTechRole" value="N1 - Suporte Técnico">
 
-              <label class="form-label">Departamento / Fila:</label>
+              <label class="form-label">Departamento / Equipe:</label>
               <input type="text" class="form-input" id="cfgTechDept" value="Central de Operações de TI">
 
-              <label class="form-label">Ramal / Telefone:</label>
+              <label class="form-label">Ramal / Contato:</label>
               <input type="text" class="form-input" id="cfgTechPhone" value="(11) 4004-0000">
 
-              <label class="form-label">Motivo Padrão de Abertura:</label>
+              <label class="form-label">Motivo Padrão de Chamado:</label>
               <input type="text" class="form-input" id="cfgDefaultReason" value="Suporte Técnico & Manutenção Preventiva" style="max-width: 100%;">
             </div>
           </div>
 
-          <!-- Card 2: Conectividade & Sinalização -->
-          <div class="settings-card">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <h4>2. Conectividade & Infraestrutura (iroh QUIC + TLS 1.3)</h4>
-            </div>
-
-            <div class="form-grid">
-              <label class="form-label">URL da API de Sinalização:</label>
-              <div class="input-with-button">
-                <input type="text" class="form-input" id="cfgServerUrl" value="https://api.prysmview.com">
-                <button class="btn-secondary" id="btnTestPing">⚡ Testar Ping</button>
-              </div>
-
-              <label class="form-label">Servidor Relay QUIC (Fallback):</label>
-              <input type="text" class="form-input" id="cfgRelayUrl" value="quic://relay.prysmview.com:4433">
-
-              <label class="form-label">Reconexão Automática (Queda):</label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="reconnect" value="10"> 10s</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="15" checked> 15s (Padrão)</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="30"> 30s</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="60"> 60s</label>
-              </div>
-            </div>
-
-            <div class="info-banner">
-              <strong>Status da Rede:</strong> P2P Direto Prioritário • Criptografia Fim a Fim (Ed25519) • Fallback automático via relay seguro em caso de firewall restrito.
-            </div>
-          </div>
-
-          <!-- Card 3: Segurança Zero-Trust -->
-          <div class="settings-card">
+          <!-- SEÇÃO 3: SEGURANÇA ZERO-TRUST -->
+          <div class="settings-card" id="cardSecurity" data-settings-group="security">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <h4>3. Segurança da Sessão & Políticas Zero-Trust</h4>
+              <h4>Políticas de Segurança & Controle de Acesso Zero-Trust</h4>
             </div>
 
             <div class="checkbox-row">
@@ -483,7 +499,7 @@
                 <input type="checkbox" id="cfgViewOnly">
                 <div class="checkbox-text">
                   <strong>Modo Apenas Visualização (View-Only / Somente Monitoramento)</strong>
-                  <span>Desativa envio de cliques e teclas, permitindo apenas acompanhamento visual passivo.</span>
+                  <span>Desativa envio de cliques e digitação, permitindo apenas acompanhamento visual passivo.</span>
                 </div>
               </label>
 
@@ -491,7 +507,7 @@
                 <input type="checkbox" id="cfgBlockInput">
                 <div class="checkbox-text">
                   <strong>Bloquear teclado e mouse local do dispositivo durante suporte crítico</strong>
-                  <span>Evita conflito de comandos pelo usuário local enquanto o técnico soluciona o chamado.</span>
+                  <span>Evita concorrência de comandos pelo operador local enquanto você realiza ajustes no sistema.</span>
                 </div>
               </label>
 
@@ -499,24 +515,24 @@
                 <input type="checkbox" id="cfgClipboard" checked>
                 <div class="checkbox-text">
                   <strong>Habilitar sincronização de Área de Transferência (Clipboard texto até 1 MB)</strong>
-                  <span>Permite copiar e colar textos e instruções técnicas de forma auditada e segura.</span>
+                  <span>Permite copiar e colar instruções e scripts técnicos com verificação de tamanho em tempo real.</span>
                 </div>
               </label>
             </div>
 
             <div class="info-banner">
-              <strong>Política Zero-Trust Inviolável:</strong><br>
-              • Nenhuma sessão inicia sem consentimento visível do usuário no dispositivo remoto (ou operador pré-autorizado).<br>
-              • Código de sessão com 8 dígitos, expiração em 120s, máximo de 3 tentativas e HMAC em tempo constante.<br>
+              <strong>Premissas de Segurança Inegociáveis:</strong><br>
+              • Toda sessão exige consentimento visível do usuário local (janela modal de 60 segundos com botão de recusa).<br>
+              • Validação por código de sessão de 8 dígitos, expiração em 120s, máximo de 3 tentativas e HMAC em tempo constante.<br>
               • Chave privada Ed25519 do dispositivo protegida por DPAPI no Windows.
             </div>
           </div>
 
-          <!-- Card 4: Desempenho DXGI -->
-          <div class="settings-card">
+          <!-- SEÇÃO 4: VÍDEO & DESEMPENHO -->
+          <div class="settings-card" id="cardPerformance" data-settings-group="performance">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <h4>4. Desempenho de Vídeo DXGI & Economia de Banda</h4>
+              <h4>Renderização de Vídeo DXGI & Otimização de Banda</h4>
             </div>
 
             <div class="form-grid">
@@ -527,7 +543,7 @@
                 <label class="radio-label"><input type="radio" name="fps" value="60"> 60 FPS (Ultra Fluidez)</label>
               </div>
 
-              <label class="form-label">Nível de Compressão Zstd:</label>
+              <label class="form-label">Compressão Zstd em Vídeo:</label>
               <div class="radio-group">
                 <label class="radio-label"><input type="radio" name="zstd" value="1" checked> Nível 1 (Menor Latência)</label>
                 <label class="radio-label"><input type="radio" name="zstd" value="3"> Nível 3 (Economia de Banda)</label>
@@ -535,53 +551,64 @@
             </div>
 
             <div class="info-banner">
-              • <strong>Captura:</strong> DXGI Desktop Duplication com detecção de tiles 64x64 alterados.<br>
-              • <strong>Teclado:</strong> Modo nativo ABNT2 Scan Codes (KEYEVENTF_SCANCODE).<br>
-              • <strong>Mouse:</strong> Coordenadas Absolutas Normalizadas (0..65535).<br>
-              • <strong>Segurança:</strong> Liberação automática de todas as teclas e modificadores ao encerrar.
+              • <strong>Captura de Tela:</strong> Desktop Duplication DXGI direto na GPU com transmissão apenas de tiles 64x64 modificados.<br>
+              • <strong>Teclado:</strong> KEYEVENTF_SCANCODE com mapeamento ABNT2 nativo sem conversão de layout.<br>
+              • <strong>Mouse:</strong> Coordenadas normalizadas em alta precisão (0..65535) com compensação de DPI do monitor.<br>
+              • <strong>Segurança de Entrada:</strong> Liberação forçada de teclas presas e modificadores ao encerrar.
             </div>
           </div>
 
-          <!-- Card 5: Armazenamento & Auditoria -->
-          <div class="settings-card">
+          <!-- SEÇÃO 5: REDE & CONECTIVIDADE -->
+          <div class="settings-card" id="cardNetwork" data-settings-group="network">
             <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <h4>5. Armazenamento Local, Auditoria & Diagnóstico</h4>
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <h4>Comunicação de Rede & Conectividade Segura (QUIC TLS 1.3)</h4>
             </div>
+
+            <p class="card-desc-text">
+              Configurações dos gateways centrais de sinalização e relay seguro com criptografia fim a fim obrigatória.
+            </p>
 
             <div class="form-grid">
-              <label class="form-label">Pasta de Downloads & Logs:</label>
-              <input type="text" class="form-input" id="cfgDownloadDir" value="C:\Users\Suporte\Downloads\PrysmView" style="max-width: 100%;">
+              <label class="form-label">Servidor de Sinalização:</label>
+              <div class="input-with-button">
+                <input type="text" class="form-input" id="cfgServerUrl" value="https://api.prysmview.com">
+                <button class="btn-secondary" id="btnTestPing">⚡ Testar Conexão</button>
+              </div>
+
+              <label class="form-label">Servidor Relay Seguro:</label>
+              <input type="text" class="form-input" id="cfgRelayUrl" value="quic://relay.prysmview.com:4433">
+
+              <label class="form-label">Tempo de Reconexão (Queda):</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="reconnect" value="10"> 10s</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="15" checked> 15s (Padrão)</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="30"> 30s</label>
+                <label class="radio-label"><input type="radio" name="reconnect" value="60"> 60s</label>
+              </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 8px;">
-              <button class="btn-secondary" id="btnExportAudit">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Exportar Relatório (CSV)</span>
-              </button>
-              <button class="btn-secondary" id="btnClearCache">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                <span>Limpar Cache de Diagnóstico</span>
-              </button>
-              <button class="btn-primary" id="btnSaveAllSettings">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Salvar Preferências</span>
-              </button>
+            <div class="info-banner">
+              <strong>Arquitetura de Conexão Zero-Trust:</strong> Conexão P2P Direta prioritária entre operador e dispositivo. Em caso de restrição severa de firewall corporativo, o tráfego é roteado pelo relay criptografado via QUIC TLS 1.3 sem que os dados de sessão sejam descriptografados.
             </div>
           </div>
 
-          <!-- Card 6: Atualizações de Software & Versão (Auto-Update In-App) -->
-          <div class="settings-card" id="cardAutoUpdate">
+          <!-- SEÇÃO 6: ATUALIZAÇÕES DO SISTEMA -->
+          <div class="settings-card" id="cardAutoUpdate" data-settings-group="updates">
             <div class="card-title-row">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <h4>6. Atualização Automática de Software (In-App Auto-Update)</h4>
+              <h4>Atualização Automática do Console (In-App Auto-Update)</h4>
             </div>
+
+            <p class="card-desc-text">
+              Verifique novas versões oficiais e instale atualizações com 1 clique diretamente pelo console, sem necessidade de reinstalação manual.
+            </p>
 
             <div class="form-grid">
               <label class="form-label">Versão Instalada:</label>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="tele-chip highlight" style="font-weight: 700; padding: 4px 10px; font-size: 12.5px;" id="currentVersionTag">v0.1.0</span>
-                <span style="font-size: 12.5px; color: var(--text-muted);">Canal de Produção (Oficial)</span>
+                <span style="font-size: 12.5px; color: var(--text-muted);">Canal de Produção Oficial</span>
               </div>
 
               <label class="form-label">Canal de Atualização:</label>
@@ -642,6 +669,49 @@
                 Substituição segura in-place com validação de assinatura Ed25519 e rollback automático.
               </span>
             </div>
+          </div>
+
+          <!-- SEÇÃO 7: DADOS & AUDITORIA -->
+          <div class="settings-card" id="cardStorage" data-settings-group="storage">
+            <div class="card-title-row">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <h4>Armazenamento Local, Cache & Auditoria</h4>
+            </div>
+
+            <p class="card-desc-text">
+              Localização de downloads de suporte, registros de conformidade e liberação de cache temporário.
+            </p>
+
+            <div class="form-grid">
+              <label class="form-label">Pasta de Downloads & Logs:</label>
+              <input type="text" class="form-input" id="cfgDownloadDir" value="C:\Users\Suporte\Downloads\PrysmView" style="max-width: 100%;">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+              <button class="btn-secondary" id="btnExportAudit">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Exportar Relatório de Auditoria (CSV)</span>
+              </button>
+              <button class="btn-secondary" id="btnClearCache">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Limpar Cache de Diagnóstico</span>
+              </button>
+              <button class="btn-primary" id="btnSaveAllSettings">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Salvar Preferências</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Rodapé de Ação Global de Salvamento -->
+          <div class="settings-bottom-bar">
+            <span style="font-size: 12.5px; color: var(--text-muted);">
+              As preferências salvas são aplicadas imediatamente a todas as sessões e diagnósticos.
+            </span>
+            <button class="btn-primary" id="btnSaveBottomSettings">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Salvar Todas as Preferências</span>
+            </button>
           </div>
 
         </div>
