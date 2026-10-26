@@ -449,4 +449,57 @@ mod tests {
         injector.inject_key(0x1F, false, false).expect("key S up");
         assert_eq!(injector.active_keys_count(), 0);
     }
+
+    #[test]
+    fn test_dpi_scaling_matrix_100_125_150_175() {
+        // Matriz de teste de DPI exigida pelo P-10 (escalas de 100%, 125%, 150% e 175%)
+        let scales = [1.00_f32, 1.25_f32, 1.50_f32, 1.75_f32];
+        let width = 1920_u32;
+        let height = 1080_u32;
+
+        for &scale in &scales {
+            // Canto superior esquerdo
+            let (phys_x, phys_y, log_x, log_y) = map_normalized_to_dpi(0, 0, width, height, scale);
+            assert_eq!(phys_x, 0);
+            assert_eq!(phys_y, 0);
+            assert_eq!(log_x, 0);
+            assert_eq!(log_y, 0);
+
+            // Centro da tela (32768, 32768)
+            let (phys_x, phys_y, log_x, log_y) =
+                map_normalized_to_dpi(32768, 32768, width, height, scale);
+            assert!((phys_x as i32 - 960).abs() <= 1);
+            assert!((phys_y as i32 - 540).abs() <= 1);
+            let expected_log_x = (960.0_f32 / scale).round() as u32;
+            let expected_log_y = (540.0_f32 / scale).round() as u32;
+            assert!((log_x as i32 - expected_log_x as i32).abs() <= 1);
+            assert!((log_y as i32 - expected_log_y as i32).abs() <= 1);
+
+            // Canto inferior direito (65535, 65535)
+            let (phys_x, phys_y, log_x, log_y) =
+                map_normalized_to_dpi(65535, 65535, width, height, scale);
+            assert_eq!(phys_x, width);
+            assert_eq!(phys_y, height);
+            assert_eq!(log_x, (width as f32 / scale).round() as u32);
+            assert_eq!(log_y, (height as f32 / scale).round() as u32);
+        }
+    }
 }
+
+/// Mapeia coordenadas normalizadas (0..65535) para coordenadas físicas e lógicas considerando o fator DPI (P-10).
+pub fn map_normalized_to_dpi(
+    norm_x: u16,
+    norm_y: u16,
+    screen_width: u32,
+    screen_height: u32,
+    dpi_scale: f32,
+) -> (u32, u32, u32, u32) {
+    let physical_x = ((norm_x as f64 / 65535.0) * screen_width as f64).round() as u32;
+    let physical_y = ((norm_y as f64 / 65535.0) * screen_height as f64).round() as u32;
+
+    let logical_x = (physical_x as f32 / dpi_scale).round() as u32;
+    let logical_y = (physical_y as f32 / dpi_scale).round() as u32;
+
+    (physical_x, physical_y, logical_x, logical_y)
+}
+
