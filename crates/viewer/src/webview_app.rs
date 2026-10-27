@@ -1,14 +1,22 @@
 //! Launcher WebView2 para o console administrativo PrysmAdmin.
 //! Utiliza `tao` e `wry` para fornecer renderização moderna via Microsoft Edge WebView2 nativo.
 
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tao::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::{ControlFlow, EventLoopBuilder},
     window::{Icon, WindowBuilder},
 };
 use tracing::info;
 use wry::WebViewBuilder;
+
+/// Eventos customizados enviados pela thread de descoberta de rede para a interface WebView2.
+#[derive(Debug, Clone)]
+pub enum AdminCustomEvent {
+    HostsDiscovered(String),
+}
 
 /// Carrega o ícone oficial da marca PrysmView para a barra de título e janela do Windows.
 fn load_window_icon() -> Option<Icon> {
@@ -68,7 +76,92 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     info!("Versão ativa do console PrysmAdmin: v{}", current_version);
 
     info!("Inicializando EventLoop do PrysmAdmin (WebView2 / Wry)...");
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoopBuilder::<AdminCustomEvent>::with_user_event().build();
+    let event_proxy = event_loop.create_proxy();
+
+    let discovered_hosts: Arc<Mutex<Vec<serde_json::Value>>> = Arc::new(Mutex::new(Vec::new()));
+    let discovered_bg = discovered_hosts.clone();
+    let proxy_bg = event_proxy.clone();
+
+    // Thread em segundo plano para descoberta de Hosts em tempo real via UDP broadcast e arquivo local
+    std::thread::spawn(move || {
+        let socket = match std::net::UdpSocket::bind("0.0.0.0:19532") {
+            Ok(s) => {
+                let _ = s.set_read_timeout(Some(Duration::from_millis(600)));
+                Some(s)
+            }
+            Err(e) => {
+                tracing::warn!("Não foi possível vincular porta UDP 19532 para descoberta LAN: {e}");
+                None
+            }
+        };
+
+        let mut buf = [0u8; 2048];
+        loop {
+            let mut list_updated = false;
+
+            // 1. Checa Host local via arquivo %LOCALAPPDATA%\PrysmView\host_config.json
+            let base = std::env::var("LOCALAPPDATA")
+                .or_else(|_| std::env::var("APPDATA"))
+                .unwrap_or_else(|_| ".".to_string());
+            let local_config_path = std::path::PathBuf::from(base).join("PrysmView").join("host_config.json");
+            if local_config_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&local_config_path) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                        let pdv_id = val.get("pdv_id").and_then(|v| v.as_str()).unwrap_or("PDV-CAIXA-01");
+                        let local_user = val.get("local_user").and_then(|v| v.as_str());
+                        let access_password = val.get("access_password").and_then(|v| v.as_str());
+                        let host_val = serde_json::json!({
+                            "pdv_id": pdv_id,
+                            "local_user": local_user,
+                            "access_password": access_password,
+                            "ip": "127.0.0.1",
+                            "agent_version": "0.1.0",
+                            "is_online": true
+                        });
+                        if let Ok(mut lock) = discovered_bg.lock() {
+                            if let Some(existing) = lock.iter_mut().find(|h| h.get("pdv_id").and_then(|v| v.as_str()) == Some(pdv_id)) {
+                                *existing = host_val;
+                            } else {
+                                lock.push(host_val);
+                            }
+                            list_updated = true;
+                        }
+                    }
+                }
+            }
+
+            // 2. Escuta beacons UDP da rede LAN
+            if let Some(ref s) = socket {
+                if let Ok((len, peer_addr)) = s.recv_from(&mut buf) {
+                    if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&buf[..len]) {
+                        if val.get("type").and_then(|v| v.as_str()) == Some("host_beacon") {
+                            let pdv_id = val.get("pdv_id").and_then(|v| v.as_str()).unwrap_or("PDV-CAIXA-01");
+                            let mut dev = val.clone();
+                            dev["ip"] = serde_json::json!(peer_addr.ip().to_string());
+                            if let Ok(mut lock) = discovered_bg.lock() {
+                                if let Some(existing) = lock.iter_mut().find(|h| h.get("pdv_id").and_then(|v| v.as_str()) == Some(pdv_id)) {
+                                    *existing = dev;
+                                } else {
+                                    lock.push(dev);
+                                }
+                                list_updated = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if list_updated {
+                if let Ok(lock) = discovered_bg.lock() {
+                    let json_str = serde_json::to_string(&*lock).unwrap_or_else(|_| "[]".to_string());
+                    let _ = proxy_bg.send_event(AdminCustomEvent::HostsDiscovered(json_str));
+                }
+            }
+
+            std::thread::sleep(Duration::from_millis(2000));
+        }
+    });
 
     let mut window_builder = WindowBuilder::new()
         .with_title("PrysmView - Acesso Remoto & Gestão de Dispositivos")
@@ -105,14 +198,28 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
             &format!("<script>\n{}\n</script>", js_content),
         );
 
+    let discovered_hosts_ipc = discovered_hosts.clone();
+    let event_proxy_ipc = event_proxy.clone();
+
     // Constrói a WebView vinculada à janela nativa do Windows
     let webview = WebViewBuilder::new()
         .with_devtools(true)
         .with_html(&bundled_html)
-        .with_ipc_handler(|msg| {
+        .with_ipc_handler(move |msg| {
             let body = msg.body();
             info!("Comando recebido do console de suporte: {}", body);
-            if body.contains("apply_update") {
+            if body.contains("start_remote_session") {
+                info!("Iniciando sessão remota E2E: {}", body);
+            } else if body.contains("end_remote_session") {
+                info!("Encerrando sessão remota E2E: {}", body);
+            } else if body.contains("send_sas") {
+                info!("Sinal SAS (Ctrl+Alt+Del) despachado para o Host");
+            } else if body.contains("refresh_fleet") {
+                if let Ok(lock) = discovered_hosts_ipc.lock() {
+                    let json_str = serde_json::to_string(&*lock).unwrap_or_else(|_| "[]".to_string());
+                    let _ = event_proxy_ipc.send_event(AdminCustomEvent::HostsDiscovered(json_str));
+                }
+            } else if body.contains("apply_update") {
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(body) {
                     let version = val.get("version").and_then(|v| v.as_str()).unwrap_or("0.1.1");
                     save_admin_state(version);
@@ -140,17 +247,21 @@ pub fn run_webview_app() -> Result<(), Box<dyn std::error::Error>> {
     info!("Janela PrysmAdmin inicializada com sucesso em modo WebView2.");
 
     event_loop.run(move |event, _, control_flow| {
-        // Garante que a WebView permaneça viva durante toda a execução da interface
-        let _ = &webview;
         *control_flow = ControlFlow::Wait;
 
-        if let Event::WindowEvent {
-            event: WindowEvent::CloseRequested,
-            ..
-        } = event
-        {
-            info!("Encerrando console administrativo PrysmAdmin...");
-            *control_flow = ControlFlow::Exit;
+        match event {
+            Event::UserEvent(AdminCustomEvent::HostsDiscovered(json)) => {
+                let script = format!("if (window.onPrysmHostSync) {{ window.onPrysmHostSync({}); }}", json);
+                let _ = webview.evaluate_script(&script);
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                info!("Encerrando console administrativo PrysmAdmin...");
+                *control_flow = ControlFlow::Exit;
+            }
+            _ => {}
         }
     });
 }

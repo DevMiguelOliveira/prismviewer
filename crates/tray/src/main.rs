@@ -459,6 +459,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
+    // Thread de broadcast UDP em tempo real para sincronização com o console PrysmAdmin
+    let state_beacon = state.clone();
+    let running_beacon = running.clone();
+    std::thread::spawn(move || {
+        let socket = match std::net::UdpSocket::bind("0.0.0.0:0") {
+            Ok(s) => {
+                let _ = s.set_broadcast(true);
+                let _ = s.set_nonblocking(true);
+                s
+            }
+            Err(e) => {
+                tracing::warn!("Falha ao criar socket de broadcast do Host: {e}");
+                return;
+            }
+        };
+
+        while running_beacon.load(Ordering::Relaxed) {
+            if let Ok(st) = state_beacon.lock() {
+                let payload = serde_json::json!({
+                    "type": "host_beacon",
+                    "pdv_id": st.pdv_id,
+                    "local_user": st.local_user,
+                    "access_password": st.access_password,
+                    "is_online": true,
+                    "agent_version": "0.1.0",
+                });
+                if let Ok(bytes) = serde_json::to_vec(&payload) {
+                    let _ = socket.send_to(&bytes, "255.255.255.255:19532");
+                    let _ = socket.send_to(&bytes, "127.0.0.1:19532");
+                }
+            }
+            std::thread::sleep(Duration::from_millis(2500));
+        }
+    });
+
     let mut window_builder = WindowBuilder::new()
         .with_title("PrysmView Host - Atendimento ao PDV")
         .with_inner_size(LogicalSize::new(410.0, 640.0))

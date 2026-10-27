@@ -1084,6 +1084,59 @@
     </div>
   </div>
 
+  <!-- =========================================================================
+       TELA DE ACESSO REMOTO AO VIVO (REMOTE DESKTOP SESSION)
+       ========================================================================= -->
+  <div id="remoteSessionScreen" class="remote-session-screen" style="display: none;">
+    <!-- Barra Flutuante de Ferramentas / Cyber Toolbar -->
+    <div id="remoteToolbar" class="remote-toolbar">
+      <div class="toolbar-info">
+        <div class="pulse-dot" style="background: var(--accent-mint); box-shadow: 0 0 8px var(--accent-mint);"></div>
+        <strong id="remoteDeviceTitle" style="font-size: 13px; color: #fff;">PDV-CAIXA-01</strong>
+        <span class="session-op-badge" id="remoteOpBadge">TLS 1.3 P2P</span>
+      </div>
+
+      <div class="toolbar-telemetry">
+        <span class="telemetry-pill" id="remoteTelemetryFps">FPS: 30</span>
+        <span class="telemetry-pill" id="remoteTelemetryRtt">RTT: 18ms</span>
+        <span class="telemetry-pill" id="remoteTelemetryBw">850 kbps</span>
+        <span class="telemetry-pill crypto">Ed25519</span>
+      </div>
+
+      <div class="toolbar-actions">
+        <button class="tool-btn" id="btnRemoteCad" title="Enviar Ctrl+Alt+Del (SAS)">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Ctrl+Alt+Del</span>
+        </button>
+        <button class="tool-btn" id="btnRemoteClipboard" title="Sincronizar Área de Transferência">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          <span>Clipboard</span>
+        </button>
+        <button class="tool-btn" id="btnRemoteMonitors" title="Alternar Monitores">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span>Monitor 1</span>
+        </button>
+        <button class="tool-btn" id="btnRemoteFullscreen" title="Alternar Tela Cheia">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        </button>
+        <button class="tool-btn danger" id="btnEndRemoteSession" title="Encerrar Sessão Imediatamente">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          <span>Desconectar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Viewport da Área de Trabalho Remota -->
+    <div id="remoteViewportContainer" class="remote-viewport-container">
+      <div id="remoteConnectingOverlay" class="remote-connecting-overlay">
+        <div class="connecting-spinner"></div>
+        <h3 id="remoteConnectingTitle" style="font-size: 17px; font-weight: 600; margin: 0;">Estabelecendo Conexão E2E...</h3>
+        <p id="remoteConnectingDesc" style="font-size: 13px; color: var(--text-muted); margin: 0;">Negociando canal QUIC criptografado com o Host.</p>
+      </div>
+      <canvas id="remoteScreenCanvas" width="1920" height="1080"></canvas>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
