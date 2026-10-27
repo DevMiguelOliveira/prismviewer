@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrysmView Host - Atendimento ao PDV</title>
+  <title>PrysmView Host - Suporte Remoto ao PDV</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="host-app-window">
     
-    <!-- Top Header Bar -->
-    <header class="host-header">
-      <div class="brand-group">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="prism-logo">
-          <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" stroke="#38bdf8" stroke-width="2" fill="rgba(56, 189, 248, 0.15)"/>
-          <polyline points="12,2 12,22" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
-          <polyline points="2,8.5 12,14 22,8.5" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
-        </svg>
-        <div class="brand-titles">
-          <div class="brand-name">PRYSM <span>VIEW</span> <span class="badge-host">HOST</span></div>
-          <div class="brand-subtitle">Módulo de Suporte Remoto • PDV Caixa</div>
+    <!-- Top Header Banner (Inspirado no TeamViewer Host) -->
+    <header class="tv-banner">
+      <div class="tv-banner-left">
+        <div class="tv-logo-circle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" stroke="#ffffff" stroke-width="2.2" fill="rgba(255, 255, 255, 0.15)"/>
+            <polyline points="12,2 12,22" stroke="#ffffff" stroke-width="1.8" opacity="0.8"/>
+            <polyline points="2,8.5 12,14 22,8.5" stroke="#ffffff" stroke-width="1.8" opacity="0.8"/>
+          </svg>
         </div>
+        <div class="tv-banner-text">
+          <div class="tv-banner-title">PrysmView</div>
+          <div class="tv-banner-subtitle">Host • Suporte Remoto ao PDV</div>
+        </div>
+      </div>
+      <div class="tv-banner-right">
+        <button class="tv-gear-btn" id="btnSettingsGear" title="Configurar Operador e Senha do PDV">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
     <!-- Content Body -->
-    <main class="host-main-content">
-
-      <!-- Status Banner de Conexão com o Serviço -->
-      <div class="status-banner status-waiting" id="connectionStatusBanner">
-        <span class="status-dot" id="statusDot"></span>
-        <span class="status-text" id="statusText">Aguardando serviço local prysmview-svc...</span>
-      </div>
+    <main class="tv-main-content">
 
       <!-- Banner de Sessão Ativa (Exibido apenas durante sessão em andamento) -->
       <section class="session-active-card" id="sessionActiveCard" style="display: none;">
@@ -40,129 +44,121 @@
           <span>SESSÃO REMOTA EM ANDAMENTO</span>
         </div>
         <div class="active-operator-row">
-          <span class="active-label">Operador Conectado:</span>
+          <span class="active-label">Técnico Conectado:</span>
           <span class="active-operator" id="activeOperatorName">Técnico de Suporte</span>
         </div>
         <div class="active-crypto-note">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          <span>Criptografia E2E Ativa</span>
+          <span>Conexão Segura Criptografada (QUIC / TLS 1.3)</span>
         </div>
         <button class="btn-emergency" id="btnTerminateSession">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          <span>ENCERRAR ACESSO IMEDIATAMENTE</span>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          <span>Encerrar Acesso Imediatamente</span>
         </button>
       </section>
 
-      <!-- Card Principal: Permitir Acesso Remoto -->
-      <section class="host-card main-credentials-card">
-        <div class="card-section-label">PERMITIR CONTROLE REMOTO</div>
+      <!-- Card Principal: Permitir Controle Remoto (Estilo TeamViewer Host) -->
+      <section class="tv-control-card">
+        <div class="tv-control-header">
+          <h2 class="tv-control-title">Permitir Controle Remoto</h2>
+          <button class="tv-mini-link-btn" id="btnEditUser" title="Alterar Operador / Nome">
+            <span id="displayLocalUser">Aguardando operador...</span>
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
+        </div>
 
-        <!-- Operador Local Cadastrado -->
-        <div class="credential-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label class="cred-label" style="margin-bottom: 0;">Operador / Usuário deste Caixa:</label>
-            <button class="btn-link-action" id="btnEditUser" title="Alterar Operador / Usuário">
-              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <p class="tv-instruction-text">
+          Informe a ID e a Senha abaixo para permitir que o suporte conecte a este computador:
+        </p>
+
+        <!-- Linha 1: Sua ID (com chevron badge e número destacado) -->
+        <div class="tv-field-row">
+          <div class="tv-chevron-badge">Sua ID</div>
+          <div class="tv-credential-value" id="displayPdvId">PDV-CAIXA-01</div>
+          <button class="tv-btn-action" id="btnCopyPdvId" title="Copiar ID do PDV">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span id="copyFeedbackText">Copiar</span>
+          </button>
+        </div>
+
+        <!-- Linha 2: Senha de Acesso (com chevron badge e valor em destaque) -->
+        <div class="tv-field-row">
+          <div class="tv-chevron-badge">Senha</div>
+          <div class="tv-credential-value tv-password-value" id="displayAccessPassword">
+            Nenhuma senha definida
+          </div>
+          <div class="tv-btn-group">
+            <button class="tv-btn-action" id="btnToggleShowPassword" title="Mostrar / Ocultar Senha">
+              <span id="labelTogglePassword">👁 Revelar</span>
+            </button>
+            <button class="tv-btn-action" id="btnEditPassword" title="Configurar Senha Fixa">
               <span>Alterar</span>
             </button>
           </div>
-          <div class="user-info-row">
-            <div class="user-avatar-mini" id="displayUserAvatar">OP</div>
-            <div class="user-name-display" id="displayLocalUser">Aguardando identificação...</div>
-          </div>
-        </div>
-        
-        <!-- Sua ID deste Caixa -->
-        <div class="credential-group">
-          <label class="cred-label">Sua ID (deste Caixa):</label>
-          <div class="cred-box-row">
-            <div class="id-display-value" id="displayPdvId">PDV-CAIXA-01</div>
-            <button class="btn-copy-action" id="btnCopyPdvId" title="Copiar ID do PDV">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              <span id="copyFeedbackText">Copiar</span>
-            </button>
-          </div>
         </div>
 
-        <!-- Código de Sessão / Senha Temporária -->
-        <div class="credential-group">
-          <label class="cred-label">Código de Sessão / Senha:</label>
-          <div class="code-display-box" id="displayCodeContainer">
+        <!-- Código de Sessão Temporário (8 dígitos) -->
+        <div class="tv-session-code-container">
+          <div class="tv-code-header">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">CÓDIGO DE SESSÃO TEMPORÁRIO (8 DÍGITOS)</span>
+          </div>
+          <div class="tv-code-box" id="displayCodeContainer">
             <span class="code-text" id="displaySessionCode">Aguardando chamada...</span>
           </div>
-          <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button class="btn-copy-action" id="btnGenerateCode" style="flex: 1; justify-content: center; height: 32px;" title="Gerar código de 8 dígitos para acesso temporário">
+          <div class="tv-code-actions">
+            <button class="tv-btn-secondary" id="btnGenerateCode" title="Gerar novo código temporário de 8 dígitos">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-              <span>Gerar Código de Acesso</span>
+              <span>Gerar Código</span>
             </button>
-            <button class="btn-copy-action" id="btnCopySessionCode" style="height: 32px; padding: 0 10px;" title="Copiar Código de 8 Dígitos">
+            <button class="tv-btn-secondary" id="btnCopySessionCode" title="Copiar código de 8 dígitos">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               <span id="copyCodeFeedbackText">Copiar</span>
             </button>
           </div>
-          <div class="code-expiry-note" id="codeExpiryNote" style="display: none; margin-top: 8px;">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <div class="code-expiry-note" id="codeExpiryNote" style="display: none; margin-top: 6px;">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span id="codeExpiryCountdown">Expira em 120s • Máximo 3 tentativas</span>
           </div>
         </div>
 
-        <!-- Senha Fixa de Acesso (Host) -->
-        <div class="credential-group" style="margin-top: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label class="cred-label" style="margin-bottom: 0;">Senha de Acesso (Fixa):</label>
-            <button class="btn-link-action" id="btnEditPassword" style="font-size: 11px;">[Configurar / Alterar]</button>
-          </div>
-          <div class="cred-box-row" style="background: rgba(15, 23, 42, 0.6); padding: 7px 10px; border-radius: var(--radius-sm, 6px); border: 1px solid rgba(148, 163, 184, 0.15);">
-            <div id="displayAccessPassword" style="font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--accent-cyan, #38bdf8); letter-spacing: 1px;">
-              Nenhuma senha definida
-            </div>
-            <button class="btn-copy-action" id="btnToggleShowPassword" style="padding: 2px 8px; font-size: 11px;" title="Mostrar / Ocultar Senha">
-              <span id="labelTogglePassword">👁 Revelar</span>
-            </button>
-          </div>
+        <!-- Travas Rápidas de Segurança (Ctrl+C/V e Arquivos) -->
+        <div class="tv-locks-row">
+          <label class="tv-lock-toggle" title="Permitir compartilhamento de texto na área de transferência">
+            <input type="checkbox" id="chkClipboard" checked>
+            <span>Clipboard (Ctrl+C/V)</span>
+          </label>
+          <label class="tv-lock-toggle" title="Permitir transferência de arquivos auditada">
+            <input type="checkbox" id="chkFileTransfer" checked>
+            <span>Arquivos (SHA-256)</span>
+          </label>
         </div>
       </section>
 
-      <!-- Card de Travas de Segurança Locais -->
-      <section class="host-card security-locks-card">
-        <div class="card-section-label">TRAVAS DE SEGURANÇA LOCAL</div>
-        <div class="toggle-list">
-          <label class="toggle-item">
-            <span class="toggle-label">Área de transferência compartilhada (Ctrl+C/V)</span>
-            <input type="checkbox" id="chkClipboard" checked>
-            <span class="toggle-switch"></span>
-          </label>
-          <label class="toggle-item">
-            <span class="toggle-label">Permitir transferência de arquivos (SHA-256)</span>
-            <input type="checkbox" id="chkFileTransfer" checked>
-            <span class="toggle-switch"></span>
-          </label>
-        </div>
-      </section>
+      <!-- Avatar invisível para manter binding com script host.js -->
+      <div id="displayUserAvatar" style="display: none;"></div>
 
     </main>
 
-    <!-- Footer Sovereignty -->
-    <footer class="host-footer">
-      <div class="sovereignty-text">O operador local pode recusar ou encerrar a qualquer momento.</div>
-      <div class="footer-meta-row">
-        <span>PrysmView Host v1.2.0</span>
-        <span class="meta-separator">•</span>
-        <span class="seal-trust">
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          Zero-Trust E2E
-        </span>
+    <!-- Bottom Status Bar (Inspirado no TeamViewer Host) -->
+    <footer class="tv-footer">
+      <div class="tv-status-indicator" id="connectionStatusBanner">
+        <span class="tv-status-dot" id="statusDot"></span>
+        <span class="tv-status-text" id="statusText">Pronto para conectar (conexão segura)</span>
+      </div>
+      <div class="tv-footer-actions">
+        <a href="https://github.com/DevMiguelOliveira/prismviewer" target="_blank" class="tv-footer-link">www.prysmview.com</a>
+        <button class="tv-cancel-btn" id="btnCancelApp" onclick="window.close ? window.close() : null">Fechar</button>
       </div>
     </footer>
 
-    <!-- Modal de Cadastro / Identificação do Usuário no Primeiro Login -->
+    <!-- Modal de Configuração de Usuário e Senha -->
     <div class="consent-modal-overlay" id="userRegistrationModal" style="display: none;">
-      <div class="consent-dialog" style="max-width: 340px;">
-        <div class="consent-icon-circle" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: var(--accent-cyan);">
+      <div class="consent-dialog" style="max-width: 350px;">
+        <div class="consent-icon-circle" style="background: rgba(2, 132, 199, 0.15); border-color: rgba(2, 132, 199, 0.4); color: var(--accent-blue);">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         </div>
-        <h3 class="consent-title" id="userModalTitle">Identificação do Usuário</h3>
-        <p class="consent-subtitle" id="userModalSubtitle">Cadastre o nome do operador ou atendente responsável por esta estação de trabalho.</p>
+        <h3 class="consent-title" id="userModalTitle">Configurações do PDV</h3>
+        <p class="consent-subtitle" id="userModalSubtitle">Defina o nome do operador e a senha de acesso fixo desta estação.</p>
 
         <form id="formUserProfile" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; text-align: left;">
           <div>
@@ -171,7 +167,7 @@
           </div>
 
           <div>
-            <label class="cred-label" style="margin-bottom: 4px;">ID da Estação / PDV:</label>
+            <label class="cred-label" style="margin-bottom: 4px;">Identificador do PDV:</label>
             <input type="text" class="host-form-input" id="inputLocalPdvId" placeholder="Ex: PDV-CAIXA-01" required style="width: 100%;">
           </div>
 
@@ -182,7 +178,7 @@
           </div>
 
           <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <button type="button" class="btn-consent-reject" id="btnCancelUserModal" style="flex: 1; padding: 10px; display: none;">
+            <button type="button" class="btn-consent-reject" id="btnCancelUserModal" style="flex: 1; padding: 10px;">
               <span>Cancelar</span>
             </button>
             <button type="submit" class="btn-consent-accept" id="btnSaveUserProfile" style="flex: 2; padding: 10px; justify-content: center;">

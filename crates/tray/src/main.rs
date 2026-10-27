@@ -495,9 +495,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let mut window_builder = WindowBuilder::new()
-        .with_title("PrysmView Host - Atendimento ao PDV")
-        .with_inner_size(LogicalSize::new(410.0, 640.0))
-        .with_min_inner_size(LogicalSize::new(360.0, 520.0))
+        .with_title("PrysmView Host - Suporte Remoto ao PDV")
+        .with_inner_size(LogicalSize::new(385.0, 565.0))
+        .with_min_inner_size(LogicalSize::new(350.0, 500.0))
         .with_resizable(true)
         .with_visible(true);
 

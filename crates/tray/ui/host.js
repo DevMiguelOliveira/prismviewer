@@ -425,6 +425,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnEditUser.onclick = () => openUserModal(false);
   }
 
+  const btnSettingsGear = document.getElementById('btnSettingsGear');
+  if (btnSettingsGear) {
+    btnSettingsGear.onclick = () => openUserModal(false);
+  }
+
   const btnEditPwd = document.getElementById('btnEditPassword');
   if (btnEditPwd) {
     btnEditPwd.onclick = () => openUserModal(false);
