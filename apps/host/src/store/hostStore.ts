@@ -6,6 +6,9 @@ interface HostState {
   deviceName: string;
   deviceIP: string;
 
+  // API Configuration
+  apiEndpoint: string;
+
   // Session Code
   sessionCode: string | null;
   codeExpiresAt: Date | null;
@@ -35,6 +38,9 @@ export const useHostStore = create<HostState>((set, get) => ({
   deviceId: '',
   deviceName: 'Desktop',
   deviceIP: '192.168.1.100',
+
+  // API Configuration
+  apiEndpoint: 'http://20.121.137.44',
 
   // Session Code
   sessionCode: null,

@@ -170,7 +170,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     notifications: true,
     autoConnect: false,
     recordSessions: false,
-    apiEndpoint: 'https://api.prysmview.com',
+    apiEndpoint: 'http://20.121.137.44',
     apiTimeout: 30000,
   },
   updateSettings: (newSettings) => {
