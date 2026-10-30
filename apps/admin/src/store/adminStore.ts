@@ -170,7 +170,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     notifications: true,
     autoConnect: false,
     recordSessions: false,
-    apiEndpoint: 'http://20.121.137.44',
+    apiEndpoint: 'https://prysmview.duckdns.org',
     apiTimeout: 30000,
   },
   updateSettings: (newSettings) => {
