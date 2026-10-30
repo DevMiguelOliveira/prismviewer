@@ -12,6 +12,8 @@ exclude = [
     "crates/spikes/s2_tiles",
     "crates/spikes/s3_iroh",
     "crates/spikes/s4_input",
+    "apps/host/src-tauri",
+    "apps/admin/src-tauri",
 ]
 
 [workspace.package]

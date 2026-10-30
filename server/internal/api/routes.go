@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/websocket"
 	"prysmview/server/internal/auth"
 	"prysmview/server/internal/db"
 )
@@ -25,6 +26,9 @@ type Server struct {
 	ticketSigningKey ed25519.PrivateKey
 	ticketStore      map[string]bool // ticket_id -> usado (uso unico)
 	ticketStoreMu    sync.Mutex
+	upgrader         websocket.Upgrader
+	clients          map[string]*websocket.Conn // pdv_public_key -> websocket conn
+	clientsMu        sync.RWMutex
 }
 
 func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRateLimiter, signingKey ed25519.PrivateKey) http.Handler {
@@ -34,6 +38,11 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 		limiter:          limiter,
 		ticketSigningKey: signingKey,
 		ticketStore:      make(map[string]bool),
+		upgrader: websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+		},
+		clients: make(map[string]*websocket.Conn),
 	}
 
 	r := chi.NewRouter()
@@ -46,6 +55,9 @@ func NewRouter(database *db.DB, tracker *auth.NonceTracker, limiter *auth.IPRate
 
 	// Health check
 	r.Get("/health", s.handleHealth)
+
+	// WebSocket endpoint
+	r.Get("/ws", s.handleWebSocket)
 
 	// API v1
 	r.Route("/api/v1", func(r chi.Router) {
@@ -284,13 +296,26 @@ func (s *Server) handleOperatorLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if req.OperatorID != "" && req.Password != "" {
 		// 2. Conta local / emergência protegida por Argon2id (S-11)
-		if req.Password != "mock" && req.Password != "emergencia-segura" {
-			// Se não for senha de mock de teste, rejeita como não autorizado
+		op, err := s.db.GetOperator(req.OperatorID)
+		if err != nil {
+			s.limiter.RecordFailure(r.RemoteAddr)
+			http.Error(w, "Erro interno", http.StatusInternalServerError)
+			return
+		}
+		if op == nil || op.PasswordHash == "" || op.PasswordHash == "entra-id-managed" {
 			s.limiter.RecordFailure(r.RemoteAddr)
 			slog.Warn("Falha de autenticacao de operador", "operator_id", req.OperatorID, "ip", r.RemoteAddr)
 			http.Error(w, "Credenciais invalidas", http.StatusUnauthorized)
 			return
 		}
+		valid, err := auth.VerifyPasswordArgon2id(req.Password, op.PasswordHash)
+		if err != nil || !valid {
+			s.limiter.RecordFailure(r.RemoteAddr)
+			slog.Warn("Falha de autenticacao de operador", "operator_id", req.OperatorID, "ip", r.RemoteAddr)
+			http.Error(w, "Credenciais invalidas", http.StatusUnauthorized)
+			return
+		}
+		operatorID = op.ID
 	} else {
 		s.limiter.RecordFailure(r.RemoteAddr)
 		http.Error(w, "Credenciais obrigatorias (Entra ID OIDC ou senha de emergencia)", http.StatusUnauthorized)
@@ -330,14 +355,20 @@ const operatorIDKey contextKey = "operator_id"
 
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := ""
 		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer ") {
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token = strings.TrimPrefix(authHeader, "Bearer ")
+		} else if cookie, err := r.Cookie("prysmview_session"); err == nil && cookie.Value != "" {
+			token = cookie.Value
+		}
+
+		if token == "" {
 			s.limiter.RecordFailure(r.RemoteAddr)
 			http.Error(w, "Token ausente ou formato invalido", http.StatusUnauthorized)
 			return
 		}
 
-		token := strings.TrimPrefix(authHeader, "Bearer ")
 		tokenHash := auth.HashSHA256(token)
 
 		operatorID, err := s.db.ValidateToken(tokenHash)
@@ -576,4 +607,43 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		next.ServeHTTP(w, r)
 	})
+}
+
+// handleWebSocket gerencia conexões WebSocket para sinalização em tempo real
+func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := s.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		slog.Error("Falha ao upgrade para WebSocket", "erro", err.Error())
+		return
+	}
+	defer conn.Close()
+
+	pdvKey := r.URL.Query().Get("pdv_key")
+	if pdvKey == "" {
+		slog.Warn("Conexão WebSocket sem pdv_key")
+		conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "pdv_key obrigatorio"}`))
+		return
+	}
+
+	s.clientsMu.Lock()
+	s.clients[pdvKey] = conn
+	s.clientsMu.Unlock()
+
+	slog.Info("WebSocket conectado", "pdv", pdvKey)
+
+	// Keep-alive ping
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				s.clientsMu.Lock()
+				delete(s.clients, pdvKey)
+				s.clientsMu.Unlock()
+				return
+			}
+		}
+	}
 }

@@ -433,6 +433,20 @@ func (d *DB) GetActiveRevocations() ([]string, error) {
 	return list, rows.Err()
 }
 
+// GetOperator busca um operador pelo ID (inclui password_hash para verificacao Argon2id).
+func (d *DB) GetOperator(operatorID string) (*Operator, error) {
+	row := d.conn.QueryRow("SELECT id, name, password_hash, created_at FROM operadores WHERE id = ?", operatorID)
+	var op Operator
+	err := row.Scan(&op.ID, &op.Name, &op.PasswordHash, &op.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &op, nil
+}
+
 // GetActiveHeartbeatCount retorna o total de PDVs com heartbeat recente (O-03).
 func (d *DB) GetActiveHeartbeatCount(since time.Time) (int, error) {
 	row := d.conn.QueryRow("SELECT COUNT(*) FROM pdvs WHERE last_seen >= ?", since)

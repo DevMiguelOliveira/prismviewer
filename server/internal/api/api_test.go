@@ -118,11 +118,13 @@ func TestOperatorLoginAndPermissionFlow(t *testing.T) {
 	database, router := setupTestServer(t)
 	defer database.Close()
 
-	// Cria operador e PDV
+	// Cria operador com hash Argon2id da senha "mock" (S-11)
+	passwordHash, _ := auth.HashPasswordArgon2id("mock")
 	op := db.Operator{
-		ID:        "op-tecnico-1",
-		Name:      "Carlos Tecnico",
-		CreatedAt: time.Now(),
+		ID:           "op-tecnico-1",
+		Name:         "Carlos Tecnico",
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
 	}
 	_ = database.CreateOperator(op)
 
@@ -216,11 +218,13 @@ func TestSessionTicketEmissionAndValidation(t *testing.T) {
 	database, router := setupTestServer(t)
 	defer database.Close()
 
-	// Cria operador e PDV
+	// Cria operador com hash Argon2id da senha "mock" (S-11)
+	passwordHash, _ := auth.HashPasswordArgon2id("mock")
 	op := db.Operator{
-		ID:        "op-ticket-1",
-		Name:      "Tecnico Ticket",
-		CreatedAt: time.Now(),
+		ID:           "op-ticket-1",
+		Name:         "Tecnico Ticket",
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
 	}
 	_ = database.CreateOperator(op)
 
@@ -371,6 +375,13 @@ func TestSecurityHeadersAndCookies(t *testing.T) {
 	}
 
 	// 2. Testa cookie seguro HttpOnly, Secure e SameSite=Strict no login (S-11)
+	passwordHash, _ := auth.HashPasswordArgon2id("mock")
+	_ = database.CreateOperator(db.Operator{
+		ID:           "op-teste",
+		Name:         "Operador Teste",
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
+	})
 	loginPayload := []byte(`{"operator_id":"op-teste","password":"mock"}`)
 	loginReq := httptest.NewRequest("POST", "/api/v1/operator/login", bytes.NewReader(loginPayload))
 	loginW := httptest.NewRecorder()
