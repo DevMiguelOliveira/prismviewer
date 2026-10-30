@@ -1171,8 +1171,10 @@ impl PrysmViewerApp {
                             Some(format!("Comando SAS Ctrl+Alt+Del enviado ao {}", pdv.id));
                     }
                     if ui.button("📶 Diagnóstico").clicked() {
-                        self.state.status_message =
-                            Some(format!("Teste em {}: Resposta rápida 18 ms (Estável)", pdv.ip_address));
+                        self.state.status_message = Some(format!(
+                            "Teste em {}: Resposta rápida 18 ms (Estável)",
+                            pdv.ip_address
+                        ));
                     }
                 });
 
@@ -1245,15 +1247,19 @@ impl PrysmViewerApp {
                         );
                         ui.end_row();
 
+                        ui.label(RichText::new("Status:").color(COLOR_TEXT_MUTED).size(11.5));
                         ui.label(
-                            RichText::new("Status:")
-                                .color(COLOR_TEXT_MUTED)
-                                .size(11.5),
-                        );
-                        ui.label(
-                            RichText::new(if pdv.is_online { "Online (Pronto)" } else { "Offline" })
-                                .color(if pdv.is_online { COLOR_MINT_ONLINE } else { COLOR_TEXT_MUTED })
-                                .size(11.5),
+                            RichText::new(if pdv.is_online {
+                                "Online (Pronto)"
+                            } else {
+                                "Offline"
+                            })
+                            .color(if pdv.is_online {
+                                COLOR_MINT_ONLINE
+                            } else {
+                                COLOR_TEXT_MUTED
+                            })
+                            .size(11.5),
                         );
                         ui.end_row();
 
@@ -2554,9 +2560,17 @@ impl PrysmViewerApp {
                 "Segurança de Sessão & Consentimento Local",
             );
             ui.add_space(10.0);
-            self.render_trust_item(ui, COLOR_BLUE_ELECTRIC, "Auditoria Centralizada & Hash de Conformidade");
+            self.render_trust_item(
+                ui,
+                COLOR_BLUE_ELECTRIC,
+                "Auditoria Centralizada & Hash de Conformidade",
+            );
             ui.add_space(10.0);
-            self.render_trust_item(ui, COLOR_VIOLET_NEON, "Ultra Leve e Baixo Consumo de Recursos");
+            self.render_trust_item(
+                ui,
+                COLOR_VIOLET_NEON,
+                "Ultra Leve e Baixo Consumo de Recursos",
+            );
 
             ui.add_space(28.0);
 

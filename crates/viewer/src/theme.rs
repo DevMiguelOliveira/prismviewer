@@ -129,13 +129,15 @@ mod tests {
 
     #[test]
     fn test_typography_scale_hierarchy() {
-        assert!(TEXT_SIZE_SM < TEXT_SIZE_BODY);
-        assert!(TEXT_SIZE_BODY < TEXT_SIZE_MD);
-        assert!(TEXT_SIZE_MD < TEXT_SIZE_LG);
-        assert!(TEXT_SIZE_LG < TEXT_SIZE_XL);
-        assert!(
-            TEXT_SIZE_BODY >= 14.0,
-            "Corpo de texto deve ser >= 14px para acessibilidade"
-        );
+        const {
+            assert!(TEXT_SIZE_SM < TEXT_SIZE_BODY);
+            assert!(TEXT_SIZE_BODY < TEXT_SIZE_MD);
+            assert!(TEXT_SIZE_MD < TEXT_SIZE_LG);
+            assert!(TEXT_SIZE_LG < TEXT_SIZE_XL);
+            assert!(
+                TEXT_SIZE_BODY >= 14.0,
+                "Corpo de texto deve ser >= 14px para acessibilidade"
+            );
+        }
     }
 }

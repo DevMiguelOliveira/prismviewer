@@ -54,7 +54,10 @@ pub enum UpdateError {
     Expired(String),
 
     #[error("Downgrade rejeitado: versão {version} abaixo da mínima aceita {min_version}")]
-    DowngradeRejected { version: String, min_version: String },
+    DowngradeRejected {
+        version: String,
+        min_version: String,
+    },
 
     #[error("Erro de E/S no gerenciamento de arquivos: {0}")]
     Io(String),

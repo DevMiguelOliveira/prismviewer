@@ -203,4 +203,3 @@ mod tests {
         assert!(controller.should_encode_keyframe_adaptive(false));
     }
 }
-

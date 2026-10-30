@@ -85,7 +85,8 @@ pub struct ValidatedSessionTicket {
 /// Trait para cache de replay e lista de revogação.
 pub trait ReplayCache: Send + Sync {
     fn is_used(&self, ticket_id: &str) -> bool;
-    fn mark_used(&mut self, ticket_id: &str, expires_at: OffsetDateTime) -> Result<(), TicketError>;
+    fn mark_used(&mut self, ticket_id: &str, expires_at: OffsetDateTime)
+        -> Result<(), TicketError>;
     fn is_revoked(&self, ticket_id: &str, technician_id: &str) -> bool;
     fn add_revocation(&mut self, id: &str) -> Result<(), TicketError>;
 }
@@ -108,7 +109,11 @@ impl ReplayCache for InMemoryReplayCache {
         self.used_tickets.contains(ticket_id)
     }
 
-    fn mark_used(&mut self, ticket_id: &str, _expires_at: OffsetDateTime) -> Result<(), TicketError> {
+    fn mark_used(
+        &mut self,
+        ticket_id: &str,
+        _expires_at: OffsetDateTime,
+    ) -> Result<(), TicketError> {
         self.used_tickets.insert(ticket_id.to_string());
         Ok(())
     }
@@ -202,7 +207,11 @@ impl ReplayCache for FileReplayCache {
             .any(|rec| rec.ticket_id == ticket_id)
     }
 
-    fn mark_used(&mut self, ticket_id: &str, expires_at: OffsetDateTime) -> Result<(), TicketError> {
+    fn mark_used(
+        &mut self,
+        ticket_id: &str,
+        expires_at: OffsetDateTime,
+    ) -> Result<(), TicketError> {
         self.data.used_tickets.push(ReplayRecord {
             ticket_id: ticket_id.to_string(),
             expires_at_unix: expires_at.unix_timestamp(),
@@ -211,7 +220,10 @@ impl ReplayCache for FileReplayCache {
     }
 
     fn is_revoked(&self, ticket_id: &str, technician_id: &str) -> bool {
-        self.data.revoked_ids.iter().any(|id| id == ticket_id || id == technician_id)
+        self.data
+            .revoked_ids
+            .iter()
+            .any(|id| id == ticket_id || id == technician_id)
     }
 
     fn add_revocation(&mut self, id: &str) -> Result<(), TicketError> {
@@ -308,16 +320,31 @@ impl SessionTicketValidator {
 
         // BTreeMap garante ordenação alfabética estrita das chaves, idêntica ao json.Marshal em Go.
         let mut map = BTreeMap::new();
-        map.insert("expires_at", serde_json::Value::String(ticket.expires_at.clone()));
+        map.insert(
+            "expires_at",
+            serde_json::Value::String(ticket.expires_at.clone()),
+        );
         map.insert(
             "groups",
             serde_json::to_value(&ticket.groups).map_err(|e| TicketError::Io(e.to_string()))?,
         );
-        map.insert("machine_id", serde_json::Value::String(ticket.machine_id.clone()));
+        map.insert(
+            "machine_id",
+            serde_json::Value::String(ticket.machine_id.clone()),
+        );
         map.insert("nonce", serde_json::Value::String(ticket.nonce.clone()));
-        map.insert("not_before", serde_json::Value::String(ticket.not_before.clone()));
-        map.insert("technician_id", serde_json::Value::String(ticket.technician_id.clone()));
-        map.insert("ticket_id", serde_json::Value::String(ticket.ticket_id.clone()));
+        map.insert(
+            "not_before",
+            serde_json::Value::String(ticket.not_before.clone()),
+        );
+        map.insert(
+            "technician_id",
+            serde_json::Value::String(ticket.technician_id.clone()),
+        );
+        map.insert(
+            "ticket_id",
+            serde_json::Value::String(ticket.ticket_id.clone()),
+        );
 
         let canonical_bytes =
             serde_json::to_vec(&map).map_err(|e| TicketError::Io(e.to_string()))?;
@@ -368,12 +395,24 @@ mod tests {
         let groups = vec!["suporte".to_string(), "ti".to_string()];
 
         let mut map = BTreeMap::new();
-        map.insert("expires_at", serde_json::Value::String(expires_at_str.clone()));
+        map.insert(
+            "expires_at",
+            serde_json::Value::String(expires_at_str.clone()),
+        );
         map.insert("groups", serde_json::to_value(&groups).unwrap());
-        map.insert("machine_id", serde_json::Value::String(machine_id.to_string()));
+        map.insert(
+            "machine_id",
+            serde_json::Value::String(machine_id.to_string()),
+        );
         map.insert("nonce", serde_json::Value::String(nonce.clone()));
-        map.insert("not_before", serde_json::Value::String(not_before_str.clone()));
-        map.insert("technician_id", serde_json::Value::String(technician_id.to_string()));
+        map.insert(
+            "not_before",
+            serde_json::Value::String(not_before_str.clone()),
+        );
+        map.insert(
+            "technician_id",
+            serde_json::Value::String(technician_id.to_string()),
+        );
         map.insert("ticket_id", serde_json::Value::String(ticket_id.clone()));
 
         let canonical_bytes = serde_json::to_vec(&map).unwrap();

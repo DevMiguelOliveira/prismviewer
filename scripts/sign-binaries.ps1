@@ -60,21 +60,59 @@ if ($isAdmin) {
     }
 }
 
-# Arquivos para assinar
+# Limpeza de instaladores e pacotes redundantes da pasta dist/
+$redundantItems = @(
+    (Join-Path $distDir "PrysmAdmin-Setup-0.1.0.exe"),
+    (Join-Path $distDir "PrysmHost-Setup-0.1.0.exe"),
+    (Join-Path $distDir "PrysmHost-Portable.zip"),
+    (Join-Path $distDir "PrysmHost-Portable")
+)
+foreach ($item in $redundantItems) {
+    if (Test-Path $item) {
+        Remove-Item -Path $item -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# Compila executáveis de release atualizados com Cargo antes de sincronizar
+Write-Host "[3.5/5] Compilando executaveis atualizados com cargo build --release..." -ForegroundColor Yellow
+& cargo build --release --bin PrysmAdmin --bin PrysmHost
+if ($LASTEXITCODE -ne 0) {
+    throw "Falha ao compilar binários com cargo build --release."
+}
+Write-Host "      [OK] Compilacao release concluida com sucesso." -ForegroundColor Green
+
+# Fecha eventuais processos em execução para evitar bloqueio de arquivo (locked file) no Windows
+$runningProcesses = Get-Process -Name PrysmAdmin, PrysmHost -ErrorAction SilentlyContinue
+if ($runningProcesses) {
+    Write-Host "      Fechando instancias anteriores em execucao para permitir atualizacao..." -ForegroundColor DarkGray
+    $runningProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 800
+}
+
+# Sincroniza executáveis diretos compilados para dist/
+if (Test-Path (Join-Path $targetReleaseDir "PrysmAdmin.exe")) {
+    Copy-Item (Join-Path $targetReleaseDir "PrysmAdmin.exe") (Join-Path $distDir "PrysmAdmin.exe") -Force
+}
+if (Test-Path (Join-Path $targetReleaseDir "PrysmHost.exe")) {
+    Copy-Item (Join-Path $targetReleaseDir "PrysmHost.exe") (Join-Path $distDir "PrysmHost.exe") -Force
+}
+
+# Arquivos executáveis oficiais para assinar com Authenticode SHA-256
 $filesToSign = @(
     (Join-Path $targetReleaseDir "PrysmAdmin.exe"),
-    (Join-Path $targetReleaseDir "prysmview-svc.exe"),
     (Join-Path $targetReleaseDir "PrysmHost.exe"),
-    (Join-Path $distDir "PrysmAdmin-Setup-0.1.0.exe"),
-    (Join-Path $distDir "PrysmHost-Setup-0.1.0.exe")
+    (Join-Path $targetReleaseDir "prysmview-svc.exe"),
+    (Join-Path $distDir "PrysmAdmin.exe"),
+    (Join-Path $distDir "PrysmHost.exe")
 )
 
-Write-Host "[4/5] Assinando executaveis e instaladores com SHA256..." -ForegroundColor Yellow
+Write-Host "[4/5] Assinando executaveis diretos em tempo real com SHA256..." -ForegroundColor Yellow
 foreach ($filePath in $filesToSign) {
     if (Test-Path $filePath) {
         try {
             $sig = Set-AuthenticodeSignature -FilePath $filePath -Certificate $cert -HashAlgorithm SHA256
-            Write-Host "      [OK] Assinado com sucesso: $(Split-Path $filePath -Leaf) (Status: $($sig.Status))" -ForegroundColor Green
+            $rel = Resolve-Path $filePath -Relative
+            Write-Host "      [OK] Assinado com sucesso: $rel (Status: $($sig.Status))" -ForegroundColor Green
         } catch {
             Write-Warning "      Erro ao assinar ${filePath}: $_"
         }
@@ -82,6 +120,7 @@ foreach ($filePath in $filesToSign) {
         Write-Host "      [IGNORADO] Arquivo nao encontrado ainda: $(Split-Path $filePath -Leaf)" -ForegroundColor DarkGray
     }
 }
+
 
 # Gerar Manifesto de Integridade Criptografica SHA256SUMS.txt
 Write-Host "[5/5] Gerando manifesto de hashes SHA-256 (SHA256SUMS.txt)..." -ForegroundColor Yellow

@@ -82,8 +82,8 @@ impl SessionCodeManager {
         let num: u32 = rng.gen_range(10_000_000..=99_999_999);
         let code = num.to_string();
 
-        let mut mac =
-            HmacSha256::new_from_slice(&self.hmac_key).expect("HMAC-SHA256 aceita chave de 32 bytes");
+        let mut mac = HmacSha256::new_from_slice(&self.hmac_key)
+            .expect("HMAC-SHA256 aceita chave de 32 bytes");
         mac.update(code.as_bytes());
         let expected_hmac: [u8; 32] = mac.finalize().into_bytes().into();
 
@@ -170,10 +170,7 @@ mod tests {
     fn test_code_not_generated_before_request() {
         let mut mgr = SessionCodeManager::new();
         // Nenhum codigo deve estar disponivel antes de gerar
-        assert_eq!(
-            mgr.display_code(),
-            Err(SessionCodeError::CodeNotGenerated)
-        );
+        assert_eq!(mgr.display_code(), Err(SessionCodeError::CodeNotGenerated));
         // Verificacao sem codigo gerado tambem falha
         assert_eq!(
             mgr.verify("12345678"),

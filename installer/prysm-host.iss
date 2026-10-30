@@ -68,14 +68,19 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilena
 Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icon.ico"
 
 [Run]
-; 1. Registra o certificado digital do PrysmView em Editores Confiaveis e CA da Maquina (sem prompts interativos)
+; 1. Registra o certificado digital do PrysmView em Root, Editores Confiaveis e CA da Maquina (sem prompts interativos)
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade raiz no Sistema"; StatusMsg: "Configurando integridade do sistema..."
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando Editor Confiável no Sistema"; StatusMsg: "Configurando editor confiável..."
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -f CA ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade intermediária"; StatusMsg: "Configurando integridade do sistema..."
 
-; 2. Registro do servico Windows com limpeza previa para evitar erros de serviço duplicado
+; 2. Configura regras no Windows Defender Firewall para o servico e porta de telemetria 19533
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""PrysmView Host Service"" dir=in action=allow program=""{app}\{#MySvcExeName}"" enable=yes"; Flags: runhidden; Description: "Configurando regra de firewall para o serviço"
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""PrysmView Service Port 19533"" dir=in action=allow protocol=TCP localport=19533 enable=yes"; Flags: runhidden; Description: "Configurando regra de firewall para a porta 19533"
+
+; 3. Registro do servico Windows com limpeza previa e aspas rigidas no ImagePath
 Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcName}"; Flags: runhidden
-Filename: "{sys}\sc.exe"; Parameters: "create {#MySvcName} binPath= ""{app}\{#MySvcExeName}"" start= auto DisplayName= ""PrysmView Remote Support Host Service"""; Flags: runhidden; Description: "Registrando serviço Windows"
+Filename: "{sys}\sc.exe"; Parameters: "create {#MySvcName} binPath= """"{app}\{#MySvcExeName}"""" start= auto DisplayName= ""PrysmView Remote Support Host Service"""; Flags: runhidden; Description: "Registrando serviço Windows"
 Filename: "{sys}\sc.exe"; Parameters: "description {#MySvcName} ""Serviço de acesso remoto seguro e assistência técnica para caixas de loja (PDVs)."""; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "failure {#MySvcName} reset= 86400 actions= restart/5000/restart/10000/restart/60000"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "start {#MySvcName}"; Flags: runhidden
@@ -85,6 +90,8 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} na barra d
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "stop {#MySvcName}"; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "delete {#MySvcName}"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""PrysmView Host Service"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""PrysmView Service Port 19533"""; Flags: runhidden
 
 [UninstallDelete]
 Type: files; Name: "{commonappdata}\PrysmView\reconnect_state.bin"
@@ -103,16 +110,25 @@ begin
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
 begin
   if CurStep = ssPostInstall then
   begin
     if not IsWebView2Installed() then
     begin
-      MsgBox('Aviso sobre a interface gráfica:' + #13#10 + #13#10 +
-             'O serviço de conexão em segundo plano foi instalado com sucesso.' + #13#10 +
-             'Porém, o componente visual "Microsoft Edge WebView2 Runtime" não foi localizado neste Windows.' + #13#10 + #13#10 +
-             'Caso a tela do PrysmView Host não abra, faça o download gratuito do WebView2 Runtime no site oficial da Microsoft.',
-             mbInformation, MB_OK);
+      WizardForm.StatusLabel.Caption := 'Instalando componente visual Microsoft Edge WebView2...';
+      Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $installer = Join-Path $env:TEMP \"MicrosoftEdgeWebview2Setup.exe\"; try { (New-Object Net.WebClient).DownloadFile(\"https://go.microsoft.com/fwlink/p/?LinkId=2124703\", $installer); Start-Process $installer -ArgumentList \"/silent /install\" -Wait } catch {}"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      
+      if not IsWebView2Installed() then
+      begin
+        MsgBox('Aviso sobre a interface gráfica:' + #13#10 + #13#10 +
+               'O serviço de conexão em segundo plano foi instalado com sucesso.' + #13#10 +
+               'Porém, o componente visual "Microsoft Edge WebView2 Runtime" não foi localizado neste Windows.' + #13#10 + #13#10 +
+               'Caso a tela do PrysmView Host não abra, faça o download gratuito do WebView2 Runtime no site oficial da Microsoft: https://go.microsoft.com/fwlink/p/?LinkId=2124703',
+               mbInformation, MB_OK);
+      end;
     end;
   end;
 end;
+

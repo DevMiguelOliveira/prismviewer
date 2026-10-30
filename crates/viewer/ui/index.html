@@ -98,15 +98,7 @@
           <div class="profile-menu-items">
             <button class="profile-menu-item" id="menuItemSettings">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              <span>Configurações Gerais</span>
-            </button>
-            <button class="profile-menu-item" id="menuItemTechnicians">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Gestão de Técnicos</span>
-            </button>
-            <button class="profile-menu-item highlight-action" id="menuItemNewTech">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-              <span>+ Cadastrar Novo Técnico</span>
+              <span>Central de Configurações</span>
             </button>
             <button class="profile-menu-item" id="menuItemProfile">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -174,78 +166,188 @@
     <main class="main-viewport">
 
       <!-- =====================================================================
-           VIEW 1: DASHBOARD DE MONITORAMENTO E DISPOSITIVOS
+           VIEW 1: DASHBOARD DE MONITORAMENTO E DISPOSITIVOS (TEAMVIEWER LAYOUT)
            ===================================================================== -->
       <section class="view-page active" id="viewDashboard">
         
-        <!-- KPI Cards Compactos -->
-        <div class="kpi-grid">
-          <div class="kpi-card card-total" data-filter="all">
-            <div class="kpi-header">
-              <span class="kpi-label">TOTAL DE DISPOSITIVOS</span>
-              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        <!-- =====================================================================
+             HERO: TEAMVIEWER 2-CARD REMOTE ACCESS & CONTROL (MENU RETRÁTIL / ACORDEOM)
+             ===================================================================== -->
+        <div class="tv-quick-accordion" id="tvQuickAccordion">
+          <div class="tv-quick-header" id="tvQuickHeader">
+            <div class="tv-quick-header-left">
+              <div class="tv-quick-icon">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <span class="tv-quick-title">Suporte & Conexão Remota</span>
+              <span class="tv-quick-id-badge" id="tvAccordionIdBadge">Sua ID: 127.0.0.1</span>
+              <span class="tv-quick-status-chip">
+                <span class="pulse-dot-tiny"></span> Pronto (19533)
+              </span>
             </div>
-            <div class="kpi-value-container">
-              <span class="kpi-value" id="kpiTotal">16</span>
-            </div>
-          </div>
-
-          <div class="kpi-card card-online" data-filter="online">
-            <div class="kpi-header">
-              <span class="kpi-label">DISPOSITIVOS ONLINE</span>
-              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="9 12 11 14 15 10"></polyline></svg>
-            </div>
-            <div class="kpi-value-container">
-              <span class="kpi-value text-mint" id="kpiOnline">13</span>
-              <span class="kpi-dot green"></span>
-            </div>
-          </div>
-
-          <div class="kpi-card card-offline" data-filter="offline">
-            <div class="kpi-header">
-              <span class="kpi-label">DISPOSITIVOS OFFLINE</span>
-              <svg class="kpi-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            </div>
-            <div class="kpi-value-container">
-              <span class="kpi-value text-red" id="kpiOffline">3</span>
-              <span class="kpi-dot red"></span>
+            <div class="tv-quick-header-right">
+              <button type="button" class="tv-accordion-toggle-btn" id="btnToggleTvAccordion" title="Expandir ou minimizar os campos de conexão rápida">
+                <span id="tvAccordionBtnText">Expandir Controles</span>
+                <svg class="tv-accordion-chevron" id="tvAccordionChevron" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
             </div>
           </div>
 
+          <div class="tv-quick-body collapsed" id="tvQuickBody">
+            <div class="tv-home-grid">
+              
+              <!-- Card 1: Permitir Controle Remoto (Identidade do Dispositivo Local) -->
+              <div class="tv-home-card">
+                <div class="tv-card-header">
+                  <div class="tv-card-icon-wrap">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                  </div>
+                  <div class="tv-card-header-text">
+                    <h3 class="tv-card-title">Permitir Suporte Remoto</h3>
+                    <p class="tv-card-desc">Compartilhe sua ID e autorize conexões com criptografia E2E</p>
+                  </div>
+                </div>
 
+                <div class="tv-card-body">
+                  <div class="tv-field-group">
+                    <label class="tv-label">SUA ID DESTE DISPOSITIVO</label>
+                    <div class="tv-id-display-box">
+                      <span class="tv-id-text" id="tvLocalIdDisplay">127.0.0.1</span>
+                      <button type="button" class="tv-copy-btn" id="btnCopyLocalId" title="Copiar ID para área de transferência">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Copiar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="tv-field-group">
+                    <label class="tv-label">STATUS DE SEGURANÇA</label>
+                    <div class="tv-status-badge-row">
+                      <span class="pulse-dot" style="background: var(--accent-mint); box-shadow: 0 0 8px var(--accent-mint);"></span>
+                      <span class="tv-status-text">Pronto para conexões recebidas (Porta 19533)</span>
+                    </div>
+                  </div>
+
+                  <div class="tv-card-footer-tip">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Canal QUIC / TLS 1.3 ponta a ponta sem tráfego descriptografado em servidores.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Controlar Computador Remoto (Partner ID + Senha/Código + Conectar) -->
+              <div class="tv-home-card accent-card">
+                <div class="tv-card-header">
+                  <div class="tv-card-icon-wrap accent">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                  </div>
+                  <div class="tv-card-header-text">
+                    <h3 class="tv-card-title">Controlar Computador Remoto</h3>
+                    <p class="tv-card-desc">Insira a ID do parceiro ou computador remoto para conectar imediatamente</p>
+                  </div>
+                </div>
+
+                <div class="tv-card-body">
+                  <div class="tv-field-group">
+                    <label class="tv-label" for="tvPartnerIdInput">ID DO PARCEIRO / DISPOSITIVO</label>
+                    <div class="tv-input-box">
+                      <input type="text" id="tvPartnerIdInput" class="tv-input" placeholder="Ex: DESKTOP-01 ou 192.168.1.100" autocomplete="off" spellcheck="false" />
+                    </div>
+                  </div>
+
+                  <div class="tv-field-group">
+                    <label class="tv-label" for="tvPartnerCodeInput">CÓDIGO DE SESSÃO (8 DÍGITOS) OU SENHA FIXA</label>
+                    <div class="tv-input-box with-btn">
+                      <input type="password" id="tvPartnerCodeInput" class="tv-input" placeholder="8 dígitos de acesso ou senha desassistida" autocomplete="off" />
+                      <button type="button" class="tv-eye-btn" id="btnToggleTvCode" title="Mostrar/Ocultar Senha">👁</button>
+                    </div>
+                  </div>
+
+                  <div class="tv-mode-selector">
+                    <label class="tv-radio-pill">
+                      <input type="radio" name="tvSessionMode" value="full" checked />
+                      <span>Controle Total (Mouse & Teclado)</span>
+                    </label>
+                    <label class="tv-radio-pill">
+                      <input type="radio" name="tvSessionMode" value="view" />
+                      <span>Apenas Visualizar</span>
+                    </label>
+                  </div>
+
+                  <button type="button" class="tv-primary-connect-btn" id="btnTvConnect">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    <span>Conectar</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
-        <!-- Filter Toolbar -->
-        <div class="filter-toolbar">
-          <div class="filter-pills">
+        <!-- =====================================================================
+             SEÇÃO: DISPOSITIVOS DESCOBERTOS NA REDE LOCAL & FROTA REAL
+             ===================================================================== -->
+        <div class="tv-section-divider">
+          <div class="tv-section-title-wrap">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <h4 class="tv-section-title">Dispositivos na Rede Local (Descoberta Automática)</h4>
+            <span class="badge-count" id="tvDiscoveredCountBadge" style="margin-left: 6px;">0</span>
+          </div>
+
+          <div class="filter-pills" style="margin: 0;">
             <button class="pill-btn active" data-filter="all">
-              <span id="pillAllLabel">Todos (16)</span>
+              <span id="pillAllLabel">Todos (0)</span>
             </button>
             <button class="pill-btn" data-filter="online">
               <span class="dot-status online"></span>
-              <span id="pillOnlineLabel">Online (13)</span>
+              <span id="pillOnlineLabel">Online (0)</span>
             </button>
             <button class="pill-btn" data-filter="offline">
               <span class="dot-status offline"></span>
-              <span id="pillOfflineLabel">Offline (3)</span>
+              <span id="pillOfflineLabel">Offline (0)</span>
             </button>
-
-            <select class="select-filter" id="storeSelectFilter" style="display: none;">
-              <option value="">Todos os Clientes / Grupos</option>
-              <option value="Matriz - Corporativo">Matriz - Corporativo</option>
-              <option value="Filial Sul - Escritório">Filial Sul - Escritório</option>
-              <option value="Unidade Norte - Operações">Unidade Norte - Operações</option>
-              <option value="Centro de Distribuição">Centro de Distribuição</option>
-              <option value="Filial Leste - Logística">Filial Leste - Logística</option>
+            <select class="select-filter" id="storeSelectFilter" style="height: 28px; padding: 2px 8px; font-size: 11.5px; border-radius: 20px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-subtle); outline: none; cursor: pointer;">
+              <option value="">Todas as Lojas</option>
             </select>
           </div>
 
-          <div class="toolbar-right-controls">
-            <button class="btn-primary" id="btnOpenNewDeviceModal" style="padding: 4px 10px; height: 28px; font-size: 11.5px; gap: 5px;" title="Cadastrar nova máquina ou PDV na lista">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <div class="toolbar-right-controls" style="margin-left: auto;">
+            <button class="btn-secondary" id="btnTvRefreshDiscovery" style="padding: 4px 10px; height: 28px; font-size: 11.5px; gap: 5px;" title="Escanear rede local imediatamente">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Escanear Rede</span>
+            </button>
+            <button class="btn-primary" id="btnOpenNewDeviceModal" style="padding: 4px 10px; height: 28px; font-size: 11.5px; gap: 5px;" title="Cadastrar novo computador ou dispositivo na lista">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
               <span>+ Cadastrar Dispositivo</span>
             </button>
-            <div class="results-count" id="resultsCountLabel">17 de 17 clientes</div>
+            <div class="results-count" id="resultsCountLabel">0 dispositivos</div>
             
             <div class="view-mode-toggle">
               <button class="view-toggle-btn active" id="btnViewCards" title="Visualização em Cards">
@@ -312,7 +414,7 @@
             <div class="inspector-header">
               <div class="inspector-title">
                 <div class="pulse-dot" id="drawerPulseDot"></div>
-                <h3 id="drawerPdvId">DESK-01</h3>
+                <h3 id="drawerPdvId">Dispositivo</h3>
                 <span id="drawerStoreName" style="display: none;">Matriz - Corporativo</span>
               </div>
               <button class="btn-icon-ghost" id="btnCloseInspector" title="Fechar Ficha">✕</button>
@@ -324,28 +426,24 @@
               <span>Conectar Sessão Remota</span>
             </button>
 
-            <!-- Ações Rápidas de Suporte -->
-            <div class="section-label">AÇÕES RÁPIDAS DE SUPORTE</div>
+            <!-- Ações Rápidas de Diagnóstico -->
+            <div class="section-label">AÇÕES DE SUPORTE</div>
             <div class="quick-actions-grid">
-              <button class="quick-btn" id="btnQuickCode">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Código 8 Dígitos</span>
+              <button class="quick-btn" id="btnQuickPing">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                <span>Testar Ping</span>
               </button>
               <button class="quick-btn" id="btnQuickRestartAgent">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                <span>Reiniciar Serviço</span>
-              </button>
-              <button class="quick-btn" id="btnQuickRebootSystem">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-                <span>Reiniciar Sistema</span>
+                <span>Reiniciar Host</span>
               </button>
               <button class="quick-btn" id="btnQuickCtrlAltDel">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <span>Ctrl+Alt+Del</span>
               </button>
-              <button class="quick-btn span-full" id="btnQuickPing">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-                <span>Ping</span>
+              <button class="quick-btn" id="btnQuickRebootSystem">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                <span>Reiniciar SO</span>
               </button>
             </div>
 
@@ -357,7 +455,7 @@
                 <td id="diagIp" style="color: var(--accent-cyan); font-weight: 600;">192.168.1.101</td>
               </tr>
               <tr>
-                <td>SO:</td>
+                <td>Sistema:</td>
                 <td id="diagOs">Windows 11</td>
               </tr>
               <tr>
@@ -368,11 +466,11 @@
                 <td>Último Sinal:</td>
                 <td id="diagLastSeen" style="color: var(--text-muted);">Agora</td>
               </tr>
-              <tr style="display: none;">
+              <tr>
                 <td>Resolução:</td>
                 <td id="diagResolution">1920x1080 @ 60Hz</td>
               </tr>
-              <tr style="display: none;">
+              <tr>
                 <td>Versão:</td>
                 <td id="diagVersion">v0.1.0</td>
               </tr>
@@ -394,16 +492,16 @@
       </section>
 
       <!-- =====================================================================
-           VIEW 2: CENTRAL DE CONFIGURAÇÕES
+           VIEW 2: CENTRAL DE CONFIGURAÇÕES (LAYOUT CLEAN & ESSENCIAL)
            ===================================================================== -->
       <section class="view-page" id="viewSettings">
-        <div class="settings-container">
+        <div class="clean-settings-container">
           
-          <!-- Cabeçalho Superior de Configurações com Ação Rápida de Salvar -->
-          <div class="settings-header-row">
+          <!-- Cabeçalho de Configurações -->
+          <div class="clean-settings-header">
             <div>
-              <h2 class="settings-title">Central de Configurações</h2>
-              <p class="settings-subtitle">Gerencie aparência, perfil profissional, segurança Zero-Trust e conectividade.</p>
+              <h2 class="clean-settings-title">Central de Configurações</h2>
+              <p class="clean-settings-subtitle">Preferências do operador, políticas de acesso Zero-Trust, interface e atualizações.</p>
             </div>
             <button class="btn-primary" id="btnSaveTopSettings">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
@@ -411,399 +509,257 @@
             </button>
           </div>
 
-          <!-- Abas de Navegação por Categorias -->
-          <div class="settings-nav-tabs">
-            <button class="settings-tab-btn active" data-settings-section="all">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              <span>Todas as Opções</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="appearance">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-              <span>Aparência</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="profile">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <span>Perfil do Operador</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="technicians">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Gestão de Técnicos</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="security">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span>Segurança Zero-Trust</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="performance">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <span>Vídeo & Desempenho</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="network">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <span>Rede & Conectividade</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="updates">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <span>Atualizações</span>
-            </button>
-            <button class="settings-tab-btn" data-settings-section="storage">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <span>Dados & Auditoria</span>
-            </button>
-          </div>
+          <!-- Grid com 4 Blocos Essenciais -->
+          <div class="clean-settings-grid">
 
-          <!-- SEÇÃO 1: APARÊNCIA & TEMA -->
-          <div class="settings-card" id="cardThemeSettings" data-settings-group="appearance">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-              <h4>Aparência & Tema da Interface</h4>
-            </div>
+            <!-- Card 1: Perfil do Operador / Técnico -->
+            <div class="clean-card">
+              <div class="clean-card-header">
+                <div class="clean-card-icon">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <div>
+                  <h3 class="clean-card-title">Perfil do Operador</h3>
+                  <p class="clean-card-desc">Identificação exibida na tela do dispositivo remoto ao solicitar acesso remoto.</p>
+                </div>
+              </div>
 
-            <p class="card-desc-text">
-              Selecione o estilo visual de sua preferência ou sincronize automaticamente com o modo de cores do Windows 10/11.
-            </p>
+              <div class="clean-card-body">
+                <div class="clean-field-group">
+                  <label class="clean-label" for="cfgTechName">Nome de Exibição / Operador:</label>
+                  <input type="text" class="clean-input" id="cfgTechName" value="admin" placeholder="Ex: Lucas Ferreira">
+                </div>
 
-            <div class="theme-selector-grid">
-              <!-- Opção 1: Modo Escuro -->
-              <div class="theme-option-card selected" data-theme-mode="dark">
-                <div class="theme-preview-box dark">
-                  <div class="preview-sidebar"></div>
-                  <div class="preview-content">
-                    <div class="preview-bar accent"></div>
-                    <div class="preview-bar"></div>
-                    <div class="preview-bar"></div>
+                <div class="clean-form-row">
+                  <div class="clean-field-group">
+                    <label class="clean-label" for="cfgTechRole">Cargo / Nível:</label>
+                    <input type="text" class="clean-input" id="cfgTechRole" value="N1 - Suporte Técnico" placeholder="Ex: N2 - Especialista">
+                  </div>
+                  <div class="clean-field-group">
+                    <label class="clean-label" for="cfgTechDept">Departamento / Equipe:</label>
+                    <input type="text" class="clean-input" id="cfgTechDept" value="Central de Operações de TI" placeholder="Ex: Suporte a Lojas">
                   </div>
                 </div>
-                <div class="theme-option-info">
-                  <input type="radio" name="uiTheme" value="dark" checked>
-                  <span class="theme-option-title">Modo Escuro</span>
-                </div>
-                <span class="theme-option-desc">Cyber Slate / Obsidian. Conforto e contraste para uso contínuo.</span>
-              </div>
 
-              <!-- Opção 2: Modo Claro -->
-              <div class="theme-option-card" data-theme-mode="light">
-                <div class="theme-preview-box light">
-                  <div class="preview-sidebar"></div>
-                  <div class="preview-content">
-                    <div class="preview-bar accent"></div>
-                    <div class="preview-bar"></div>
-                    <div class="preview-bar"></div>
+                <div class="clean-field-group">
+                  <label class="clean-label" for="cfgDefaultReason">Motivo Padrão de Atendimento:</label>
+                  <input type="text" class="clean-input" id="cfgDefaultReason" value="Suporte Técnico & Manutenção Preventiva" placeholder="Ex: Suporte e Manutenção">
+                </div>
+
+                <div class="clean-form-row">
+                  <div class="clean-field-group">
+                    <label class="clean-label" for="cfgTechPhone">Telefone / Ramal de Suporte:</label>
+                    <input type="text" class="clean-input" id="cfgTechPhone" value="(11) 4004-0000" placeholder="Ex: (11) 99999-0000">
+                  </div>
+                  <div class="clean-field-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn-secondary" id="btnOpenNewTechModal" style="height: 35px; justify-content: center; font-size: 12px; gap: 6px;">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                      <span>+ Cadastrar Novo Técnico</span>
+                    </button>
                   </div>
                 </div>
-                <div class="theme-option-info">
-                  <input type="radio" name="uiTheme" value="light">
-                  <span class="theme-option-title">Modo Claro</span>
-                </div>
-                <span class="theme-option-desc">Fluent Light. Alto contraste para ambientes claros e iluminados.</span>
-              </div>
 
-              <!-- Opção 3: Automático -->
-              <div class="theme-option-card" data-theme-mode="auto">
-                <div class="theme-preview-box auto">
-                  <div class="preview-sidebar"></div>
-                  <div class="preview-content">
-                    <div class="preview-bar accent"></div>
-                    <div class="preview-bar"></div>
+                <!-- Lista de Técnicos e Operadores Cadastrados -->
+                <div class="tech-table-container" style="margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+                  <div style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Técnicos & Operadores Autorizados</div>
+                  <div style="overflow-x: auto;">
+                    <table class="clean-table" style="width: 100%; font-size: 12px;">
+                      <thead>
+                        <tr>
+                          <th>Nome & Usuário</th>
+                          <th>Cargo / Nível</th>
+                          <th>Permissões</th>
+                          <th>Status</th>
+                          <th style="text-align: right;">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="techniciansTableBody">
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="theme-option-info">
-                  <input type="radio" name="uiTheme" value="auto">
-                  <span class="theme-option-title">Automático (Sistema)</span>
-                </div>
-                <span class="theme-option-desc">Sincroniza dinamicamente com as preferências do Windows.</span>
               </div>
             </div>
+
+            <!-- Card 2: Políticas de Segurança Zero-Trust -->
+            <div class="clean-card">
+              <div class="clean-card-header">
+                <div class="clean-card-icon accent">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div>
+                  <h3 class="clean-card-title">Políticas de Segurança Zero-Trust</h3>
+                  <p class="clean-card-desc">Controles de privilégio e proteção aplicados nas sessões remotas.</p>
+                </div>
+              </div>
+
+              <div class="clean-card-body">
+                <div class="clean-switch-list">
+                  
+                  <label class="clean-switch-item">
+                    <div class="clean-switch-info">
+                      <span class="clean-switch-title">Modo Padrão Apenas Visualizar (View-Only)</span>
+                      <span class="clean-switch-sub">Inicia conexões sem controle de entrada (apenas visualização de tela).</span>
+                    </div>
+                    <div class="switch-control switch-toggle-wrap">
+                      <input type="checkbox" id="cfgViewOnly" class="switch-input">
+                      <span class="switch-slider"></span>
+                    </div>
+                  </label>
+
+                  <label class="clean-switch-item">
+                    <div class="clean-switch-info">
+                      <span class="clean-switch-title">Bloquear Entrada de Mouse e Teclado</span>
+                      <span class="clean-switch-sub">Suprime envio de teclas e cliques do operador em sessões ativas.</span>
+                    </div>
+                    <div class="switch-control switch-toggle-wrap">
+                      <input type="checkbox" id="cfgBlockInput" class="switch-input">
+                      <span class="switch-slider"></span>
+                    </div>
+                  </label>
+
+                  <label class="clean-switch-item">
+                    <div class="clean-switch-info">
+                      <span class="clean-switch-title">Sincronização de Área de Transferência (Clipboard)</span>
+                      <span class="clean-switch-sub">Permite copiar e colar texto de forma bidirecional (máx 1 MB).</span>
+                    </div>
+                    <div class="switch-control switch-toggle-wrap">
+                      <input type="checkbox" id="cfgClipboard" class="switch-input" checked>
+                      <span class="switch-slider"></span>
+                    </div>
+                  </label>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Aparência & Tema da Interface -->
+            <div class="clean-card">
+              <div class="clean-card-header">
+                <div class="clean-card-icon">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </div>
+                <div>
+                  <h3 class="clean-card-title">Aparência & Interface</h3>
+                  <p class="clean-card-desc">Escolha o estilo visual para o painel de administração.</p>
+                </div>
+              </div>
+
+              <div class="clean-card-body">
+                <div class="clean-theme-selector">
+                  <div class="theme-option-card" data-theme-mode="dark">
+                    <div class="theme-preview-box dark-preview">
+                      <div class="preview-header"></div>
+                      <div class="preview-body"></div>
+                    </div>
+                    <div class="theme-info">
+                      <span class="theme-name">Modo Escuro (Obsidian)</span>
+                      <span class="theme-desc">Otimizado para conforto visual prolongado.</span>
+                    </div>
+                    <input type="radio" name="uiTheme" value="dark" checked class="theme-radio">
+                  </div>
+
+                  <div class="theme-option-card" data-theme-mode="light">
+                    <div class="theme-preview-box light-preview">
+                      <div class="preview-header"></div>
+                      <div class="preview-body"></div>
+                    </div>
+                    <div class="theme-info">
+                      <span class="theme-name">Modo Claro (Fluent Light)</span>
+                      <span class="theme-desc">Interface limpa com alto contraste diurno.</span>
+                    </div>
+                    <input type="radio" name="uiTheme" value="light" class="theme-radio">
+                  </div>
+
+                  <div class="theme-option-card" data-theme-mode="auto">
+                    <div class="theme-preview-box auto-preview">
+                      <div class="preview-half dark"></div>
+                      <div class="preview-half light"></div>
+                    </div>
+                    <div class="theme-info">
+                      <span class="theme-name">Automático (Sistema)</span>
+                      <span class="theme-desc">Segue a preferência do Windows automaticamente.</span>
+                    </div>
+                    <input type="radio" name="uiTheme" value="auto" class="theme-radio">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Atualizações do Sistema & Sobre -->
+            <div class="clean-card" id="cardAutoUpdate">
+              <div class="clean-card-header">
+                <div class="clean-card-icon mint">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                </div>
+                <div>
+                  <h3 class="clean-card-title">Atualizações & Sobre</h3>
+                  <p class="clean-card-desc">Verificação e instalação in-place com integridade SHA-256 e assinatura Ed25519.</p>
+                </div>
+              </div>
+
+              <div class="clean-card-body">
+                <div class="clean-version-status-row">
+                  <div>
+                    <span class="clean-version-label">Versão Instalada:</span>
+                    <strong class="clean-version-tag" id="currentVersionTag">v0.1.0</strong>
+                  </div>
+                  <span class="clean-status-pill" id="updateStatusText">Sistema atualizado</span>
+                </div>
+
+                <div class="clean-update-actions">
+                  <button class="btn-secondary" id="btnCheckUpdates">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                    <span>Verificar Atualizações Agora</span>
+                  </button>
+                  <button class="btn-secondary" id="btnTestPing">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                    <span>Testar Sinalização</span>
+                  </button>
+                  <button class="btn-secondary" id="btnExportAudit">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Exportar Auditoria (CSV)</span>
+                  </button>
+                  <button class="btn-secondary" id="btnClearCache">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Limpar Cache</span>
+                  </button>
+                </div>
+
+                <!-- Box de Atualização Disponível (dinâmico) -->
+                <div class="clean-update-box" id="updateAvailableBox" style="display: none;">
+                  <div class="clean-update-box-header">
+                    <div class="pulse-dot"></div>
+                    <strong>Nova Versão Disponível: <span id="newVersionTag">v0.2.0</span></strong>
+                  </div>
+                  <p class="clean-update-notes" id="newVersionNotes">Melhorias no protocolo QUIC/TLS 1.3 e taxa de quadros adaptativa.</p>
+                  <button class="btn-primary" id="btnApplyUpdate">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Atualizar Agora (In-Place)</span>
+                  </button>
+                </div>
+
+                <!-- Barra de Progresso Real (NTFS in-place) -->
+                <div class="clean-progress-box" id="updateProgressContainer" style="display: none;">
+                  <div class="clean-progress-header">
+                    <span id="updateProgressLabel">Baixando binário oficial...</span>
+                    <strong id="updateProgressPercent">0%</strong>
+                  </div>
+                  <div class="clean-progress-track">
+                    <div class="clean-progress-fill" id="updateProgressBar"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
           </div>
 
-          <!-- SEÇÃO 2: PERFIL DO OPERADOR -->
-          <div class="settings-card" id="cardProfile" data-settings-group="profile">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <h4>Perfil do Operador & Identificação de Suporte</h4>
-            </div>
-
-            <p class="card-desc-text">
-              Estes dados identificam você perante o usuário local durante a solicitação de autorização de sessão remota.
-            </p>
-
-            <div class="form-grid">
-              <label class="form-label">Nome / Identificação:</label>
-              <input type="text" class="form-input" id="cfgTechName" value="Técnico Admin">
-
-              <label class="form-label">Nível / Cargo:</label>
-              <input type="text" class="form-input" id="cfgTechRole" value="N1 - Suporte Técnico">
-
-              <label class="form-label">Departamento / Equipe:</label>
-              <input type="text" class="form-input" id="cfgTechDept" value="Central de Operações de TI">
-
-              <label class="form-label">Ramal / Contato:</label>
-              <input type="text" class="form-input" id="cfgTechPhone" value="(11) 4004-0000">
-
-              <label class="form-label">Motivo Padrão de Chamado:</label>
-              <input type="text" class="form-input" id="cfgDefaultReason" value="Suporte Técnico & Manutenção Preventiva" style="max-width: 100%;">
-            </div>
-          </div>
-
-          <!-- SEÇÃO: GESTÃO DE TÉCNICOS & OPERADORES -->
-          <div class="settings-card" id="cardTechnicians" data-settings-group="technicians">
-            <div class="card-title-row" style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <h4>Equipe de Suporte & Técnicos Autorizados</h4>
-              </div>
-              <button class="btn-primary" id="btnOpenNewTechModal" style="padding: 6px 12px; font-size: 12px; gap: 6px;">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>+ Novo Técnico</span>
-              </button>
-            </div>
-
-            <p class="card-desc-text">
-              Gerencie a equipe de suporte autorizada a realizar conexões remotas, transferência de arquivos e suporte aos caixas e estações.
-            </p>
-
-            <div class="table-container" style="margin-top: 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden;">
-              <table class="fleet-table" style="width: 100%; margin: 0;">
-                <thead>
-                  <tr>
-                    <th>Técnico</th>
-                    <th>Usuário / E-mail</th>
-                    <th>Nível / Cargo</th>
-                    <th>Permissões</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="techniciansTableBody">
-                  <!-- Injetado via app.js -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- SEÇÃO 3: SEGURANÇA ZERO-TRUST -->
-          <div class="settings-card" id="cardSecurity" data-settings-group="security">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <h4>Políticas de Segurança & Controle de Acesso Zero-Trust</h4>
-            </div>
-
-            <div class="checkbox-row">
-              <label class="checkbox-item">
-                <input type="checkbox" id="cfgViewOnly">
-                <div class="checkbox-text">
-                  <strong>Modo Apenas Visualização (View-Only / Somente Monitoramento)</strong>
-                  <span>Desativa envio de cliques e digitação, permitindo apenas acompanhamento visual passivo.</span>
-                </div>
-              </label>
-
-              <label class="checkbox-item">
-                <input type="checkbox" id="cfgBlockInput">
-                <div class="checkbox-text">
-                  <strong>Bloquear teclado e mouse local do dispositivo durante suporte crítico</strong>
-                  <span>Evita concorrência de comandos pelo operador local enquanto você realiza ajustes no sistema.</span>
-                </div>
-              </label>
-
-              <label class="checkbox-item">
-                <input type="checkbox" id="cfgClipboard" checked>
-                <div class="checkbox-text">
-                  <strong>Habilitar sincronização de Área de Transferência (Clipboard texto até 1 MB)</strong>
-                  <span>Permite copiar e colar instruções e scripts técnicos com verificação de tamanho em tempo real.</span>
-                </div>
-              </label>
-            </div>
-
-            <div class="info-banner">
-              <strong>Premissas de Segurança Inegociáveis:</strong><br>
-              • Toda sessão exige consentimento visível do usuário local (janela modal de 60 segundos com botão de recusa).<br>
-              • Validação por código de sessão de 8 dígitos, expiração em 120s, máximo de 3 tentativas e HMAC em tempo constante.<br>
-              • Chave privada Ed25519 do dispositivo protegida por DPAPI no Windows.
-            </div>
-          </div>
-
-          <!-- SEÇÃO 4: VÍDEO & DESEMPENHO -->
-          <div class="settings-card" id="cardPerformance" data-settings-group="performance">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <h4>Renderização de Vídeo DXGI & Otimização de Banda</h4>
-            </div>
-
-            <div class="form-grid">
-              <label class="form-label">Taxa de Quadros Alvo (FPS):</label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="fps" value="15"> 15 FPS (Econômico)</label>
-                <label class="radio-label"><input type="radio" name="fps" value="30" checked> 30 FPS (Recomendado)</label>
-                <label class="radio-label"><input type="radio" name="fps" value="60"> 60 FPS (Ultra Fluidez)</label>
-              </div>
-
-              <label class="form-label">Compressão Zstd em Vídeo:</label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="zstd" value="1" checked> Nível 1 (Menor Latência)</label>
-                <label class="radio-label"><input type="radio" name="zstd" value="3"> Nível 3 (Economia de Banda)</label>
-              </div>
-            </div>
-
-            <div class="info-banner">
-              • <strong>Captura de Tela:</strong> Desktop Duplication DXGI direto na GPU com transmissão apenas de tiles 64x64 modificados.<br>
-              • <strong>Teclado:</strong> KEYEVENTF_SCANCODE com mapeamento ABNT2 nativo sem conversão de layout.<br>
-              • <strong>Mouse:</strong> Coordenadas normalizadas em alta precisão (0..65535) com compensação de DPI do monitor.<br>
-              • <strong>Segurança de Entrada:</strong> Liberação forçada de teclas presas e modificadores ao encerrar.
-            </div>
-          </div>
-
-          <!-- SEÇÃO 5: REDE & CONECTIVIDADE -->
-          <div class="settings-card" id="cardNetwork" data-settings-group="network">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <h4>Comunicação de Rede & Conectividade Segura</h4>
-            </div>
-
-            <p class="card-desc-text">
-              Configurações dos gateways centrais de sinalização e relay seguro com criptografia fim a fim obrigatória.
-            </p>
-
-            <div class="form-grid">
-              <label class="form-label">Servidor de Sinalização:</label>
-              <div class="input-with-button">
-                <input type="text" class="form-input" id="cfgServerUrl" value="https://api.prysmview.com">
-                <button class="btn-secondary" id="btnTestPing">⚡ Testar Conexão</button>
-              </div>
-
-              <label class="form-label">Servidor Relay Seguro:</label>
-              <input type="text" class="form-input" id="cfgRelayUrl" value="quic://relay.prysmview.com:4433">
-
-              <label class="form-label">Tempo de Reconexão (Queda):</label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="reconnect" value="10"> 10s</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="15" checked> 15s (Padrão)</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="30"> 30s</label>
-                <label class="radio-label"><input type="radio" name="reconnect" value="60"> 60s</label>
-              </div>
-            </div>
-
-            <div class="info-banner">
-              <strong>Arquitetura de Conexão Segura:</strong> Conexão direta prioritária entre operador e dispositivo com túnel criptografado fim a fim.
-            </div>
-          </div>
-
-          <!-- SEÇÃO 6: ATUALIZAÇÕES DO SISTEMA -->
-          <div class="settings-card" id="cardAutoUpdate" data-settings-group="updates">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              <h4>Atualização Automática do Console (In-App Auto-Update)</h4>
-            </div>
-
-            <p class="card-desc-text">
-              Verifique novas versões oficiais e instale atualizações com 1 clique diretamente pelo console, sem necessidade de reinstalação manual.
-            </p>
-
-            <div class="form-grid">
-              <label class="form-label">Versão Instalada:</label>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="tele-chip highlight" style="font-weight: 700; padding: 4px 10px; font-size: 12.5px;" id="currentVersionTag">v0.1.0</span>
-                <span style="font-size: 12.5px; color: var(--text-muted);">Canal de Produção Oficial</span>
-              </div>
-
-              <label class="form-label">Canal de Atualização:</label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="updateChannel" value="stable" checked> Estável (Recomendado)</label>
-                <label class="radio-label"><input type="radio" name="updateChannel" value="beta"> Beta / Pré-lançamento</label>
-              </div>
-
-              <label class="form-label">Status da Versão:</label>
-              <div>
-                <div id="updateStatusText" style="font-size: 13px; color: var(--accent-mint); font-weight: 500;">
-                  ● Sistema Atualizado (Você está utilizando a versão mais recente)
-                </div>
-                <div id="lastCheckTimeText" style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
-                  Última verificação: Hoje, 12:45
-                </div>
-              </div>
-            </div>
-
-            <!-- Caixa de Alerta quando há atualização disponível -->
-            <div id="updateAvailableBox" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px solid var(--accent-cyan); border-radius: var(--radius-md); padding: 18px 20px; flex-direction: column; gap: 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div class="pulse-dot"></div>
-                  <strong style="color: var(--accent-cyan); font-size: 14px;">Nova Versão Disponível: <span id="latestVersionTag">v0.1.1</span></strong>
-                </div>
-                <span style="font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">Integridade Verificada</span>
-              </div>
-              <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.6; white-space: pre-line;" id="updateChangelog">
-                • Nova interface corporativa moderna (WebView2 Fluent & Cyber Slate)
-                • Otimização de latência e estabilidade de conexão
-                • Atualização automática embutida com 1 clique sem reinstalação manual
-              </p>
-              
-              <!-- Barra de Progresso de Download / Instalação -->
-              <div id="updateProgressContainer" style="display: none; flex-direction: column; gap: 6px;">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
-                  <span id="updateProgressLabel">Baixando pacote...</span>
-                  <span id="updateProgressPercent">0%</span>
-                </div>
-                <div style="width: 100%; height: 7px; background: var(--bg-input); border-radius: var(--radius-full); overflow: hidden;">
-                  <div id="updateProgressBar" style="width: 0%; height: 100%; background: var(--accent-cyan); transition: width 0.3s ease;"></div>
-                </div>
-              </div>
-
-              <button class="btn-primary" id="btnApplyUpdate" style="align-self: flex-start; margin-top: 6px;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                <span>Instalar Atualização Automaticamente (Sem Reinstalar)</span>
-              </button>
-            </div>
-
-            <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
-              <button class="btn-secondary" id="btnCheckUpdates">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                <span>Verificar Atualizações Agora</span>
-              </button>
-              <span style="font-size: 12.5px; color: var(--text-muted);">
-                Substituição segura in-place com validação de assinatura Ed25519 e rollback automático.
-              </span>
-            </div>
-          </div>
-
-          <!-- SEÇÃO 7: DADOS & AUDITORIA -->
-          <div class="settings-card" id="cardStorage" data-settings-group="storage">
-            <div class="card-title-row">
-              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <h4>Armazenamento Local, Cache & Auditoria</h4>
-            </div>
-
-            <p class="card-desc-text">
-              Localização de downloads de suporte, registros de conformidade e liberação de cache temporário.
-            </p>
-
-            <div class="form-grid">
-              <label class="form-label">Pasta de Downloads & Logs:</label>
-              <input type="text" class="form-input" id="cfgDownloadDir" value="C:\Users\Suporte\Downloads\PrysmView" style="max-width: 100%;">
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
-              <button class="btn-secondary" id="btnExportAudit">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Exportar Relatório de Auditoria (CSV)</span>
-              </button>
-              <button class="btn-secondary" id="btnClearCache">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                <span>Limpar Cache de Diagnóstico</span>
-              </button>
-              <button class="btn-primary" id="btnSaveAllSettings">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Salvar Preferências</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Rodapé de Ação Global de Salvamento -->
-          <div class="settings-bottom-bar">
-            <span style="font-size: 12.5px; color: var(--text-muted);">
-              As preferências salvas são aplicadas imediatamente a todas as sessões e diagnósticos.
-            </span>
-            <button class="btn-primary" id="btnSaveBottomSettings">
+          <!-- Rodapé com Botão Salvar -->
+          <div class="clean-settings-footer">
+            <button class="btn-primary" id="btnSaveBottomSettings" style="padding: 10px 24px; font-size: 13.5px;">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              <span>Salvar Todas as Preferências</span>
+              <span>Salvar Alterações</span>
             </button>
           </div>
 
@@ -811,24 +767,113 @@
       </section>
 
       <!-- =====================================================================
-           VIEW 3: CONEXÃO RÁPIDA / DIRECT CONNECT
+           VIEW 3: CONEXÃO RÁPIDA / DIRECT CONNECT (PAINEL DEDICADO NO MENU)
            ===================================================================== -->
       <section class="view-page" id="viewDirect">
-        <div style="max-width: 500px; margin: 40px auto; width: 100%; text-align: center;">
-          <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Conexão Direta ao Dispositivo</h2>
-          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Insira o identificador do dispositivo e o código de 8 dígitos ou a senha de acesso configurada no Host.</p>
+        <div class="view-direct-wrapper">
+          <div class="view-direct-header">
+            <h2 class="view-direct-title">Controle Remoto & Suporte Instantâneo</h2>
+            <p class="view-direct-subtitle">Compartilhe sua ID para receber suporte técnico ou insira os dados do computador remoto para iniciar controle total com criptografia ponta a ponta.</p>
+          </div>
 
-          <div class="settings-card" style="text-align: left;">
-            <label class="form-label">Identificador do Dispositivo:</label>
-            <input type="text" class="form-input" id="directPdvInput" placeholder="Ex: DESK-01 ou 192.168.1.101" style="max-width: 100%; margin-top: 6px; margin-bottom: 14px;">
+          <div class="tv-home-grid direct-mode">
+            <!-- Card 1: Permitir Suporte Remoto -->
+            <div class="tv-home-card">
+              <div class="tv-card-header">
+                <div class="tv-card-icon-wrap">
+                  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                  </svg>
+                </div>
+                <div class="tv-card-header-text">
+                  <h3 class="tv-card-title">Permitir Suporte Remoto</h3>
+                  <p class="tv-card-desc">Compartilhe sua ID e autorize conexões com criptografia E2E</p>
+                </div>
+              </div>
 
-            <label class="form-label">Código de Sessão (8 Dígitos) ou Senha de Acesso do Host:</label>
-            <input type="password" class="form-input" id="directCodeInput" placeholder="Ex: 84920147 ou Senha do Host" style="max-width: 100%; margin-top: 6px; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px; text-align: center; color: var(--accent-cyan); font-weight: 700;">
+              <div class="tv-card-body">
+                <div class="tv-field-group">
+                  <label class="tv-label">SUA ID DESTE DISPOSITIVO</label>
+                  <div class="tv-id-display-box">
+                    <span class="tv-id-text" id="tvDirectLocalIdDisplay">127.0.0.1</span>
+                    <button type="button" class="tv-copy-btn" id="btnCopyDirectLocalId" title="Copiar ID para área de transferência">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                      <span>Copiar</span>
+                    </button>
+                  </div>
+                </div>
 
-            <button class="btn-primary" id="btnDirectSubmit" style="width: 100%; justify-content: center; margin-top: 18px; padding: 12px;">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              <span>Autorizar e Conectar (TLS 1.3)</span>
-            </button>
+                <div class="tv-field-group">
+                  <label class="tv-label">STATUS DE SEGURANÇA</label>
+                  <div class="tv-status-badge-row">
+                    <span class="pulse-dot" style="background: var(--accent-mint); box-shadow: 0 0 8px var(--accent-mint);"></span>
+                    <span class="tv-status-text">Pronto para conexões recebidas (Porta 19533)</span>
+                  </div>
+                </div>
+
+                <div class="tv-card-footer-tip">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                  <span>Canal QUIC / TLS 1.3 ponta a ponta sem tráfego descriptografado em servidores.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Controlar Computador Remoto -->
+            <div class="tv-home-card accent-card">
+              <div class="tv-card-header">
+                <div class="tv-card-icon-wrap accent">
+                  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                </div>
+                <div class="tv-card-header-text">
+                  <h3 class="tv-card-title">Controlar Computador Remoto</h3>
+                  <p class="tv-card-desc">Insira a ID do parceiro ou computador remoto para conectar imediatamente</p>
+                </div>
+              </div>
+
+              <div class="tv-card-body">
+                <div class="tv-field-group">
+                  <label class="tv-label" for="directPdvInput">ID DO PARCEIRO / DISPOSITIVO</label>
+                  <div class="tv-input-box">
+                    <input type="text" id="directPdvInput" class="tv-input" placeholder="Ex: DESKTOP-01 ou 192.168.1.100" autocomplete="off" spellcheck="false" />
+                  </div>
+                </div>
+
+                <div class="tv-field-group">
+                  <label class="tv-label" for="directCodeInput">CÓDIGO DE SESSÃO (8 DÍGITOS) OU SENHA FIXA</label>
+                  <div class="tv-input-box with-btn">
+                    <input type="password" id="directCodeInput" class="tv-input" placeholder="8 dígitos de acesso ou senha desassistida" autocomplete="off" />
+                    <button type="button" class="tv-eye-btn" id="btnToggleDirectCode" title="Mostrar/Ocultar Senha">👁</button>
+                  </div>
+                </div>
+
+                <div class="tv-mode-selector">
+                  <label class="tv-radio-pill">
+                    <input type="radio" name="directSessionMode" value="full" checked />
+                    <span>Controle Total (Mouse & Teclado)</span>
+                  </label>
+                  <label class="tv-radio-pill">
+                    <input type="radio" name="directSessionMode" value="view" />
+                    <span>Apenas Visualizar</span>
+                  </label>
+                </div>
+
+                <button type="button" class="tv-primary-connect-btn" id="btnDirectSubmit">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  <span>Conectar</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -930,14 +975,15 @@
       <div id="containerAuthPassword" style="display: none; margin-bottom: 12px; text-align: left;">
         <label class="form-label" style="font-size: 12px; margin-bottom: 6px; display: block;">Senha de Acesso do Host:</label>
         <div style="position: relative;">
-          <input type="password" class="form-input" id="inputModalHostPassword" placeholder="Digite a senha configurada no PDV..." style="width: 100%; padding-right: 42px;">
+          <input type="password" class="form-input" id="inputModalHostPassword" placeholder="Digite a senha configurada no dispositivo..." style="width: 100%; padding-right: 42px;">
           <button type="button" id="btnToggleModalPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;" title="Mostrar / Ocultar">👁</button>
         </div>
-        <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 5px;">Conecte diretamente utilizando a senha fixa definida no caixa remoto.</span>
+        <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 5px;">Conecte diretamente utilizando a senha fixa definida no dispositivo remoto.</span>
       </div>
 
-      <button class="btn-primary" id="btnModalAuthorize" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 13.5px; margin-top: 4px;">
-        Validar & Iniciar Sessão (TLS 1.3)
+      <button class="btn-primary" id="btnModalAuthorize" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 13.5px; margin-top: 4px; gap: 8px;">
+        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Conectar ao Dispositivo (TLS 1.3)</span>
       </button>
     </div>
   </div>
@@ -958,7 +1004,7 @@
       </div>
 
       <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
-        Cadastre os dados de acesso do técnico ou operador para atuação no console e atendimento aos PDVs.
+        Cadastre os dados de acesso do técnico ou operador para atuação no console e atendimento aos computadores remotos.
       </p>
 
       <form id="formNewTech" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px;">
@@ -1024,7 +1070,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL DE CADASTRO DE NOVO DISPOSITIVO (PDV / ESTAÇÃO REMOTA)
+       MODAL DE CADASTRO DE NOVO DISPOSITIVO (COMPUTADOR / ESTAÇÃO REMOTA)
        ========================================================================= -->
   <div class="modal-overlay" id="newDeviceModal">
     <div class="modal-box" style="max-width: 520px;">
@@ -1033,20 +1079,20 @@
           <div class="user-avatar-circle" style="width: 28px; height: 28px; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan);">
             <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
           </div>
-          <h3 style="font-size: 16.5px; font-weight: 700; color: var(--text-primary); margin: 0;">Cadastrar Dispositivo / PDV</h3>
+          <h3 id="newDeviceModalTitle" style="font-size: 16.5px; font-weight: 700; color: var(--text-primary); margin: 0;">Cadastrar Dispositivo / Computador</h3>
         </div>
         <button class="btn-icon-ghost" id="btnCloseNewDeviceModal" title="Fechar">✕</button>
       </div>
 
-      <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
-        Adicione uma máquina de teste, caixa de loja ou terminal corporativo para gerenciamento e acesso direto.
+      <p id="newDeviceModalDesc" style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;">
+        Adicione uma máquina de teste, estação de trabalho ou servidor corporativo para gerenciamento e acesso direto.
       </p>
 
       <form id="formNewDevice" onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: 12px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">ID do Dispositivo / Hostname:</label>
-            <input type="text" class="form-input" id="devIdInput" placeholder="Ex: PDV-CAIXA-01 ou PC-TESTE" required style="width: 100%;">
+            <input type="text" class="form-input" id="devIdInput" placeholder="Ex: DESKTOP-01 ou PC-TESTE" required style="width: 100%;">
           </div>
           <div>
             <label class="form-label" style="font-size: 12px; margin-bottom: 4px; display: block;">Grupo / Loja / Unidade:</label>
@@ -1077,11 +1123,48 @@
           <button type="button" class="btn-secondary" id="btnCancelNewDevice" style="padding: 8px 16px;">Cancelar</button>
           <button type="submit" class="btn-primary" id="btnSaveNewDevice" style="padding: 8px 20px;">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Cadastrar Dispositivo</span>
+            <span id="btnSaveNewDeviceText">Cadastrar Dispositivo</span>
           </button>
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- =========================================================================
+       CONTEXT MENU FLUTUANTE PARA DISPOSITIVOS (CLIQUE COM BOTÃO DIREITO)
+       ========================================================================= -->
+  <div id="deviceContextMenu" class="device-context-menu" style="display: none;">
+    <div class="ctx-menu-header">
+      <span class="ctx-device-name" id="ctxDeviceTitle">DESKTOP-01</span>
+      <span class="ctx-device-ip" id="ctxDeviceIp">192.168.0.5</span>
+    </div>
+    <div class="ctx-menu-divider"></div>
+    <button type="button" class="ctx-menu-item primary" id="ctxBtnConnect">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>Conectar Agora</span>
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxBtnEdit">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      <span>Editar / Alterar Dispositivo</span>
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxBtnInspect">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <span>Ver Ficha Técnica</span>
+    </button>
+    <div class="ctx-menu-divider"></div>
+    <button type="button" class="ctx-menu-item" id="ctxBtnCopyId">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span>Copiar ID do Dispositivo</span>
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxBtnCopyIp">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      <span>Copiar Endereço IP</span>
+    </button>
+    <div class="ctx-menu-divider"></div>
+    <button type="button" class="ctx-menu-item danger" id="ctxBtnDelete">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      <span>Remover Dispositivo</span>
+    </button>
   </div>
 
   <!-- =========================================================================
@@ -1092,7 +1175,7 @@
     <div id="remoteToolbar" class="remote-toolbar">
       <div class="toolbar-info">
         <div class="pulse-dot" style="background: var(--accent-mint); box-shadow: 0 0 8px var(--accent-mint);"></div>
-        <strong id="remoteDeviceTitle" style="font-size: 13px; color: #fff;">PDV-CAIXA-01</strong>
+        <strong id="remoteDeviceTitle" style="font-size: 13px; color: #fff;">DESKTOP-01</strong>
         <span class="session-op-badge" id="remoteOpBadge">TLS 1.3 P2P</span>
       </div>
 
@@ -1104,6 +1187,18 @@
       </div>
 
       <div class="toolbar-actions">
+        <div style="display: inline-flex; background: rgba(0,0,0,0.35); border-radius: 6px; padding: 2px; border: 1px solid rgba(255,255,255,0.08); margin-right: 4px;">
+          <button class="tool-btn active-quality" id="btnQualitySmooth" title="Fluidez Máxima (60 FPS)" style="padding: 3px 8px; font-size: 11px;">60 FPS</button>
+          <button class="tool-btn" id="btnQualityBalanced" title="Alta Resolução (HD)" style="padding: 3px 8px; font-size: 11px;">HD</button>
+        </div>
+        <button class="tool-btn" id="btnToggleViewOnly" title="Alternar Modo: Controle Total ou Apenas Visualizar">
+          <svg id="iconViewMode" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path></svg>
+          <span id="labelViewMode">Controle</span>
+        </button>
+        <button class="tool-btn" id="btnToggleScale" title="Alternar Escala: Ajustar à Tela vs 100% Original">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6v6m0-6l-7 7M9 21H3v-6m0 6l7-7"></path></svg>
+          <span id="labelScaleMode">Ajustar</span>
+        </button>
         <button class="tool-btn" id="btnRemoteCad" title="Enviar Ctrl+Alt+Del (SAS)">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           <span>Ctrl+Alt+Del</span>
@@ -1123,7 +1218,16 @@
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
           <span>Desconectar</span>
         </button>
+        <button class="toolbar-collapse-handle" id="btnTogglePinToolbar" title="Recolher / Fixar Barra Superior (TeamViewer Pin)">
+          <svg id="iconPinChevron" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </button>
       </div>
+    </div>
+
+    <!-- Badge de Modo Somente Leitura (View-Only) -->
+    <div id="viewOnlyBadge" class="view-only-badge" style="display: none;">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      <span>Modo Apenas Visualizar Ativo • Entradas de Mouse e Teclado Bloqueadas</span>
     </div>
 
     <!-- Viewport da Área de Trabalho Remota -->
@@ -1140,6 +1244,7 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="gsap.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

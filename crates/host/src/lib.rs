@@ -45,10 +45,10 @@ pub use signaling::{
     build_signed_message, to_hex, HostRegisterPayload, HostSignalingClient, PdvStatusResponse,
     SignalingError,
 };
-pub use updater::{
-    verify_package_integrity, UpdateBackupGuard, UpdateChannel, UpdateError, UpdateManifest,
-};
 pub use ticket::{
     FileReplayCache, InMemoryReplayCache, ReplayCache, SessionTicket, SessionTicketValidator,
     TicketError, ValidatedSessionTicket, CLOCK_SKEW_TOLERANCE, MAX_TICKET_VALIDITY_WINDOW,
+};
+pub use updater::{
+    verify_package_integrity, UpdateBackupGuard, UpdateChannel, UpdateError, UpdateManifest,
 };

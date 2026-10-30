@@ -293,7 +293,11 @@ mod tests {
             .encode_frame_dirty(&screen, Some(&dirty), false)
             .expect("encode dirty");
 
-        assert_eq!(msg.tiles.len(), 1, "apenas o tile no dirty rect deve ser codificado");
+        assert_eq!(
+            msg.tiles.len(),
+            1,
+            "apenas o tile no dirty rect deve ser codificado"
+        );
         assert_eq!(msg.tiles[0].tile_index, 3);
     }
 
@@ -314,4 +318,3 @@ mod tests {
         assert_eq!(msg.tiles.len(), 0);
     }
 }
-

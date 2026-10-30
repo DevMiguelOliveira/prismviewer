@@ -64,9 +64,45 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"; IconFilena
 
 [Run]
 ; Registra o certificado do desenvolvedor no armazenamento do usuario para eliminar alertas do SmartScreen (sem prompts bloqueantes)
+Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f Root ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade raiz"; StatusMsg: "Configurando integridade do sistema..."
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f CA ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando autoridade intermediária"; StatusMsg: "Configurando integridade do sistema..."
 Filename: "{sys}\certutil.exe"; Parameters: "-addstore -user -f TrustedPublisher ""{app}\assets\PrysmView-Certificate.cer"""; Flags: runhidden; Description: "Registrando como Editor Confiável"; StatusMsg: "Configurando editor confiável..."
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
+
+[Code]
+function IsWebView2Installed(): Boolean;
+var
+  Version: String;
+begin
+  Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-9E2A-4295-8BAC-497B32E05C6E}', 'pv', Version) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-9E2A-4295-8BAC-497B32E05C6E}', 'pv', Version);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if not IsWebView2Installed() then
+    begin
+      WizardForm.StatusLabel.Caption := 'Instalando componente visual Microsoft Edge WebView2...';
+      Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $installer = Join-Path $env:TEMP \"MicrosoftEdgeWebview2Setup.exe\"; try { (New-Object Net.WebClient).DownloadFile(\"https://go.microsoft.com/fwlink/p/?LinkId=2124703\", $installer); Start-Process $installer -ArgumentList \"/silent /install\" -Wait } catch {}"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      
+      if not IsWebView2Installed() then
+      begin
+        MsgBox('Aviso sobre a interface gráfica:' + #13#10 + #13#10 +
+               'O componente visual "Microsoft Edge WebView2 Runtime" é necessário para exibir a interface do PrysmView Admin.' + #13#10 +
+               'Caso a tela não abra, faça o download gratuito no site oficial da Microsoft: https://go.microsoft.com/fwlink/p/?LinkId=2124703',
+               mbInformation, MB_OK);
+      end;
+    end;
+  end;
+end;
+

@@ -390,6 +390,23 @@ impl Drop for InputInjector {
     }
 }
 
+/// Mapeia coordenadas normalizadas (0..65535) para coordenadas físicas e lógicas considerando o fator DPI (P-10).
+pub fn map_normalized_to_dpi(
+    norm_x: u16,
+    norm_y: u16,
+    screen_width: u32,
+    screen_height: u32,
+    dpi_scale: f32,
+) -> (u32, u32, u32, u32) {
+    let physical_x = ((norm_x as f64 / 65535.0) * screen_width as f64).round() as u32;
+    let physical_y = ((norm_y as f64 / 65535.0) * screen_height as f64).round() as u32;
+
+    let logical_x = (physical_x as f32 / dpi_scale).round() as u32;
+    let logical_y = (physical_y as f32 / dpi_scale).round() as u32;
+
+    (physical_x, physical_y, logical_x, logical_y)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -485,21 +502,3 @@ mod tests {
         }
     }
 }
-
-/// Mapeia coordenadas normalizadas (0..65535) para coordenadas físicas e lógicas considerando o fator DPI (P-10).
-pub fn map_normalized_to_dpi(
-    norm_x: u16,
-    norm_y: u16,
-    screen_width: u32,
-    screen_height: u32,
-    dpi_scale: f32,
-) -> (u32, u32, u32, u32) {
-    let physical_x = ((norm_x as f64 / 65535.0) * screen_width as f64).round() as u32;
-    let physical_y = ((norm_y as f64 / 65535.0) * screen_height as f64).round() as u32;
-
-    let logical_x = (physical_x as f32 / dpi_scale).round() as u32;
-    let logical_y = (physical_y as f32 / dpi_scale).round() as u32;
-
-    (physical_x, physical_y, logical_x, logical_y)
-}
-

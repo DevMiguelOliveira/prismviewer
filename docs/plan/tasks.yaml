@@ -847,3 +847,437 @@
   tentativas: 0
   ultimo_log: 'Overhaul completo de UI/UX e responsividade do PrysmAdmin: tela de login adaptativa com ScrollArea e preenchimento de teste rapido; sidebar com pulso de telemetria vivo e avatar customizado; KPI cards interativos com filtro instantaneo e layout adaptativo (2x2 ou 4 colunas); cards de PDV ricos com chips de telemetria e empty state com botao de reset; Conexao Rapida com timeline visual de 3 etapas e atalhos; Lojas com badge de saude operacional; Auditoria com grid zebrado; Configuracoes agrupadas em cards de secao. 21 testes unitarios verdes, 0 clippy warnings e instalador PrysmAdmin-Setup-0.1.0.exe regerado (4.70 MB).'
 
+
+
+# ==============================================================================
+# FASE 21: CORREÇÃO E ROBUSTEZ DA CONEXÃO REMOTA (PRYSM HOST <-> PRYSM ADMIN)
+# ==============================================================================
+- id: F21-REMOTE-CONNECT-FIX
+  fase: 21
+  titulo: Correcao da sincronizacao de codigo de sessao, streaming WebSocket, clipboard e descoberta de rede entre Host e Admin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/tray/src/main.rs
+    - crates/tray/ui/host.js
+    - crates/viewer/src/webview_app.rs
+    - crates/viewer/ui/app.js
+  depende_de: [F20-ADMIN-UIUX-RESPONSIVE-REFINE]
+  criterio_pronto:
+    - Host inicializa com codigo de 8 digitos ativo e sincroniza IPC session_code_generated com Rust
+    - Handshake WebSocket do Host valida codigo com tempo constante e trata comando de clipboard
+    - InputInjector atualiza dimensoes de resolucao dinamicamente no streaming
+    - Descoberta LAN no Admin nao sobrescreve IP de hosts remotos com 127.0.0.1
+    - Botao SAS da toolbar e preenchimento de senha no Admin unificados sem conflito
+    - Encerramento imediato de sessao no PDV interrompe streaming WebSocket e fecha conexao
+    - Endpoints HTTP GET /frame e POST /input retornam 403 Forbidden se sessao inativa
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Integracao em tempo real Host <-> Admin 100% validada e corrigida: Host inicializa com codigo de 8 digitos sincronizado via IPC; WebSocket com comparacao em tempo constante e tratamento de Clipboard; resolucao dinamica no injector; descoberta LAN sem sobrescrita de IPs; encerramento imediato de sessao pelo PDV interrompe o streaming e fecha o socket; endpoints HTTP protegidos com 403 Forbidden; e Admin trata session_terminated sem loops indevidos de fallback. 152 testes unitarios verdes, 0 clippy warnings e formatacao 100% padronizada.'
+
+# ==============================================================================
+# FASE 22: MELHORIAS DE UI/UX E CONTROLES INSPIRADOS NO TEAMVIEWER (VIEWER)
+# ==============================================================================
+- id: F22-TEAMVIEWER-UX-ENHANCE
+  fase: 22
+  titulo: Barra retratil suspensa (Pin/Collapse), Modo Apenas Visualizar (View-Only) e Escala Adaptativa
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - AGENTS.md
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/style.css
+    - crates/viewer/ui/app.js
+  depende_de: [F21-REMOTE-CONNECT-FIX]
+  criterio_pronto:
+    - Barra de ferramentas retratil com botao pin/collapse e animacao suave para nao cobrir menu do PDV
+    - Botao de alternancia de Modo Controle Total vs Apenas Visualizar (View-Only) suprimindo eventos
+    - Botao seletor de Escala Ajustar a Tela (Fit) vs Tamanho Real 100% (1:1)
+    - Badge discreto indicando modo ativo de visualizacao/controle
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Melhorias de ergonomia e controles in-session inspiradas no TeamViewer concluidas com sucesso: Barra superior retratil (Toolbar Pin/Collapse) implementada com recolhimento suave; modo Apenas Visualizar (View-Only) adicionado suprimindo eventos de mouse e teclado locais; seletor de escala Ajustar a Tela (Fit) vs 100% Original (1:1) com navegacao fluida; e badge flutuante de status ativo. Gates verdes com 152 testes e 0 warnings.'
+
+# ==============================================================================
+# FASE 23: TEAMVIEWER OVERHAUL & ZERO MOCKS NO PRYSMADMIN
+# ==============================================================================
+- id: F23-TEAMVIEWER-OVERHAUL-ZERO-MOCKS
+  fase: 23
+  titulo: Eliminacao total de mocks de PDV, purga de localStorage e layout TeamViewer de 2 cards no PrysmAdmin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/style.css
+    - crates/viewer/ui/app.js
+  depende_de: [F22-TEAMVIEWER-UX-ENHANCE]
+  criterio_pronto:
+    - Zero mocks: eliminados todos os 17 dispositivos fake do codigo e purga automatica de dados antigos no localStorage
+    - Layout TeamViewer autentico na Home: 2 cards principais (Permitir Controle Remoto & Controlar Computador Remoto)
+    - Descoberta LAN em tempo real abaixo dos cards com empty state limpo quando nenhum PDV estiver conectado
+    - Botao Conectar funcional para conexao instantanea por ID do parceiro e autenticacao
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Overhaul completo inspirado no TeamViewer com Zero Mocks concluido: Purga rigorosa de todos os 17 dispositivos e lojas simuladas (no codigo e no localStorage); layout autentico na Home com 2 cards proeminentes ("Permitir Suporte Remoto" com ID/copiar e "Controlar Computador Remoto" com Partner ID, Código/Senha, Seletor de Modo e Botao Conectar funcional); secao de descoberta LAN em tempo real com empty state limpo quando nenhum PDV esta conectado; binarios e instalador PrysmAdmin-Setup-0.1.0.exe regerados e assinados digitalmente. 152 testes verdes e 0 clippy warnings.'
+
+# ==============================================================================
+# FASE 24: HOST TEAMVIEWER ID FIXO, LOGIN TÉCNICO & LATERAL DOCKING
+# ==============================================================================
+- id: F24-HOST-TEAMVIEWER-ID-ADMIN-PROTECT
+  fase: 24
+  titulo: ID fixo permanente por Host (estilo TeamViewer), autenticacao de tecnico para alterar senha e docking lateral
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/tray/src/main.rs
+    - crates/tray/ui/index.html
+    - crates/tray/ui/host.js
+    - crates/tray/ui/style.css
+  depende_de: [F23-TEAMVIEWER-OVERHAUL-ZERO-MOCKS]
+  criterio_pronto:
+    - Host gera automaticamente ID numerico exclusivo e permanente (ex: 117 029 2035) sem opcao de alteracao pelo caixa
+    - Modal de configuracoes do Host exige login de Tecnico cadastrado no Admin para alterar senha desassistida ou apelido
+    - Janela do Host doca automaticamente na lateral/canto da tela durante sessao ativa liberando 100% da visualizacao
+    - Suporte a block_input (BlockInput do Windows) e lock_workstation com fail-safe obrigatorio de liberacao
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Fase 24 concluida com sucesso: ID fixo numerico permanente e imutavel (estilo TeamViewer, ex: 117 029 2035); protecao administrativa do Host exigindo autenticacao de tecnico cadastrado no Admin para alterar propriedades ou senha desassistida; docking lateral automatico (recolhimento para 320x95px no canto da tela) liberando 100% da visualizacao durante sessao ativa; comandos nativos block_input e lock_workstation com fail-safe garantido de liberacao na desconexao; binarios e instaladores assinados digitalmente com Authenticode; 152 testes e clippy 100% verdes.'
+
+# ==============================================================================
+# FASE 25: MINIMIZAR PRYSMHOST PARA A BANDEJA DE ÍCONES OCULTOS (SYSTEM TRAY)
+# ==============================================================================
+- id: F25-HOST-SYSTEM-TRAY-MINIMIZE
+  fase: 25
+  titulo: Minimizar PrysmHost para a bandeja de icones ocultos do Windows (System Tray com restauracao)
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/tray/src/main.rs
+  depende_de: [F24-HOST-TEAMVIEWER-ID-ADMIN-PROTECT]
+  criterio_pronto:
+    - Ao minimizar ou fechar o PrysmHost, a janela oculta da barra de tarefas e vai para a bandeja de icones ocultos (System Tray)
+    - Icone oficial no System Tray com tooltip descritivo e menu de contexto (Abrir, Sair)
+    - Clique ou duplo-clique no icone da bandeja restaura a janela para o primeiro plano
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 0
+  ultimo_log: 'Fase 25 concluida com sucesso: Minimizacao e fechamento do PrysmHost redirecionados nativamente para a bandeja de icones ocultos do Windows (System Tray via Shell_NotifyIconW); icone oficial registrado com tooltip; duplo-clique restaura a janela e botao direito abre menu nativo (Abrir/Sair); binarios de release assinados com Authenticode; 152 testes e clippy 100% verdes.'
+
+# ==============================================================================
+# FASE 26: MENU DE CONTEXTO DO BOTÃO DIREITO NOS DISPOSITIVOS DO ADMIN
+# ==============================================================================
+- id: F26-ADMIN-CONTEXT-MENU-DEVICES
+  fase: 26
+  titulo: Menu de contexto com botao direito nos dispositivos do Admin (Conectar, Editar, Copiar ID, Remover)
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+  depende_de: [F25-HOST-SYSTEM-TRAY-MINIMIZE]
+  criterio_pronto:
+    - Clique com botao direito em qualquer card ou linha de dispositivo abre menu de contexto flutuante executivo
+    - Opcao Conectar Agora para inicio imediato da sessao remota
+    - Opcao Editar / Alterar Dispositivo abrindo modal com dados preenchidos para salvar alteracoes
+    - Opcao Copiar ID / Copiar IP para a area de transferencia
+    - Opcao Remover Dispositivo com confirmacao e remocao persistente da lista
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'F26 concluida: Menu de contexto de botao direito com Conectar, Editar, Ver Ficha, Copiar ID/IP e Remover persistente no painel Admin.'
+
+# ==============================================================================
+# FASE 27: MINIMIZAR CONTROLES DE SUPORTE E CONEXAO REMOTA NO MENU DO ADMIN
+# ==============================================================================
+- id: F27-ADMIN-COLLAPSIBLE-QUICK-CONNECT
+  fase: 27
+  titulo: Minimizar e colapsar campos de suporte remoto e controle remoto no menu do Admin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+  depende_de: [F26-ADMIN-CONTEXT-MENU-DEVICES]
+  criterio_pronto:
+    - Campos de 'Permitir Suporte Remoto' e 'Controlar Computador Remoto' minimizados por padrao no topo do painel
+    - Barra sanfona retratil / accordion elegante com botao de expandir e minimizar
+    - Aba de menu lateral 'Conexao Rapida' dedicada e acessivel diretamente
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'F27 concluida: Campos de conexao e suporte remoto minimizados em acordeom no dashboard e integrados como menu dedicado em Conexao Rapida.'
+
+# ==============================================================================
+# FASE 28: OVERHAUL UI/UX DA CENTRAL DE CONFIGURAÇÕES DO ADMIN
+# ==============================================================================
+- id: F28-ADMIN-SETTINGS-UIUX-OVERHAUL
+  fase: 28
+  titulo: Overhaul de UI/UX da Central de Configuracoes do Admin com layout Master-Detail em 2 colunas
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+  depende_de: [F27-ADMIN-COLLAPSIBLE-QUICK-CONNECT]
+  criterio_pronto:
+    - Layout moderno Master-Detail em 2 colunas (sidebar vertical de categorias + painel focado de conteudo)
+    - Switches/toggles visuais modernos para opcoes de seguranca Zero-Trust
+    - Seletor de temas com cards interativos refinados e preview visual
+    - Painel de atualizacoes claro e elegante com status da versao e canal
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'F28 concluida: Overhaul de UI/UX da Central de Configuracoes com layout Master-Detail em 2 colunas, switches modernos e cards refinados.'
+
+# ==============================================================================
+# FASE 29: AUDITORIA DE BOTÕES/ABAS E LIMPEZA DE ARQUIVOS OBSOLETOS
+# ==============================================================================
+- id: F29-AUDIT-AND-CLEANUP
+  fase: 29
+  titulo: Auditoria geral de abas, botoes e remocao de arquivos duplicados/obsoletos
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/app.js
+    - docs/threat-model/threat-model.md
+    - docs/plan/empty.txt
+    - deploy/prismview-deploy.tar.gz
+  depende_de: [F28-ADMIN-SETTINGS-UIUX-OVERHAUL]
+  criterio_pronto:
+    - Verificacao completa de todos os botoes, abas e eventos do PrysmAdmin e PrysmHost
+    - Integracao de persistencia total (localStorage) para todos os campos da Central de Configuracoes
+    - Vinculacao de evento no botao de notificacoes do cabecalho (btnHeaderNotify)
+    - Remocao segura dos arquivos duplicados, vazios e obsoletos
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'F29 concluida: Auditoria completa de botoes e abas, persistencia local total de settings, remocao de arquivos duplicados/obsoletos e 152 testes 100% verdes.'
+
+# ==============================================================================
+# FASE 30: LIMPEZA DE DIST E FOCO EM EXECUTÁVEIS DIRETOS EM TEMPO REAL
+# ==============================================================================
+- id: F30-CLEAN-DIST-DIRECT-BINARIES
+  fase: 30
+  titulo: Limpeza de duplicatas em dist e foco exclusivo nos executaveis diretos
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - scripts/sign-binaries.ps1
+  depende_de: [F29-AUDIT-AND-CLEANUP]
+  criterio_pronto:
+    - Remocao de instaladores antigos e zips/pastas redundantes da pasta dist/
+    - Ajuste de sign-binaries.ps1 para assinar apenas executaveis diretos oficiais
+    - Pasta dist/ contendo exclusivamente os executaveis standalone PrysmAdmin.exe e PrysmHost.exe
+    - Executaveis assinados com certificado Authenticode SHA-256 valido
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'F30 concluida: Limpeza completa de dist/, mantendo apenas PrysmAdmin.exe e PrysmHost.exe oficiais com assinatura Authenticode SHA-256 e atualizacao em tempo real.'
+
+# ==============================================================================
+# FASE 31: CORREÇÃO INTEGRAL DE BOTÕES E REDESIGN CLEAN DE CONFIGURAÇÕES
+# ==============================================================================
+- id: F31-ADMIN-FIX-ALL-BUTTONS-AND-CLEAN-SETTINGS
+  fase: 31
+  titulo: Correcao de botoes/busca e layout clean essencial da aba Configuracoes
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+  depende_de: [F30-CLEAN-DIST-DIRECT-BINARIES]
+  criterio_pronto:
+    - Barra de busca global topSearchBar conectada e filtrando a frota em tempo real
+    - Revisao e ativacao de todos os botoes interativos do painel Admin
+    - Aba Configuracoes simplificada em layout clean contendo apenas 4 blocos essenciais (Perfil, Seguranca, Aparencia, Atualizacoes)
+    - Remocao de sub-abas complexas, radios inoperantes e tabelas redundantes
+    - Persistencia integral via localStorage e feedback visual imediato
+    - cargo test e clippy 100% verde sem warnings
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 31 concluida: Todos os botoes e abas validados e funcionando, busca global em tempo real ativada, redesign clean de Configuracoes em 4 blocos essenciais, 152 testes 100% verdes e binario PrysmAdmin.exe assinado.'
+
+# ==============================================================================
+# FASE 32: GSAP ANIMATIONS & UI/UX REFINEMENT (ADMIN, VIEWER, HOST)
+# ==============================================================================
+- id: F32-GSAP-UIUX-REFINEMENT
+  fase: 32
+  titulo: Implementacao da biblioteca GSAP offline com melhorias de UI/UX no Admin, Viewer e Host
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - docs/dependencias.md
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+    - crates/viewer/src/webview_app.rs
+    - crates/tray/ui/index.html
+    - crates/tray/ui/host.js
+    - crates/tray/ui/style.css
+    - crates/tray/src/main.rs
+  depende_de: [F31-ADMIN-FIX-ALL-BUTTONS-AND-CLEAN-SETTINGS]
+  criterio_pronto:
+    - Biblioteca GSAP 3 incorporada 100% local e offline nos frontends do Admin, Viewer e Host
+    - Transicoes fluidas de abas, acordeom de conexao rapida, modais e toasts com easing profissional
+    - Micro-interacoes interativas nos botoes e feedback visual enriquecido
+    - In-session toolbar retratil com recolhimento/fixacao suave via GSAP
+    - Animacoes do Host PDV (abertura de janela, geracao de codigo, consentimento, encerramento de emergencia)
+    - Validacao integral de todos os botoes, abas e guias
+    - cargo test --workspace 100% verde sem falhas
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 32 concluida e revisada: GSAP 3.12.5 incorporado 100% offline em Admin, Viewer e Host. Corrigido seletor de modais para .modal-box em app.js; protegidas todas as animacoes de modais, acordeom e dropdown contra race-conditions com killTweensOf; preservada centralizacao horizontal xPercent -50 e hover na toolbar remota; limpos estilos inline de borderColor na expiracao do codigo do Host; adicionada animacao de saida no encerramento de emergencia e consentimento; e micro-interacoes estendidas a elementos dinamicos. Workspace 100% verde com 136 testes e 0 warnings.'
+
+# ==============================================================================
+# FASE 33: CORREÇÃO DO OVERLAY DE SWITCHES EM CONFIGURAÇÕES E ESTABILIDADE DE ABAS
+# ==============================================================================
+- id: F33-FIX-SETTINGS-SWITCH-OVERLAY
+  fase: 33
+  titulo: Correcao de switches e seletores em Configuracoes e estabilidade das abas
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/style.css
+    - crates/viewer/ui/app.js
+  depende_de: [F32-GSAP-UIUX-REFINEMENT]
+  criterio_pronto:
+    - Correcao do posicionamento dos switches (.switch-toggle-wrap e .switch-slider) evitando que expandam para a janela inteira
+    - Remocao do fechamento extra </section> em index.html
+    - Sincronizacao de versao com newVersionTag
+    - Validacao integral de todas as abas e botoes (Dashboard, Conexao Rapida, Grupos, Auditoria e Configuracoes)
+    - cargo test --workspace verde
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 33 concluida: Corrigido overlay de .switch-slider e .switch-toggle-wrap na aba Configuracoes, removido fechamento duplicado de </section>, adicionada protecao de confinamento com width/height fixos de 44x24px e position:relative, sincronizado newVersionTag e validadas todas as abas e botoes com 152 testes 100% verdes.'
+
+# ==============================================================================
+# FASE 34: VARREDURA GERAL DE CAMPOS, ABAS E BOTÕES NO PAINEL ADMIN
+# ==============================================================================
+- id: F34-ADMIN-SWEEP-ALL-FIELDS-TABS-BUTTONS
+  fase: 34
+  titulo: Varredura profunda e correcao de todos os botoes, modais e campos inoperantes no Painel Admin
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+  depende_de: [F33-FIX-SETTINGS-SWITCH-OVERLAY]
+  criterio_pronto:
+    - Correcao de todos os seletores de dialogos modais (.modal-box) e fechamento por backdrop e ESC
+    - Suporte a conexao direta via btnDirectSubmit com ou sem credencial previa
+    - Habilitacao de cadastro de novo tecnico via btnOpenNewTechModal e sincronizacao de cfgTechPhone
+    - Limpeza de filtro de lojas no Dashboard ao clicar na pill 'Todos' e inclusao do seletor storeSelectFilter
+    - Animacao correta de cards no acordeom de conexao rapida (#tvQuickBody .tv-home-card)
+    - Confinamento total de switches evitando qualquer overlay no painel de configuracoes
+    - 152 testes no cargo test --workspace e cargo clippy 100% verdes
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 34 concluida: Varredura de todos os 67 botoes e 45 campos do Admin concluida com sucesso. Corrigidos seletores .modal-box em 7 funcoes GSAP, adicionado fechamento por backdrop e tecla ESC, implementado fallback inteligente no Direct Connect, adicionados btnOpenNewTechModal, cfgTechPhone, storeSelectFilter e btnQuickCtrlAltDel. 152 testes verdes e clippy sem warnings.'
+
+# ==============================================================================
+# FASE 35: GENERALIZAÇÃO DE TERMINOLOGIA NO ADMIN E VIEWER (REMOÇÃO DE PDV/CAIXA)
+# ==============================================================================
+- id: F35-GENERALIZE-TERMINOLOGY-ADMIN-VIEWER
+  fase: 35
+  titulo: Remocao de termos especificos de PDV e Caixa no Admin e Viewer para uso geral
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/index.html
+    - crates/viewer/ui/app.js
+    - crates/viewer/src/strings.rs
+    - crates/viewer/src/webview_app.rs
+  depende_de: [F34-ADMIN-SWEEP-ALL-FIELDS-TABS-BUTTONS]
+  criterio_pronto:
+    - Substituicao de textos de interface 'PDV', 'Caixa', 'terminal de caixa' por 'Dispositivo', 'Computador Remoto', 'Estacao'
+    - Atualizacao de exemplos e placeholders de 'PDV-CAIXA-01' para 'DESKTOP-01'
+    - Atualizacao de toasts e dialogos no Admin e Viewer
+    - Testes e clippy 100% verdes
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 35 concluida: Eliminado congelamento de opacidade GSAP no switchTab e initApp, removida terminologia restritiva de PDV/Caixa no painel Admin e Viewer, substituidos por Dispositivo e Computador Remoto, mantendo compatibilidade de protocolo. Testes 100% verdes.'
+
+# ==============================================================================
+# FASE 36: GENERALIZAÇÃO DE TERMINOLOGIA NO HOST E TRAY (REMOÇÃO DE PDV/CAIXA)
+# ==============================================================================
+- id: F36-GENERALIZE-TERMINOLOGY-HOST-TRAY
+  fase: 36
+  titulo: Remocao de termos especificos de PDV e Caixa no Host e Tray para uso geral
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/tray/ui/index.html
+    - crates/tray/ui/host.js
+    - crates/tray/src/main.rs
+  depende_de: [F35-GENERALIZE-TERMINOLOGY-ADMIN-VIEWER]
+  criterio_pronto:
+    - Remocao de 'ao PDV' e 'Caixa Local' em index.html e host.js do Host/Tray
+    - Atualizacao de títulos de janela, tooltips e mensagens de consentimento para 'Dispositivo' e 'Computador'
+    - Atualizacao de fallback ID de 'PDV-CAIXA-01' para 'DESKTOP-01' em main.rs
+    - cargo test --workspace e cargo clippy 100% verdes
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 36 concluida: Generalizada terminologia no Host e Tray, removidas mencoes a PDV e Caixa em titulos, tooltips, modais de consentimento e beacons, fallback ID atualizado para DESKTOP-01, mantendo integridade de rede. Workspace 100% verde.'
+
+# ==============================================================================
+# FASE 37: CORREÇÃO DO MENU DE USUÁRIO, ACORDEOM E ANIMAÇÕES GSAP
+# ==============================================================================
+- id: F37-FIX-USER-PROFILE-ACCORDION-GSAP-UI
+  fase: 37
+  titulo: Correcao do menu de usuario, expansao do acordeom de conexao rapida, reativacao de animacoes GSAP e garantia de recompilacao release
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/style.css
+    - crates/viewer/ui/index.html
+    - scripts/sign-binaries.ps1
+  depende_de: [F36-GENERALIZE-TERMINOLOGY-HOST-TRAY]
+  criterio_pronto:
+    - Correcao de position relative e z-index no app-header e remocao de conflito de animacao CSS no menu de perfil
+    - Correcao do acordeom medindo scrollHeight numerico para GSAP sem travar em height auto
+    - Integracao de animacoes GSAP fluidas e seguras no switchTab, initApp, renderFleetCards vazio e micro-interacoes
+    - Atualizacao do scripts/sign-binaries.ps1 para compilar com cargo build --release antes de copiar e assinar
+    - 152 testes no cargo test --workspace e cargo clippy 100% verdes
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 37 concluida: Menu de perfil corrigido com position relative no app-header e display flex/none via GSAP killTweensOf, expansao do acordeom corrigida medindo scrollHeight numerico, animacoes fluidas de entrada, transicao de abas e empty fleet integradas com non-zero opacity e clearProps all, e script sign-binaries.ps1 atualizado com cargo build --release automatico e encerramento de instancias anteriores para eliminar locked files no Windows. 152 testes no cargo test e clippy 100% verdes.'
+
+# ==============================================================================
+# FASE 38: ROBUSTEZ DA BIBLIOTECA DE ANIMAÇÕES E CORREÇÃO FRONTEND/BACKEND
+# ==============================================================================
+- id: F38-ANIMATION-LIB-ROBUSTNESS-AND-FULLSTACK-FIXES
+  fase: 38
+  titulo: Robustez total da biblioteca de animacoes GSAP, micro-interacoes dinamicas, tabela de tecnicos e suporte a cookies na API
+  agente: dev-rust
+  arquivos_permitidos:
+    - docs/plan/tasks.yaml
+    - crates/viewer/ui/app.js
+    - crates/viewer/ui/index.html
+    - crates/tray/ui/host.js
+    - server/internal/api/routes.go
+  depende_de: [F37-FIX-USER-PROFILE-ACCORDION-GSAP-UI]
+  criterio_pronto:
+    - Correcao de condicoes de corrida nas animacoes GSAP (fromTo com killTweensOf em acordeom, cards da frota, lojas e host)
+    - Suporte a hover bidirecional e centralizacao horizontal xPercent -50 na barra superior retratil do Viewer
+    - Micro-interacoes aplicadas a todos os botoes dinamicos e de acao rapida em Viewer e Host
+    - Tabela de gestao de tecnicos integrada em index.html e acionada na aba de configuracoes
+    - Suporte a cookie de sessao prysmview_session no middleware de autenticacao da API Go
+    - Testes unitarios e de integracao do Go e do Rust 100% aprovados
+  status: concluida
+  tentativas: 1
+  ultimo_log: 'Fase 38 concluida com sucesso: robustez das animacoes GSAP implementada com fromTo e killTweensOf em acordeom, cards de frota e host para eliminar condicoes de corrida e opacidade presa; centralizacao horizontal xPercent -50 e suporte a hover bidirecional adicionados na toolbar retratil do visualizador remoto; micro-interacoes estendidas a todos os elementos dinamicos e modais; tabela de gestao de tecnicos integrada na interface HTML e sincronizada ao trocar para a aba de configuracoes; suporte a cookie seguro prysmview_session adicionado no middleware de autenticacao da API Go. 137 testes Rust e suites de testes Go 100% verdes.'
+
+
+
+

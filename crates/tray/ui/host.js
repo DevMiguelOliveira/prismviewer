@@ -4,8 +4,12 @@
 
 let hostState = {
   isConnected: false,
-  pdvId: 'PDV-CAIXA-01',
+  pdvId: '100000000',
+  formattedId: '100 000 000',
   localUser: null,
+  alias: null,
+  group: 'Dispositivos Matriz',
+  description: null,
   accessPassword: null,
   isPasswordRevealed: false,
   isSessionActive: false,
@@ -14,33 +18,16 @@ let hostState = {
   sessionCodeExpiresIn: 120,
   clipboardEnabled: true,
   fileTransferEnabled: true,
-  statusMessage: 'Aguardando serviço local prysmview-svc...',
+  inputBlocked: false,
+  statusMessage: 'Aguardando servico local prysmview-svc...',
   pendingConsent: null
 };
-
-function getSavedLocalUser() {
-  try {
-    if (window.localStorage) {
-      return window.localStorage.getItem('prysm_host_user') || null;
-    }
-  } catch (e) {}
-  return null;
-}
-
-function getSavedAccessPassword() {
-  try {
-    if (window.localStorage) {
-      return window.localStorage.getItem('prysm_host_password') || null;
-    }
-  } catch (e) {}
-  return null;
-}
 
 let consentTimerInterval = null;
 let codeTimerInterval = null;
 
 // =============================================================================
-// COMUNICAÇÃO IPC NATIVA COM O BACKEND RUST
+// COMUNICACAO IPC NATIVA COM O BACKEND RUST
 // =============================================================================
 function sendIpcMessage(action, data = {}) {
   const payload = JSON.stringify({ action, ...data });
@@ -52,17 +39,17 @@ function sendIpcMessage(action, data = {}) {
 }
 
 // =============================================================================
-// RENDERIZAÇÃO DA INTERFACE
+// RENDERIZACAO DA INTERFACE
 // =============================================================================
 function renderState() {
-  // 0. Atualizar Operador Local do Caixa
+  // 0. Atualizar Apelido / Operador Local do Dispositivo
   const elLocalUser = document.getElementById('displayLocalUser');
   const elUserAvatar = document.getElementById('displayUserAvatar');
   if (elLocalUser) {
-    const userName = hostState.localUser || 'Não cadastrado';
-    elLocalUser.textContent = userName;
+    const displayName = hostState.alias || hostState.localUser || 'Dispositivo Local';
+    elLocalUser.textContent = displayName;
     if (elUserAvatar) {
-      const initials = userName
+      const initials = displayName
         .split(' ')
         .filter(Boolean)
         .map(n => n[0])
@@ -73,26 +60,26 @@ function renderState() {
     }
   }
 
-  // 1. Atualizar ID do PDV
+  // 1. Atualizar ID Fixo Permanente do PDV (Estilo TeamViewer)
   const elPdvId = document.getElementById('displayPdvId');
   if (elPdvId) {
-    elPdvId.textContent = hostState.pdvId || 'PDV-CAIXA-01';
+    elPdvId.textContent = hostState.formattedId || hostState.pdvId || '100 000 000';
   }
 
-  // 2. Banner de Status da Conexão com o Serviço
+  // 2. Banner de Status da Conexao com o Servico
   const banner = document.getElementById('connectionStatusBanner');
   const statusText = document.getElementById('statusText');
   if (banner && statusText) {
     if (hostState.isConnected) {
-      banner.className = 'status-banner status-online';
-      statusText.textContent = 'Pronto para conectar (Conexão Segura E2E)';
+      banner.className = 'tv-status-indicator status-online';
+      statusText.textContent = 'Pronto para conectar (Conexao Segura E2E)';
     } else {
-      banner.className = 'status-banner status-waiting';
-      statusText.textContent = hostState.statusMessage || 'Aguardando serviço local prysmview-svc...';
+      banner.className = 'tv-status-indicator status-waiting';
+      statusText.textContent = hostState.statusMessage || 'Aguardando servico local prysmview-svc...';
     }
   }
 
-  // 3. Código de Sessão / Senha Temporária
+  // 3. Codigo de Sessao / Senha Temporaria (8 digitos)
   const codeBox = document.getElementById('displayCodeContainer');
   const codeText = document.getElementById('displaySessionCode');
   const codeExpiryNote = document.getElementById('codeExpiryNote');
@@ -104,10 +91,11 @@ function renderState() {
       codeText.textContent = hostState.currentCode;
       if (codeExpiryNote && codeExpiryCountdown) {
         codeExpiryNote.style.display = 'flex';
-        codeExpiryCountdown.textContent = `Expira em ${hostState.sessionCodeExpiresIn}s • Máximo 3 tentativas`;
+        codeExpiryCountdown.textContent = `Expira em ${hostState.sessionCodeExpiresIn}s • Maximo 3 tentativas`;
       }
     } else {
       codeBox.classList.remove('active-code');
+      codeBox.style.borderColor = '';
       codeText.textContent = 'Aguardando chamada...';
       if (codeExpiryNote) {
         codeExpiryNote.style.display = 'none';
@@ -115,7 +103,7 @@ function renderState() {
     }
   }
 
-  // 3.1 Senha Fixa de Acesso (Host)
+  // 3.1 Senha Fixa Desassistida (Host)
   const elPassword = document.getElementById('displayAccessPassword');
   const labelToggle = document.getElementById('labelTogglePassword');
   const btnToggle = document.getElementById('btnToggleShowPassword');
@@ -135,17 +123,27 @@ function renderState() {
     }
   }
 
-  // 4. Banner de Sessão Ativa
+  // 4. Banner e Docking Lateral de Sessao Ativa
   const sessionCard = document.getElementById('sessionActiveCard');
   const opName = document.getElementById('activeOperatorName');
   if (sessionCard) {
     if (hostState.isSessionActive) {
-      sessionCard.style.display = 'flex';
+      if (sessionCard.style.display !== 'flex') {
+        sessionCard.style.display = 'flex';
+        if (window.gsap) {
+          gsap.fromTo(sessionCard,
+            { opacity: 0, y: -10, scale: 0.98 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'power2.out', clearProps: 'transform,opacity' }
+          );
+        }
+      }
+      document.body.classList.add('session-docked');
       if (opName) {
-        opName.textContent = hostState.currentOperator || 'Técnico de Suporte';
+        opName.textContent = hostState.currentOperator || 'Tecnico de Suporte';
       }
     } else {
       sessionCard.style.display = 'none';
+      document.body.classList.remove('session-docked');
     }
   }
 
@@ -157,9 +155,20 @@ function renderState() {
 
   if (consentModal) {
     if (hostState.pendingConsent) {
-      consentModal.style.display = 'flex';
+      if (consentModal.style.display !== 'flex') {
+        consentModal.style.display = 'flex';
+        if (window.gsap) {
+          const dialog = consentModal.querySelector('.consent-dialog');
+          if (dialog) {
+            gsap.fromTo(dialog,
+              { opacity: 0, scale: 0.88, y: -15 },
+              { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(1.5)', clearProps: 'transform,opacity' }
+            );
+          }
+        }
+      }
       if (consentOp) consentOp.textContent = hostState.pendingConsent.operatorName || 'Central de Suporte';
-      if (consentReason) consentReason.textContent = hostState.pendingConsent.reason || 'Assistência Técnica';
+      if (consentReason) consentReason.textContent = hostState.pendingConsent.reason || 'Assistencia Tecnica';
       if (consentTime) consentTime.textContent = `${hostState.pendingConsent.timeoutSecs || 60}s`;
 
       startConsentCountdown(hostState.pendingConsent.timeoutSecs || 60);
@@ -169,7 +178,7 @@ function renderState() {
     }
   }
 
-  // 6. Travas de Segurança Local
+  // 6. Travas de Seguranca Local
   const chkClipboard = document.getElementById('chkClipboard');
   const chkFileTransfer = document.getElementById('chkFileTransfer');
   if (chkClipboard) chkClipboard.checked = hostState.clipboardEnabled;
@@ -195,7 +204,7 @@ function startConsentCountdown(seconds) {
 }
 
 // =============================================================================
-// FUNÇÃO EXPOSTA PARA O BACKEND RUST ATUALIZAR O ESTADO
+// FUNCAO EXPOSTA PARA O BACKEND RUST ATUALIZAR O ESTADO
 // =============================================================================
 window.updateHostState = function(stateObj) {
   if (typeof stateObj === 'string') {
@@ -211,44 +220,185 @@ window.updateHostState = function(stateObj) {
   renderState();
 };
 
-function openUserModal(isFirstLogin = false) {
-  const modal = document.getElementById('userRegistrationModal');
+// =============================================================================
+// CONTROLE DE AUTENTICACAO DE TECNICO E PROPRIEDADES DO HOST
+// =============================================================================
+function openTechAuthModal() {
+  const modal = document.getElementById('techAuthModal');
   if (!modal) return;
-  const title = document.getElementById('userModalTitle');
-  const subtitle = document.getElementById('userModalSubtitle');
-  const btnCancel = document.getElementById('btnCancelUserModal');
-  const inputName = document.getElementById('inputLocalUserName');
-  const inputPdv = document.getElementById('inputLocalPdvId');
-  const inputPwd = document.getElementById('inputLocalAccessPassword');
-
-  if (isFirstLogin) {
-    if (title) title.textContent = 'Primeiro Acesso: Identifique o Operador';
-    if (subtitle) subtitle.textContent = 'Cadastre o nome do operador ou atendente responsável por esta estação de trabalho.';
-    if (btnCancel) btnCancel.style.display = 'none';
-  } else {
-    if (title) title.textContent = 'Alterar Operador / Senha do Caixa';
-    if (subtitle) subtitle.textContent = 'Atualize o nome do operador ou a senha de acesso deste PDV.';
-    if (btnCancel) btnCancel.style.display = 'block';
+  const errBox = document.getElementById('techAuthError');
+  if (errBox) errBox.style.display = 'none';
+  const inputPwd = document.getElementById('inputTechPassword');
+  if (inputPwd) inputPwd.value = '';
+  modal.style.display = 'flex';
+  if (window.gsap) {
+    const dialog = modal.querySelector('.consent-dialog');
+    if (dialog) {
+      gsap.killTweensOf(dialog);
+      gsap.fromTo(dialog,
+        { opacity: 0, scale: 0.92, y: -10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(1.5)', clearProps: 'transform,opacity' }
+      );
+    }
   }
+  const inputUser = document.getElementById('inputTechUsername');
+  if (inputUser) {
+    if (!inputUser.value) inputUser.value = 'admin';
+    setTimeout(() => {
+      if (inputPwd) inputPwd.focus();
+    }, 50);
+  }
+}
 
-  if (inputName) inputName.value = hostState.localUser || '';
-  if (inputPdv) inputPdv.value = hostState.pdvId || 'PDV-CAIXA-01';
+function closeTechAuthModal() {
+  const modal = document.getElementById('techAuthModal');
+  if (!modal) return;
+  if (window.gsap) {
+    const dialog = modal.querySelector('.consent-dialog');
+    if (dialog) {
+      gsap.killTweensOf(dialog);
+      gsap.to(dialog, {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.15,
+        ease: 'power2.in',
+        onComplete: () => {
+          modal.style.display = 'none';
+          dialog.style.opacity = '';
+          dialog.style.transform = '';
+        }
+      });
+      return;
+    }
+  }
+  modal.style.display = 'none';
+}
+
+function submitTechAuth(e) {
+  if (e) e.preventDefault();
+  const inputUser = document.getElementById('inputTechUsername');
+  const inputPwd = document.getElementById('inputTechPassword');
+  const username = inputUser ? inputUser.value.trim() : '';
+  const password = inputPwd ? inputPwd.value.trim() : '';
+
+  if (!username || !password) return;
+
+  const btnSubmit = document.getElementById('btnSubmitTechAuth');
+  if (btnSubmit) btnSubmit.disabled = true;
+
+  sendIpcMessage('verify_technician_login', { username, password });
+}
+
+window.onTechAuthResult = function(res) {
+  const btnSubmit = document.getElementById('btnSubmitTechAuth');
+  if (btnSubmit) btnSubmit.disabled = false;
+
+  if (res && res.success) {
+    closeTechAuthModal();
+    openHostPropsModal();
+  } else {
+    const errBox = document.getElementById('techAuthError');
+    if (errBox) {
+      errBox.textContent = (res && res.message) ? res.message : 'Credenciais de tecnico invalidas.';
+      errBox.style.display = 'block';
+    }
+    const inputPwd = document.getElementById('inputTechPassword');
+    if (inputPwd) {
+      inputPwd.value = '';
+      inputPwd.focus();
+    }
+  }
+};
+
+function openHostPropsModal() {
+  const modal = document.getElementById('hostPropsModal');
+  if (!modal) return;
+
+  const inputId = document.getElementById('inputPropFixedId');
+  const inputPwd = document.getElementById('inputPropAccessPassword');
+  const inputAlias = document.getElementById('inputPropAlias');
+  const inputGroup = document.getElementById('inputPropGroup');
+  const inputDesc = document.getElementById('inputPropDescription');
+
+  if (inputId) inputId.value = hostState.formattedId || hostState.pdvId || '100 000 000';
   if (inputPwd) inputPwd.value = hostState.accessPassword || '';
+  if (inputAlias) inputAlias.value = hostState.alias || hostState.localUser || '';
+  if (inputGroup) inputGroup.value = hostState.group || 'Dispositivos Matriz';
+  if (inputDesc) inputDesc.value = hostState.description || '';
 
   modal.style.display = 'flex';
-  if (inputName) setTimeout(() => inputName.focus(), 50);
+  if (window.gsap) {
+    const dialog = modal.querySelector('.consent-dialog');
+    if (dialog) {
+      gsap.killTweensOf(dialog);
+      gsap.fromTo(dialog,
+        { opacity: 0, scale: 0.92, y: -10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.25, ease: 'back.out(1.5)', clearProps: 'transform,opacity' }
+      );
+    }
+  }
+  if (inputPwd) setTimeout(() => inputPwd.focus(), 50);
 }
 
-function closeUserModal() {
-  const modal = document.getElementById('userRegistrationModal');
-  if (modal) modal.style.display = 'none';
+function closeHostPropsModal() {
+  const modal = document.getElementById('hostPropsModal');
+  if (!modal) return;
+  if (window.gsap) {
+    const dialog = modal.querySelector('.consent-dialog');
+    if (dialog) {
+      gsap.killTweensOf(dialog);
+      gsap.to(dialog, {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.15,
+        ease: 'power2.in',
+        onComplete: () => {
+          modal.style.display = 'none';
+          dialog.style.opacity = '';
+          dialog.style.transform = '';
+        }
+      });
+      return;
+    }
+  }
+  modal.style.display = 'none';
 }
 
-window.openUserModal = openUserModal;
-window.closeUserModal = closeUserModal;
+function submitHostProps(e) {
+  if (e) e.preventDefault();
+  const inputPwd = document.getElementById('inputPropAccessPassword');
+  const inputAlias = document.getElementById('inputPropAlias');
+  const inputGroup = document.getElementById('inputPropGroup');
+  const inputDesc = document.getElementById('inputPropDescription');
+
+  const accessPassword = inputPwd ? inputPwd.value.trim() : '';
+  const alias = inputAlias ? inputAlias.value.trim() : '';
+  const group = inputGroup ? inputGroup.value.trim() : '';
+  const description = inputDesc ? inputDesc.value.trim() : '';
+
+  hostState.accessPassword = accessPassword || null;
+  if (alias) hostState.alias = alias;
+  if (group) hostState.group = group;
+  if (description) hostState.description = description;
+
+  sendIpcMessage('save_host_props', {
+    accessPassword,
+    alias,
+    group,
+    description
+  });
+
+  closeHostPropsModal();
+  renderState();
+}
+
+window.openTechAuthModal = openTechAuthModal;
+window.closeTechAuthModal = closeTechAuthModal;
+window.openHostPropsModal = openHostPropsModal;
+window.closeHostPropsModal = closeHostPropsModal;
 
 // =============================================================================
-// INICIALIZAÇÃO E EVENTOS DOM
+// INICIALIZACAO E EVENTOS DOM
 // =============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   // Carrega estado inicial caso injetado pelo WebView
@@ -256,28 +406,37 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateHostState(window.__INITIAL_HOST_STATE__);
   }
 
-  // Carrega usuário e senha de localStorage caso ainda não estejam no estado
-  if (!hostState.localUser) {
-    const saved = getSavedLocalUser();
-    if (saved) hostState.localUser = saved;
-  }
-  if (!hostState.accessPassword) {
-    const savedPwd = getSavedAccessPassword();
-    if (savedPwd) hostState.accessPassword = savedPwd;
-  }
-
   renderState();
 
-  // PRIMEIRO LOGIN: Se o usuário ainda não tiver sido cadastrado, abre o modal de boas-vindas imediatamente
-  if (!hostState.localUser) {
-    setTimeout(() => openUserModal(true), 200);
+  // Animacao de entrada fluida com GSAP
+  if (window.gsap) {
+    gsap.killTweensOf('.tv-banner, .tv-control-card, .tv-footer');
+    gsap.fromTo('.tv-banner', { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', clearProps: 'transform,opacity' });
+    gsap.fromTo('.tv-control-card', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, delay: 0.08, ease: 'power2.out', clearProps: 'transform,opacity' });
+    gsap.fromTo('.tv-footer', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.15, ease: 'power2.out', clearProps: 'transform,opacity' });
+
+    // Micro-interacoes nos botoes
+    document.querySelectorAll('.tv-btn-action, .tv-btn-secondary, .btn-consent-accept, .btn-consent-reject, .tv-mini-link-btn, .btn-emergency, .tv-gear-btn, .tv-cancel-btn').forEach(btn => {
+      if (btn.dataset.gsapBound) return;
+      btn.dataset.gsapBound = 'true';
+      btn.addEventListener('mousedown', () => gsap.to(btn, { scale: 0.95, duration: 0.1, ease: 'power1.out' }));
+      btn.addEventListener('mouseup', () => gsap.to(btn, { scale: 1, duration: 0.15, ease: 'power1.out' }));
+      btn.addEventListener('mouseleave', () => gsap.to(btn, { scale: 1, duration: 0.15, ease: 'power1.out' }));
+    });
   }
 
-  // Botão Copiar ID
+  // Botao Copiar ID Permanente
   const btnCopy = document.getElementById('btnCopyPdvId');
   if (btnCopy) {
     btnCopy.addEventListener('click', () => {
-      const textToCopy = hostState.pdvId || 'PDV-CAIXA-01';
+      const textToCopy = hostState.formattedId || hostState.pdvId || '100000000';
+      if (window.gsap) {
+        gsap.killTweensOf(btnCopy);
+        gsap.fromTo(btnCopy,
+          { scale: 0.92 },
+          { scale: 1.05, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut', overwrite: 'auto', clearProps: 'transform' }
+        );
+      }
       navigator.clipboard.writeText(textToCopy).then(() => {
         btnCopy.classList.add('copied');
         const feedback = document.getElementById('copyFeedbackText');
@@ -290,20 +449,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Botão Gerar Código Temporário
+  // Botao Gerar Codigo Temporario (8 digitos)
   const btnGenCode = document.getElementById('btnGenerateCode');
   if (btnGenCode) {
     btnGenCode.addEventListener('click', () => {
       const randomDigits = Math.floor(10000000 + Math.random() * 90000000).toString();
       hostState.currentCode = randomDigits;
       hostState.sessionCodeExpiresIn = 120;
-      
+
+      if (window.gsap) {
+        gsap.killTweensOf('#displayCodeContainer');
+        gsap.killTweensOf('#displaySessionCode');
+        gsap.fromTo('#displayCodeContainer',
+          { scale: 0.92, borderColor: '#00f0ff' },
+          { scale: 1, duration: 0.35, ease: 'back.out(2)', clearProps: 'borderColor' }
+        );
+        gsap.fromTo('#displaySessionCode',
+          { opacity: 0, y: -6 },
+          { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out', clearProps: 'transform,opacity' }
+        );
+      }
+
       if (codeTimerInterval) clearInterval(codeTimerInterval);
       codeTimerInterval = setInterval(() => {
         if (hostState.sessionCodeExpiresIn > 0) {
           hostState.sessionCodeExpiresIn--;
           const el = document.getElementById('codeExpiryCountdown');
-          if (el) el.textContent = `Expira em ${hostState.sessionCodeExpiresIn}s • Máximo 3 tentativas`;
+          if (el) el.textContent = `Expira em ${hostState.sessionCodeExpiresIn}s • Maximo 3 tentativas`;
         } else {
           clearInterval(codeTimerInterval);
           hostState.currentCode = null;
@@ -316,12 +488,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Botão Copiar Código de Sessão
+  // Botao Copiar Codigo de Sessao
   const btnCopyCode = document.getElementById('btnCopySessionCode');
   if (btnCopyCode) {
     btnCopyCode.addEventListener('click', () => {
       if (!hostState.currentCode && btnGenCode) {
         btnGenCode.click();
+      }
+      if (window.gsap) {
+        gsap.killTweensOf(btnCopyCode);
+        gsap.fromTo(btnCopyCode,
+          { scale: 0.92 },
+          { scale: 1.05, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut', overwrite: 'auto', clearProps: 'transform' }
+        );
       }
       setTimeout(() => {
         const codeToCopy = hostState.currentCode || '';
@@ -340,10 +519,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Botão Encerrar Sessão Imediatamente
+  // Botao Encerrar Sessao Imediatamente (Encerramento de Emergencia com animacao GSAP)
   const btnTerminate = document.getElementById('btnTerminateSession');
   if (btnTerminate) {
     btnTerminate.addEventListener('click', () => {
+      if (window.gsap) {
+        const sessionCard = document.getElementById('sessionActiveCard');
+        if (sessionCard && sessionCard.style.display !== 'none') {
+          gsap.killTweensOf(sessionCard);
+          gsap.to(sessionCard, {
+            opacity: 0,
+            scale: 0.94,
+            y: -12,
+            duration: 0.22,
+            ease: 'power2.in',
+            onComplete: () => {
+              sendIpcMessage('terminate_session');
+              hostState.isSessionActive = false;
+              hostState.currentOperator = null;
+              renderState();
+              sessionCard.style.opacity = '';
+              sessionCard.style.transform = '';
+            }
+          });
+          return;
+        }
+      }
       sendIpcMessage('terminate_session');
       hostState.isSessionActive = false;
       hostState.currentOperator = null;
@@ -351,26 +552,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Botões de Consentimento
+  // Botoes de Consentimento com animacao suave de saida
+  function dismissConsentModal(accept) {
+    const consentModal = document.getElementById('consentModalOverlay');
+    if (window.gsap && consentModal && consentModal.style.display !== 'none') {
+      const dialog = consentModal.querySelector('.consent-dialog');
+      if (dialog) {
+        gsap.killTweensOf(dialog);
+        gsap.to(dialog, {
+          opacity: 0,
+          scale: 0.92,
+          y: 8,
+          duration: 0.18,
+          ease: 'power2.in',
+          onComplete: () => {
+            sendIpcMessage('consent_response', { accept });
+            hostState.pendingConsent = null;
+            renderState();
+            dialog.style.opacity = '';
+            dialog.style.transform = '';
+          }
+        });
+        return;
+      }
+    }
+    sendIpcMessage('consent_response', { accept });
+    hostState.pendingConsent = null;
+    renderState();
+  }
+
   const btnAccept = document.getElementById('btnConsentAccept');
   if (btnAccept) {
-    btnAccept.addEventListener('click', () => {
-      sendIpcMessage('consent_response', { accept: true });
-      hostState.pendingConsent = null;
-      renderState();
-    });
+    btnAccept.addEventListener('click', () => dismissConsentModal(true));
   }
 
   const btnReject = document.getElementById('btnConsentReject');
   if (btnReject) {
-    btnReject.addEventListener('click', () => {
-      sendIpcMessage('consent_response', { accept: false });
-      hostState.pendingConsent = null;
-      renderState();
-    });
+    btnReject.addEventListener('click', () => dismissConsentModal(false));
   }
 
-  // Travas de Segurança
+  // Travas de Seguranca
   const chkClipboard = document.getElementById('chkClipboard');
   if (chkClipboard) {
     chkClipboard.addEventListener('change', (e) => {
@@ -387,52 +608,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Eventos do Modal de Cadastro / Identificação de Usuário e Senha
-  const formUser = document.getElementById('formUserProfile');
-  if (formUser) {
-    formUser.onsubmit = (e) => {
-      e.preventDefault();
-      const inputName = document.getElementById('inputLocalUserName');
-      const inputPdv = document.getElementById('inputLocalPdvId');
-      const inputPwd = document.getElementById('inputLocalAccessPassword');
-      const name = inputName ? inputName.value.trim() : '';
-      const pdv = inputPdv ? inputPdv.value.trim() : '';
-      const pwd = inputPwd ? inputPwd.value.trim() : '';
+  // Eventos de Autenticacao de Tecnico e Propriedades do Host
+  const formTech = document.getElementById('formTechAuth');
+  if (formTech) {
+    formTech.onsubmit = submitTechAuth;
+  }
 
-      if (!name) return;
+  const btnCancelTech = document.getElementById('btnCancelTechAuth');
+  if (btnCancelTech) {
+    btnCancelTech.onclick = closeTechAuthModal;
+  }
 
-      hostState.localUser = name;
-      if (pdv) hostState.pdvId = pdv;
-      hostState.accessPassword = pwd || null;
+  const formProps = document.getElementById('formHostProps');
+  if (formProps) {
+    formProps.onsubmit = submitHostProps;
+  }
 
-      try {
-        if (window.localStorage) {
-          window.localStorage.setItem('prysm_host_user', name);
-          if (pdv) window.localStorage.setItem('prysm_host_pdv_id', pdv);
-          if (pwd) window.localStorage.setItem('prysm_host_password', pwd);
-          else window.localStorage.removeItem('prysm_host_password');
-        }
-      } catch (err) {}
-
-      sendIpcMessage('save_user_profile', { localUser: name, pdvId: pdv, accessPassword: pwd });
-      closeUserModal();
-      renderState();
-    };
+  const btnCancelProps = document.getElementById('btnCancelHostProps');
+  if (btnCancelProps) {
+    btnCancelProps.onclick = closeHostPropsModal;
   }
 
   const btnEditUser = document.getElementById('btnEditUser');
   if (btnEditUser) {
-    btnEditUser.onclick = () => openUserModal(false);
+    btnEditUser.onclick = openTechAuthModal;
   }
 
   const btnSettingsGear = document.getElementById('btnSettingsGear');
   if (btnSettingsGear) {
-    btnSettingsGear.onclick = () => openUserModal(false);
+    btnSettingsGear.onclick = openTechAuthModal;
   }
 
   const btnEditPwd = document.getElementById('btnEditPassword');
   if (btnEditPwd) {
-    btnEditPwd.onclick = () => openUserModal(false);
+    btnEditPwd.onclick = openTechAuthModal;
   }
 
   const btnTogglePwd = document.getElementById('btnToggleShowPassword');
@@ -444,8 +653,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  const btnCancelUserModal = document.getElementById('btnCancelUserModal');
-  if (btnCancelUserModal) {
-    btnCancelUserModal.onclick = closeUserModal;
-  }
+  // Gera o primeiro codigo de acesso de 8 digitos automaticamente ao inicializar o Host
+  setTimeout(() => {
+    if (!hostState.currentCode && btnGenCode) {
+      btnGenCode.click();
+    }
+  }, 100);
 });

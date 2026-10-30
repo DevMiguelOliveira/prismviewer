@@ -8,10 +8,10 @@
 // ==============================================================================
 // 1. TÍTULOS E CABEÇALHOS
 // ==============================================================================
-pub const APP_TITLE: &str = "PrysmView - Suporte Remoto PDV";
+pub const APP_TITLE: &str = "PrysmView - Suporte Remoto & Gestão de Dispositivos";
 pub const APP_ADMIN_HEADING: &str = "PRYSM ADMIN";
-pub const APP_ADMIN_SUBHEADING: &str = "Central de Suporte & Gestão de PDVs";
-pub const HOST_TITLE: &str = "PrysmHost - Suporte Remoto do Caixa";
+pub const APP_ADMIN_SUBHEADING: &str = "Central de Suporte & Gestão de Dispositivos";
+pub const HOST_TITLE: &str = "PrysmHost - Suporte Remoto";
 
 // ==============================================================================
 // 2. AUTENTICAÇÃO E LOGIN (U-05 / S-08)
@@ -58,9 +58,11 @@ pub const BTN_AUDIT: &str = "Ver Histórico de Auditoria";
 pub const ERR_TICKET_EXPIRED: &str =
     "O ticket do chamado expirou. Solicite a reabertura no sistema.";
 pub const ERR_TICKET_REVOKED: &str = "Acesso cancelado centralmente pela equipe de segurança.";
-pub const ERR_UNAUTHORIZED: &str = "Você não possui permissão para acessar este terminal de caixa.";
+pub const ERR_UNAUTHORIZED: &str =
+    "Você não possui permissão para acessar este dispositivo remoto.";
+#[allow(dead_code)]
 pub const ERR_NETWORK_FAIL: &str =
-    "Falha de comunicação com o PDV. Verifique a conexão de rede da loja.";
+    "Falha de comunicação com o dispositivo remoto. Verifique a conexão de rede.";
 
 #[cfg(test)]
 mod tests {

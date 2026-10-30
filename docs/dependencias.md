@@ -27,6 +27,8 @@ Este documento registra as dependências iniciais do projeto conforme especifica
 | [`eframe`](https://crates.io/crates/eframe) | Framework GUI desktop baseado em egui | MIT / Apache-2.0 | Interface gráfica nativa e leve para a bandeja do PDV (`PrysmHost`). |
 | [`tao`](https://crates.io/crates/tao) | Biblioteca de criação de janelas desktop (Tauri Core) | MIT / Apache-2.0 | Suporte a janelas nativas, DPI, eventos e barra de título no Windows 10/11. |
 | [`wry`](https://crates.io/crates/wry) | Renderizador WebView2 multiplataforma (Tauri Core) | MIT / Apache-2.0 | Integração com o runtime Microsoft Edge WebView2 nativo do Windows para o console `PrysmAdmin`. |
+| [`sha1`](https://crates.io/crates/sha1) | Hashing SHA-1 do handshake de WebSocket RFC 6455 | MIT / Apache-2.0 | Requisito do protocolo RFC 6455 para cálculo do cabeçalho Sec-WebSocket-Accept. |
+| [`base64`](https://crates.io/crates/base64) | Codificação Base64 para chave de WebSocket RFC 6455 | MIT / Apache-2.0 | Requisito do protocolo RFC 6455 para codificação da resposta do handshake. |
 
 
 
@@ -39,5 +41,11 @@ Este documento registra as dependências iniciais do projeto conforme especifica
 | [`golang.org/x/time/rate`](https://pkg.go.dev/golang.org/x/time/rate) | Rate limiting por IP e por token | BSD-3-Clause | Implementação testada e padrão para limitação de requisições (proteção contra brute-force). |
 | [`crypto/ed25519`](https://pkg.go.dev/crypto/ed25519) (stdlib) | Validação de assinaturas Ed25519 do Host | BSD-3-Clause | Presente na biblioteca padrão Go, sem dependência externa adicional. |
 | [`golang.org/x/crypto`](https://pkg.go.dev/golang.org/x/crypto) | Hashing de senhas com Argon2id para contas locais de emergência (S-11) | BSD-3-Clause | Padrão oficial do ecossistema Go para derivação de chaves e hash resistente a GPUs/ASICs. |
+
+## Frontend / UI (Admin, Viewer e Host PDV)
+
+| Dependência | Uso no PrysmView | Licença | Motivo de escolha |
+|-------------|-------------------|---------|-------------------|
+| [`gsap`](https://gsap.com) (GreenSock 3.12.5) | Animações fluidas de UI/UX, transições de abas, acordeom, modais e feedback interativo | Standard GreenSock / Free License | Biblioteca líder do mercado em animações de alta performance e 60 FPS, sem dependências, embutida localmente offline (custo zero). |
 
 *Observação:* Versões exatas serão fixadas em `Cargo.lock` e `go.sum` na Fase 0, conforme regras do projeto.
