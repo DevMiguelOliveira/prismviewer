@@ -258,7 +258,21 @@ export const INITIAL_SESSIONS: Session[] = [
 ];
 
 export const INITIAL_SETTINGS: Settings = {
+  contactName: 'NLUISOLIVEIRA',
+  startWithWindows: true,
   theme: 'dark',
+  closeToTray: true,
+  lanConnections: 'deactivated',
+  displayQuality: 'speed',
+  defaultScale: 'fit',
+  removeRemoteWallpaper: true,
+  sendKeyCombinations: true,
+  blockClientInput: false,
+  accessControl: 'full',
+  requireConsent: true,
+  unattendedPassword: '••••••••',
+  logRetentionDays: 30,
+  cleanTempOnExit: true,
   notifications: true,
   autoConnect: false,
   clipboardSync: true,

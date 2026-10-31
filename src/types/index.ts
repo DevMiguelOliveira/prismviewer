@@ -66,15 +66,29 @@ export interface KPI {
 }
 
 export interface Settings {
+  contactName?: string;
+  startWithWindows?: boolean;
   theme: 'dark' | 'light';
+  closeToTray?: boolean;
+  lanConnections?: 'deactivated' | 'accept';
+  displayQuality?: 'auto' | 'speed' | 'quality';
+  defaultScale?: 'fit' | 'original';
+  removeRemoteWallpaper?: boolean;
+  sendKeyCombinations?: boolean;
+  blockClientInput?: boolean;
+  accessControl?: 'full' | 'confirm' | 'view';
+  requireConsent?: boolean;
+  unattendedPassword?: string;
+  logRetentionDays?: number;
+  cleanTempOnExit?: boolean;
   notifications: boolean;
-  autoConnect: boolean;
+  autoConnect?: boolean;
   clipboardSync: boolean;
   fileTransferEnabled: boolean;
   apiEndpoint: string;
-  apiTimeout: number;
-  stunServer: string;
-  turnServer: string;
+  apiTimeout?: number;
+  stunServer?: string;
+  turnServer?: string;
   installedVersion: string;
   channel: 'stable' | 'beta';
 }
