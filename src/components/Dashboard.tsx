@@ -356,9 +356,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* =========================================================================
-          DEVICES GRID OR TABLE VIEW
+          DEVICES GRID OR TABLE VIEW (Zero Mocks)
           ========================================================================= */}
-      {viewMode === 'cards' ? (
+      {filteredDevices.length === 0 ? (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-4 max-w-xl mx-auto my-6 animate-in fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-sky-950/80 border border-sky-800/80 flex items-center justify-center text-sky-400">
+            <Monitor className="w-7 h-7" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white">Nenhum Dispositivo Conectado no Momento</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-md">
+              O PrysmView opera sob o protocolo estrito <strong>Zero Mocks (Regra 17 do AGENTS.md)</strong>. Dispositivos e PDVs só são listados com telemetria ativa via sinalização ou porta de serviço 19533.
+            </p>
+          </div>
+          <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-[11px] text-slate-400 text-left space-y-1.5 w-full max-w-md">
+            <div className="text-slate-200 font-semibold mb-1">Como registrar um PDV em tempo real:</div>
+            <div>• Instale o <code>PrysmView Host.msi</code> no caixa da loja física.</div>
+            <div>• O serviço inicia em <code>LocalSystem</code> e se registra na Azure VM.</div>
+            <div>• O caixa aparecerá instantaneamente com telemetria viva e RTT.</div>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm shadow-sky-600/30"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Cadastrar Dispositivo</span>
+            </button>
+            <button
+              onClick={() => {
+                onSendNotification('Sincronizando inventário com a nuvem Azure (https://prysmview.duckdns.org)...', 'success');
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors border border-slate-700"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Sincronizar Nuvem Azure</span>
+            </button>
+          </div>
+        </div>
+      ) : viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredDevices.map((dev) => (
             <div

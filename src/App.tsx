@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Monitor,
   Zap,
@@ -49,12 +49,60 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Domain Data State
-  const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
+  // Domain Data State (Persistent with localStorage + Zero Mocks)
+  const [devices, setDevices] = useState<Device[]>(() => {
+    try {
+      const saved = localStorage.getItem('prysmview_devices_v2');
+      return saved ? JSON.parse(saved) : INITIAL_DEVICES;
+    } catch {
+      return INITIAL_DEVICES;
+    }
+  });
   const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
   const [technicians, setTechnicians] = useState<Operator[]>(INITIAL_OPERATORS);
   const [sessions, setSessions] = useState<Session[]>(INITIAL_SESSIONS);
   const [settings, setSettings] = useState<Settings>(INITIAL_SETTINGS);
+
+  // Sincroniza e salva dispositivos reais
+  useEffect(() => {
+    try {
+      localStorage.setItem('prysmview_devices_v2', JSON.stringify(devices));
+    } catch {}
+  }, [devices]);
+
+  // Consulta automática à API de sinalização na nuvem Azure (Zero Mocks)
+  useEffect(() => {
+    let isMounted = true;
+    async function syncAzureDevices() {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        let endpoint = settings.apiEndpoint.replace(/\/+$/, '');
+        if (typeof window !== 'undefined' && window.location.protocol === 'https:' && endpoint.includes('prysmview.duckdns.org')) {
+          endpoint = '/api/duckdns';
+        }
+        const res = await fetch(`${endpoint}/devices`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const remoteDevices = await res.json();
+          if (Array.isArray(remoteDevices) && isMounted) {
+            setDevices(remoteDevices);
+          }
+        }
+      } catch {
+        // Modo silencioso: mantém inventário real sem sobrescrever com mocks
+      }
+    }
+
+    syncAzureDevices();
+    const interval = setInterval(syncAzureDevices, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [settings.apiEndpoint]);
 
   // Active Operator
   const [activeOperator, setActiveOperator] = useState<Operator>(INITIAL_OPERATORS[0]);
