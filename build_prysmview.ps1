@@ -1,7 +1,7 @@
 # build_prysmview.ps1
 # Script de build do PrysmView com Tauri (React + Tailwind)
 # Autor: PrysmView Team
-# Versão: 2.0.0
+# Versao: 2.0.0
 
 param(
     [string]$Mode = "production",
@@ -10,16 +10,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Função para imprimir mensagens coloridas
+# Funcao para imprimir mensagens coloridas
 function Write-ColorMessage {
     param(
         [string]$Message,
-        [string]$Color = "White"
+        [Alias("Color")]
+        [string]$ForegroundColor = "White"
     )
-    Write-Host $Message -ForegroundColor $Color
+    Write-Host $Message -ForegroundColor $ForegroundColor
 }
 
-# Função para verificar se um comando existe
+# Funcao para verificar se um comando existe
 function Test-Command {
     param([string]$Command)
     try {
@@ -31,58 +32,78 @@ function Test-Command {
     }
 }
 
-# Função para verificar dependências
+# Detectar gerenciador de pacotes preferido (pnpm ou npm)
+$global:PkgManager = "npm"
+if (Test-Command "pnpm") {
+    $global:PkgManager = "pnpm"
+}
+
+# Funcao para verificar dependencias
 function Test-Dependencies {
-    Write-ColorMessage ">>> Verificando dependências..." -ForegroundColor Cyan
+    Write-ColorMessage ">>> Verificando dependencias do sistema..." -ForegroundColor Cyan
 
     $dependencies = @(
-        @{Name = "Node.js"; Command = "node"; MinVersion = "18.0.0"},
-        @{Name = "pnpm"; Command = "pnpm"; MinVersion = "8.0.0"},
-        @{Name = "Rust"; Command = "cargo"; MinVersion = "1.70.0"}
+        @{Name = "Node.js"; Command = "node"},
+        @{Name = "Rust / Cargo"; Command = "cargo"}
     )
 
     $missing = @()
 
     foreach ($dep in $dependencies) {
         if (Test-Command $dep.Command) {
-            $version = & $dep.Command --version 2>&1
-            Write-ColorMessage "  ✓ $($dep.Name): $version" -ForegroundColor Green
+            $ver = & $dep.Command --version 2>&1
+            Write-ColorMessage "  [OK] $($dep.Name): $ver" -ForegroundColor Green
         }
         else {
-            Write-ColorMessage "  ✗ $($dep.Name): não encontrado" -ForegroundColor Red
+            Write-ColorMessage "  [FALHA] $($dep.Name): nao encontrado" -ForegroundColor Red
             $missing += $dep.Name
         }
     }
 
+    if (Test-Command "pnpm") {
+        $pnpmVer = pnpm --version 2>&1
+        Write-ColorMessage "  [OK] pnpm: $pnpmVer" -ForegroundColor Green
+    }
+    else {
+        Write-ColorMessage "  [AVISO] pnpm nao encontrado globalmente; utilizando npm como fallback." -ForegroundColor Yellow
+    }
+
     if ($missing.Count -gt 0) {
-        Write-ColorMessage "`n❌ Dependências faltando: $($missing -join ', ')" -ForegroundColor Red
-        Write-ColorMessage "Por favor, instale as dependências faltantes antes de continuar." -ForegroundColor Yellow
+        $missingList = $missing -join ", "
+        Write-ColorMessage "`n[ERRO] Dependencias obrigatorias faltando: $missingList" -ForegroundColor Red
+        Write-ColorMessage "Por favor, instale Node.js e Rust (rustup.rs) antes de continuar." -ForegroundColor Yellow
         exit 1
     }
 
-    Write-ColorMessage "✓ Todas as dependências estão instaladas.`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] Verificacao de dependencias concluida.`n" -ForegroundColor Green
 }
 
-# Função para instalar dependências
+# Funcao para instalar dependencias
 function Install-Dependencies {
     param([string]$AppPath)
 
-    Write-ColorMessage ">>> Instalando dependências em $AppPath..." -ForegroundColor Yellow
+    Write-ColorMessage ">>> Instalando dependencias em $AppPath..." -ForegroundColor Yellow
     Set-Location -Path $AppPath
 
     if (Test-Path "package.json") {
-        pnpm install
+        if ($global:PkgManager -eq "pnpm") {
+            pnpm install
+        }
+        else {
+            npm install
+        }
+
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorMessage "❌ Falha ao instalar dependências em $AppPath" -ForegroundColor Red
+            Write-ColorMessage "[ERRO] Falha ao instalar dependencias em $AppPath" -ForegroundColor Red
             exit 1
         }
     }
 
     Set-Location -Path "..\.."
-    Write-ColorMessage "✓ Dependências instaladas em $AppPath`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] Dependencias instaladas em $AppPath`n" -ForegroundColor Green
 }
 
-# Função para executar testes
+# Funcao para executar testes
 function Run-Tests {
     param([string]$AppPath)
 
@@ -90,19 +111,25 @@ function Run-Tests {
     Set-Location -Path $AppPath
 
     if (Test-Path "package.json") {
-        pnpm test
+        if ($global:PkgManager -eq "pnpm") {
+            pnpm test
+        }
+        else {
+            npm test
+        }
+
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorMessage "❌ Testes falharam em $AppPath" -ForegroundColor Red
+            Write-ColorMessage "[ERRO] Testes falharam em $AppPath" -ForegroundColor Red
             Set-Location -Path "..\.."
             exit 1
         }
     }
 
     Set-Location -Path "..\.."
-    Write-ColorMessage "✓ Testes passaram em $AppPath`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] Testes passaram em $AppPath`n" -ForegroundColor Green
 }
 
-# Função para fazer lint
+# Funcao para fazer lint
 function Run-Lint {
     param([string]$AppPath)
 
@@ -110,19 +137,25 @@ function Run-Lint {
     Set-Location -Path $AppPath
 
     if (Test-Path "package.json") {
-        pnpm lint
+        if ($global:PkgManager -eq "pnpm") {
+            pnpm lint
+        }
+        else {
+            npm run lint
+        }
+
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorMessage "❌ Lint falhou em $AppPath" -ForegroundColor Red
+            Write-ColorMessage "[ERRO] Lint falhou em $AppPath" -ForegroundColor Red
             Set-Location -Path "..\.."
             exit 1
         }
     }
 
     Set-Location -Path "..\.."
-    Write-ColorMessage "✓ Lint passou em $AppPath`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] Lint passou em $AppPath`n" -ForegroundColor Green
 }
 
-# Função para fazer typecheck
+# Funcao para fazer typecheck
 function Run-TypeCheck {
     param([string]$AppPath)
 
@@ -130,19 +163,25 @@ function Run-TypeCheck {
     Set-Location -Path $AppPath
 
     if (Test-Path "package.json") {
-        pnpm typecheck
+        if ($global:PkgManager -eq "pnpm") {
+            pnpm typecheck
+        }
+        else {
+            npm run typecheck
+        }
+
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorMessage "❌ Typecheck falhou em $AppPath" -ForegroundColor Red
+            Write-ColorMessage "[ERRO] Typecheck falhou em $AppPath" -ForegroundColor Red
             Set-Location -Path "..\.."
             exit 1
         }
     }
 
     Set-Location -Path "..\.."
-    Write-ColorMessage "✓ Typecheck passou em $AppPath`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] Typecheck passou em $AppPath`n" -ForegroundColor Green
 }
 
-# Função para build do app Tauri
+# Funcao para build do app Tauri
 function Build-TauriApp {
     param(
         [string]$AppPath,
@@ -154,44 +193,56 @@ function Build-TauriApp {
 
     # Build do frontend
     Write-ColorMessage "  Build do frontend (Vite)..." -ForegroundColor Cyan
-    pnpm build
+    if ($global:PkgManager -eq "pnpm") {
+        pnpm build
+    }
+    else {
+        npm run build
+    }
+
     if ($LASTEXITCODE -ne 0) {
-        Write-ColorMessage "❌ Falha no build do frontend de $AppName" -ForegroundColor Red
+        Write-ColorMessage "[ERRO] Falha no build do frontend de $AppName" -ForegroundColor Red
         Set-Location -Path "..\.."
         exit 1
     }
 
     # Build do Tauri
-    Write-ColorMessage "  Build do Tauri..." -ForegroundColor Cyan
-    pnpm tauri build
+    Write-ColorMessage "  Build do Tauri (Rust + WebView)..." -ForegroundColor Cyan
+    if ($global:PkgManager -eq "pnpm") {
+        pnpm tauri build
+    }
+    else {
+        npx @tauri-apps/cli build
+    }
+
     if ($LASTEXITCODE -ne 0) {
-        Write-ColorMessage "❌ Falha no build do Tauri de $AppName" -ForegroundColor Red
+        Write-ColorMessage "[ERRO] Falha no build do Tauri de $AppName" -ForegroundColor Red
         Set-Location -Path "..\.."
         exit 1
     }
 
     Set-Location -Path "..\.."
-    Write-ColorMessage "✓ $AppName compilado com sucesso`n" -ForegroundColor Green
+    Write-ColorMessage "[OK] $AppName compilado com sucesso`n" -ForegroundColor Green
 }
 
-# Função principal
+# Funcao principal
 function Build-PrysmView {
     $StartTime = Get-Date
 
-    Write-ColorMessage "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-ColorMessage "===============================================================" -ForegroundColor Cyan
     Write-ColorMessage "  PRYSMVIEW BUILD SCRIPT v2.0.0" -ForegroundColor Cyan
     Write-ColorMessage "  React + Tailwind + Tauri" -ForegroundColor Cyan
-    Write-ColorMessage "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+    Write-ColorMessage "===============================================================" -ForegroundColor Cyan
     Write-ColorMessage ""
 
-    # Verificar dependências
+    # Verificar dependencias
     Test-Dependencies
 
-    # Criar diretório de releases
+    # Criar diretorio de releases
     $ReleaseDir = ".\Releases"
     if (!(Test-Path $ReleaseDir)) {
         New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
-        Write-ColorMessage "✓ Diretório de releases criado: $ReleaseDir`n" -ForegroundColor Green
+        Write-ColorMessage "[OK] Diretorio de releases criado: $ReleaseDir`n" -ForegroundColor Green
     }
 
     # Verificar se as pastas existem
@@ -199,13 +250,13 @@ function Build-PrysmView {
     $AdminPath = ".\apps\admin"
 
     if (!(Test-Path $HostPath)) {
-        Write-ColorMessage "❌ Pasta do Host não encontrada: $HostPath" -ForegroundColor Red
+        Write-ColorMessage "[ERRO] Pasta do Host nao encontrada: $HostPath" -ForegroundColor Red
         Write-ColorMessage "Execute o script de setup antes de fazer o build." -ForegroundColor Yellow
         exit 1
     }
 
     if (!(Test-Path $AdminPath)) {
-        Write-ColorMessage "❌ Pasta do Admin não encontrada: $AdminPath" -ForegroundColor Red
+        Write-ColorMessage "[ERRO] Pasta do Admin nao encontrada: $AdminPath" -ForegroundColor Red
         Write-ColorMessage "Execute o script de setup antes de fazer o build." -ForegroundColor Yellow
         exit 1
     }
@@ -213,9 +264,9 @@ function Build-PrysmView {
     # ========================
     # BUILD DO HOST
     # ========================
-    Write-ColorMessage "───────────────────────────────────────────────────────────────" -ForegroundColor Cyan
-    Write-ColorMessage "  BUILD DO HOST" -ForegroundColor Cyan
-    Write-ColorMessage "───────────────────────────────────────────────────────────────" -ForegroundColor Cyan
+    Write-ColorMessage "---------------------------------------------------------------" -ForegroundColor Cyan
+    Write-ColorMessage "  BUILD DO HOST (PDV)" -ForegroundColor Cyan
+    Write-ColorMessage "---------------------------------------------------------------" -ForegroundColor Cyan
     Write-ColorMessage ""
 
     Install-Dependencies -AppPath $HostPath
@@ -234,12 +285,12 @@ function Build-PrysmView {
 
     if ($HostMsi) {
         Copy-Item $HostMsi.FullName -Destination $ReleaseDir -Force
-        Write-ColorMessage "✓ Instalador MSI do Host copiado: $($HostMsi.Name)" -ForegroundColor Green
+        Write-ColorMessage "[OK] Instalador MSI do Host copiado: $($HostMsi.Name)" -ForegroundColor Green
     }
 
     if ($HostExe) {
         Copy-Item $HostExe.FullName -Destination $ReleaseDir -Force
-        Write-ColorMessage "✓ Executável do Host copiado: $($HostExe.Name)" -ForegroundColor Green
+        Write-ColorMessage "[OK] Executavel do Host copiado: $($HostExe.Name)" -ForegroundColor Green
     }
 
     Write-ColorMessage ""
@@ -247,9 +298,9 @@ function Build-PrysmView {
     # ========================
     # BUILD DO ADMIN
     # ========================
-    Write-ColorMessage "───────────────────────────────────────────────────────────────" -ForegroundColor Cyan
-    Write-ColorMessage "  BUILD DO ADMIN" -ForegroundColor Cyan
-    Write-ColorMessage "───────────────────────────────────────────────────────────────" -ForegroundColor Cyan
+    Write-ColorMessage "---------------------------------------------------------------" -ForegroundColor Cyan
+    Write-ColorMessage "  BUILD DO ADMIN (Console do Operador)" -ForegroundColor Cyan
+    Write-ColorMessage "---------------------------------------------------------------" -ForegroundColor Cyan
     Write-ColorMessage ""
 
     Install-Dependencies -AppPath $AdminPath
@@ -268,12 +319,12 @@ function Build-PrysmView {
 
     if ($AdminMsi) {
         Copy-Item $AdminMsi.FullName -Destination $ReleaseDir -Force
-        Write-ColorMessage "✓ Instalador MSI do Admin copiado: $($AdminMsi.Name)" -ForegroundColor Green
+        Write-ColorMessage "[OK] Instalador MSI do Admin copiado: $($AdminMsi.Name)" -ForegroundColor Green
     }
 
     if ($AdminExe) {
         Copy-Item $AdminExe.FullName -Destination $ReleaseDir -Force
-        Write-ColorMessage "✓ Executável do Admin copiado: $($AdminExe.Name)" -ForegroundColor Green
+        Write-ColorMessage "[OK] Executavel do Admin copiado: $($AdminExe.Name)" -ForegroundColor Green
     }
 
     Write-ColorMessage ""
@@ -284,19 +335,19 @@ function Build-PrysmView {
     $EndTime = Get-Date
     $Duration = $EndTime - $StartTime
 
-    Write-ColorMessage "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-ColorMessage "  BUILD CONCLUÍDO COM SUCESSO!" -ForegroundColor Green
-    Write-ColorMessage "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
+    Write-ColorMessage "===============================================================" -ForegroundColor Green
+    Write-ColorMessage "  BUILD CONCLUIDO COM SUCESSO!" -ForegroundColor Green
+    Write-ColorMessage "===============================================================" -ForegroundColor Green
     Write-ColorMessage ""
     Write-ColorMessage "Tempo total: $($Duration.ToString('mm\:ss'))" -ForegroundColor Cyan
-    Write-ColorMessage "Os executáveis (.exe) e instaladores (.msi) estão na pasta:" -ForegroundColor Cyan
+    Write-ColorMessage "Os executaveis (.exe) e instaladores (.msi) estao na pasta:" -ForegroundColor Cyan
     Write-ColorMessage "  $ReleaseDir" -ForegroundColor White
     Write-ColorMessage ""
     Write-ColorMessage "Arquivos gerados:" -ForegroundColor Cyan
 
     Get-ChildItem -Path $ReleaseDir | ForEach-Object {
         $size = [math]::Round($_.Length / 1MB, 2)
-        Write-ColorMessage "  • $($_.Name) ($size MB)" -ForegroundColor White
+        Write-ColorMessage "  * $($_.Name) ($size MB)" -ForegroundColor White
     }
 
     Write-ColorMessage ""
@@ -307,7 +358,7 @@ try {
     Build-PrysmView
 }
 catch {
-    Write-ColorMessage "`n❌ ERRO FATAL: $_" -ForegroundColor Red
+    Write-ColorMessage "`n[ERRO FATAL]: $_" -ForegroundColor Red
     Write-ColorMessage "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
     exit 1
 }
