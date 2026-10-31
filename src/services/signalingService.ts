@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Serviço de Diagnóstico de Sinalização e WebRTC
  * Testa a integridade da comunicação com a API de sinalização e
  * verifica a geração de candidatos ICE pelo STUN/TURN no navegador/WebView.

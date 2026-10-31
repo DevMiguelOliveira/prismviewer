@@ -32,10 +32,10 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Unattended password
-  const [unattendedPassword, setUnattendedPassword] = useState('admin@prysm2024');
+  const [unattendedPassword, setUnattendedPassword] = useState('••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [showEditPassModal, setShowEditPassModal] = useState(false);
-  const [newPasswordInput, setNewPasswordInput] = useState('admin@prysm2024');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
 
   // Security Toggles
   const [allowClipboard, setAllowClipboard] = useState(true);

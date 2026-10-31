@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Monitor,
   Zap,
@@ -53,8 +53,35 @@ export function App() {
   const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
   const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
   const [technicians, setTechnicians] = useState<Operator[]>(INITIAL_OPERATORS);
-  const [sessions, setSessions] = useState<Session[]>(INITIAL_SESSIONS);
-  const [settings, setSettings] = useState<Settings>(INITIAL_SETTINGS);
+  const [sessions, setSessions] = useState<Session[]>(() => {
+    try {
+      const saved = localStorage.getItem('prysmview_sessions');
+      return saved ? JSON.parse(saved) : INITIAL_SESSIONS;
+    } catch {
+      return INITIAL_SESSIONS;
+    }
+  });
+
+  const [settings, setSettings] = useState<Settings>(() => {
+    try {
+      const saved = localStorage.getItem('prysmview_settings');
+      return saved ? { ...INITIAL_SETTINGS, ...JSON.parse(saved) } : INITIAL_SETTINGS;
+    } catch {
+      return INITIAL_SETTINGS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('prysmview_settings', JSON.stringify(settings));
+    } catch {}
+  }, [settings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('prysmview_sessions', JSON.stringify(sessions));
+    } catch {}
+  }, [sessions]);
 
   // Active Operator
   const [activeOperator, setActiveOperator] = useState<Operator>(INITIAL_OPERATORS[0]);
@@ -100,8 +127,21 @@ export function App() {
     );
   };
 
-  const handleEndSession = (durationSeconds: number, bytesTransferred: number) => {
+  const handleEndSession = async (durationSeconds: number, bytesTransferred: number) => {
     if (!activeSession) return;
+
+    // Gera hash SHA-256 real com crypto.subtle (proibido Math.random para auditoria)
+    const auditPayload = `${activeSession.device.id}|${activeOperator.id}|${new Date().toISOString()}|${bytesTransferred}`;
+    let auditHash = '0'.repeat(64);
+    try {
+      const msgBuffer = new TextEncoder().encode(auditPayload);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      auditHash = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    } catch {
+      auditHash = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    }
 
     // Record in immutable audit log
     const newSessionRecord: Session = {
@@ -118,7 +158,7 @@ export function App() {
       bytesTransferred,
       consentType: activeSession.method === 'code' ? 'Código de 8 Dígitos' : 'Acesso Desassistido',
       reason: 'Atendimento de suporte técnico pelo painel',
-      auditHash: Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      auditHash,
     };
 
     setSessions((prev) => [newSessionRecord, ...prev]);

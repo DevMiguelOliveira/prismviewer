@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   CheckCircle2,
@@ -37,7 +37,7 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'tests' | 'frontendFix' | 'signalingFix'>('tests');
 
-  const runAllTests = async () => {
+  const runAllTests = useCallback(async () => {
     setIsRunning(true);
     setResults([]);
 
@@ -74,13 +74,13 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
     setResults((prev) => [...prev, webrtcResult]);
 
     setIsRunning(false);
-  };
+  }, [customUrl]);
 
   useEffect(() => {
     if (isOpen) {
       runAllTests();
     }
-  }, [isOpen]);
+  }, [isOpen, runAllTests]);
 
   if (!isOpen) return null;
 

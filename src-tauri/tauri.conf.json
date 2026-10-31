@@ -11,6 +11,24 @@
     "version": "2.0.0"
   },
   "tauri": {
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' https://prysmview.duckdns.org wss://prysmview.duckdns.org https://*.duckdns.org wss://*.duckdns.org http://localhost:* ws://localhost:* tauri://localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;"
+    },
+    "allowlist": {
+      "http": {
+        "all": false,
+        "request": true,
+        "scope": [
+          "https://prysmview.duckdns.org/**",
+          "https://*.duckdns.org/**",
+          "http://localhost/**",
+          "http://127.0.0.1/**"
+        ]
+      },
+      "shell": {
+        "all": false
+      }
+    },
     "bundle": {
       "active": true,
       "category": "DeveloperTool",

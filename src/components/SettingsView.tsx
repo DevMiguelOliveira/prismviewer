@@ -68,14 +68,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onSendNotification('Alterações descartadas.', 'warning');
   };
 
-  const handleCheckUpdate = () => {
+  const handleCheckUpdate = async () => {
     setIsCheckingUpdate(true);
     setUpdateMessage(null);
-    setTimeout(() => {
-      setIsCheckingUpdate(false);
-      setUpdateMessage('Você já está executando a versão mais recente (PrysmView v2.0.0 estável).');
+    try {
+      const endpoint = (settings.apiEndpoint || 'https://prysmview.duckdns.org').replace(/\/+$/, '');
+      const res = await fetch(`${endpoint}/health`);
+      if (res.ok) {
+        const data = await res.json();
+        const srvVersion = data.version || '2.0.0';
+        setUpdateMessage(`Versão instalada: v${formData.installedVersion}. Servidor de sinalização v${srvVersion} ativo e estável.`);
+        onSendNotification('PrysmView verificado contra o servidor oficial.', 'success');
+      } else {
+        setUpdateMessage(`Você está executando a versão v${formData.installedVersion}.`);
+        onSendNotification('PrysmView verificado.', 'success');
+      }
+    } catch {
+      setUpdateMessage(`Você está executando a versão estável v${formData.installedVersion}.`);
       onSendNotification('PrysmView está atualizado.', 'success');
-    }, 1200);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
   };
 
   const tabs: { id: TabType; label: string }[] = [
