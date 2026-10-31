@@ -135,6 +135,8 @@ Veja [AGENTS.md](AGENTS.md) para requisitos de segurança detalhados.
 - [docs/threat-model.md](docs/threat-model.md) - Modelo de ameaças
 - [docs/protocolo.md](docs/protocolo.md) - Protocolo de comunicação
 - [docs/dependencias.md](docs/dependencias.md) - Dependências e licenças
+- [deploy/HTTPS-SETUP.md](deploy/HTTPS-SETUP.md) - Configuração HTTPS com Caddy
+- [deploy/AZURE.md](deploy/AZURE.md) - Deploy na Azure VM
 
 ## 🤝 Contribuindo
 

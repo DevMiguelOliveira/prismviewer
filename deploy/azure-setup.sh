@@ -109,11 +109,24 @@ systemctl enable prysmview-api prysmview-relay
 systemctl restart prysmview-api prysmview-relay
 
 # 6. Firewall e segurança de portas
-echo "--> [6/7] Ajustando firewall UFW..."
+echo "--> [6/8] Ajustando firewall UFW..."
 bash "${SCRIPT_DIR}/setup-ufw.sh"
 
-# 7. Rotinas de Backup Cifrado (O-01) e Monitor de Heartbeats (O-03)
-echo "--> [7/7] Configurando tarefas de cron (backup e monitoramento)..."
+# 7. Instalar e configurar Caddy para HTTPS
+echo "--> [7/8] Instalando e configurando Caddy para HTTPS..."
+apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt-get update
+apt-get install caddy -y
+
+# Configurar Caddyfile
+cp "${SCRIPT_DIR}/Caddyfile" /etc/caddy/Caddyfile
+systemctl enable caddy
+systemctl restart caddy
+
+# 8. Rotinas de Backup Cifrado (O-01) e Monitor de Heartbeats (O-03)
+echo "--> [8/8] Configurando tarefas de cron (backup e monitoramento)..."
 cp "${SCRIPT_DIR}/backup-sqlite.sh" /usr/local/bin/prysmview-backup.sh
 cp "${SCRIPT_DIR}/check-heartbeat-drop.sh" /usr/local/bin/check-heartbeat-drop.sh
 cp "${SCRIPT_DIR}/rollback.sh" /usr/local/bin/prysmview-rollback.sh

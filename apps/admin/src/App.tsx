@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@prysmview/ui';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 import { QuickConnect } from './components/QuickConnect';
@@ -7,15 +6,42 @@ import { Stores } from './components/Stores';
 import { Audit } from './components/Audit';
 import { Settings } from './components/Settings';
 import { useAdminStore } from './store/adminStore';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Monitor, Zap, Users, FileText, Settings as SettingsIcon } from 'lucide-react';
+
+type Tab = 'dashboard' | 'direct' | 'stores' | 'audit' | 'settings';
 
 function App() {
   const { isAuthenticated, operator, logout } = useAdminStore();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
 
   if (!isAuthenticated) {
     return <Login />;
   }
+
+  const tabs = [
+    { id: 'dashboard' as Tab, label: 'Dispositivos', icon: Monitor },
+    { id: 'direct' as Tab, label: 'Conexão Rápida', icon: Zap },
+    { id: 'stores' as Tab, label: 'Grupos & Clientes', icon: Users },
+    { id: 'audit' as Tab, label: 'Auditoria', icon: FileText },
+    { id: 'settings' as Tab, label: 'Configurações', icon: SettingsIcon },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'direct':
+        return <QuickConnect />;
+      case 'stores':
+        return <Stores />;
+      case 'audit':
+        return <Audit />;
+      case 'settings':
+        return <Settings />;
+      default:
+        return <Dashboard />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -42,57 +68,31 @@ function App() {
       {/* Layout com Sidebar e Conteúdo */}
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-800 min-h-screen p-4">
+        <aside className="w-64 bg-gray-800 min-h-screen p-4 border-r border-gray-700">
           <nav className="space-y-2">
-            <Tabs defaultValue="dashboard">
-              <TabsList className="flex flex-col w-full">
-                <TabsTrigger
-                  value="dashboard"
-                  onClick={() => setActiveTab('dashboard')}
-                  className={activeTab === 'dashboard' ? 'bg-blue-600' : ''}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
                 >
-                  Dispositivos
-                </TabsTrigger>
-                <TabsTrigger
-                  value="direct"
-                  onClick={() => setActiveTab('direct')}
-                  className={activeTab === 'direct' ? 'bg-blue-600' : ''}
-                >
-                  Conexão Rápida
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stores"
-                  onClick={() => setActiveTab('stores')}
-                  className={activeTab === 'stores' ? 'bg-blue-600' : ''}
-                >
-                  Grupos & Clientes
-                </TabsTrigger>
-                <TabsTrigger
-                  value="audit"
-                  onClick={() => setActiveTab('audit')}
-                  className={activeTab === 'audit' ? 'bg-blue-600' : ''}
-                >
-                  Auditoria
-                </TabsTrigger>
-                <TabsTrigger
-                  value="settings"
-                  onClick={() => setActiveTab('settings')}
-                  className={activeTab === 'settings' ? 'bg-blue-600' : ''}
-                >
-                  Configurações
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{tab.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </aside>
 
         {/* Conteúdo Principal */}
         <main className="flex-1 p-6 overflow-auto">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'direct' && <QuickConnect />}
-          {activeTab === 'stores' && <Stores />}
-          {activeTab === 'audit' && <Audit />}
-          {activeTab === 'settings' && <Settings />}
+          {renderContent()}
         </main>
       </div>
     </div>

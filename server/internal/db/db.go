@@ -447,6 +447,12 @@ func (d *DB) GetOperator(operatorID string) (*Operator, error) {
 	return &op, nil
 }
 
+// DeleteOperator remove um operador pelo ID.
+func (d *DB) DeleteOperator(operatorID string) error {
+	_, err := d.conn.Exec("DELETE FROM operadores WHERE id = ?", operatorID)
+	return err
+}
+
 // GetActiveHeartbeatCount retorna o total de PDVs com heartbeat recente (O-03).
 func (d *DB) GetActiveHeartbeatCount(since time.Time) (int, error) {
 	row := d.conn.QueryRow("SELECT COUNT(*) FROM pdvs WHERE last_seen >= ?", since)

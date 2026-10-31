@@ -132,7 +132,7 @@ sudo tee /etc/caddy/Caddyfile > /dev/null <<'EOF'
 }
 
 # HTTPS com terminação TLS (Let's Encrypt automático)
-api.seudominio.com {
+prysmview.duckdns.org {
     # HSTS: navegadores forçam HTTPS por 1 ano, inclui subdomínios, pré-carregamento
     header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 
@@ -150,7 +150,7 @@ api.seudominio.com {
 
     # Certificado automático via Let's Encrypt
     tls {
-        protocolo tls1.2 tls1.3
+        protocols tls1.2 tls1.3
     }
 }
 EOF

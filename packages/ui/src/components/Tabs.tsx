@@ -5,35 +5,34 @@ interface TabsProps {
   children: React.ReactNode
 }
 
+interface TabsContextValue {
+  activeTab: string
+  setActiveTab: (value: string) => void
+}
+
+const TabsContext = React.createContext<TabsContextValue | undefined>(undefined)
+
 export function Tabs({ defaultValue, children }: TabsProps) {
   const [activeTab, setActiveTab] = React.useState(defaultValue)
 
   return (
-    <div data-active-tab={activeTab}>
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as any, { activeTab, setActiveTab })
-        }
-        return child
-      })}
-    </div>
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div data-active-tab={activeTab}>{children}</div>
+    </TabsContext.Provider>
   )
 }
 
-export function TabsList({ children, activeTab, setActiveTab }: any) {
+export function TabsList({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="flex gap-2 border-b border-gray-700 pb-2">
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as any, { activeTab, setActiveTab })
-        }
-        return child
-      })}
-    </div>
+    <div className={`flex gap-2 border-b border-gray-700 pb-2 ${className || ''}`}>{children}</div>
   )
 }
 
-export function TabsTrigger({ value, children, activeTab, setActiveTab }: any) {
+export function TabsTrigger({ value, children }: { value: string; children: React.ReactNode }) {
+  const context = React.useContext(TabsContext)
+  if (!context) throw new Error('TabsTrigger must be used within Tabs')
+
+  const { activeTab, setActiveTab } = context
   const isActive = activeTab === value
 
   return (
@@ -48,7 +47,11 @@ export function TabsTrigger({ value, children, activeTab, setActiveTab }: any) {
   )
 }
 
-export function TabsContent({ value, children, activeTab }: any) {
+export function TabsContent({ value, children }: { value: string; children: React.ReactNode }) {
+  const context = React.useContext(TabsContext)
+  if (!context) throw new Error('TabsContent must be used within Tabs')
+
+  const { activeTab } = context
   if (activeTab !== value) return null
 
   return <div className="mt-4">{children}</div>
