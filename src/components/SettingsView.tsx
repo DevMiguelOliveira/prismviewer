@@ -29,6 +29,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   onUpdateSettings,
   onSendNotification,
+  onOpenDiagnostics,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('geral');
   const [formData, setFormData] = useState<Settings>({
@@ -447,6 +448,74 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                ============================================================== */}
             {activeTab === 'avancado' && (
               <div className="space-y-5 animate-in fade-in duration-150">
+                {/* Seção: Rede e Sinalização Nuvem Azure */}
+                <div className="space-y-3">
+                  <div className="bg-slate-800/80 px-3 py-1.5 rounded text-[11px] font-bold text-slate-200 uppercase tracking-wide border-l-2 border-[#0078d4] flex items-center justify-between">
+                    <span>Rede e Sinalização na Nuvem Azure (Produção Real)</span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-normal">VM Azure 20.121.137.44</span>
+                  </div>
+
+                  <div className="space-y-3 px-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
+                      <label className="text-slate-300 font-medium">Servidor de Sinalização:</label>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          value={formData.apiEndpoint}
+                          onChange={(e) => setFormData({ ...formData, apiEndpoint: e.target.value })}
+                          placeholder="https://prysmview.duckdns.org"
+                          className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#0078d4]"
+                        />
+                        <span className="text-[10px] text-slate-400 block mt-1">
+                          Terminal Caddy reverso com TLS 1.3 Let&apos;s Encrypt ativo na VM Azure.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
+                      <label className="text-slate-300 font-medium">Servidor STUN (NAT Discovery):</label>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          value={formData.stunServer}
+                          onChange={(e) => setFormData({ ...formData, stunServer: e.target.value })}
+                          placeholder="stun.l.google.com:19302"
+                          className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#0078d4]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2">
+                      <label className="text-slate-300 font-medium">Servidor TURN / Coturn:</label>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          value={formData.turnServer}
+                          onChange={(e) => setFormData({ ...formData, turnServer: e.target.value })}
+                          placeholder="turn:20.121.137.44:3478"
+                          className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#0078d4]"
+                        />
+                        <span className="text-[10px] text-slate-400 block mt-1">
+                          Relay P2P DTLS criptografado para transposição de firewalls corporativos.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex items-center gap-2">
+                      {onOpenDiagnostics && (
+                        <button
+                          type="button"
+                          onClick={onOpenDiagnostics}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-800/50 rounded font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Executar Diagnóstico WebRTC & Sinalização</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   <div className="bg-slate-800/80 px-3 py-1.5 rounded text-[11px] font-bold text-slate-200 uppercase tracking-wide border-l-2 border-[#0078d4]">
                     Auditoria e Conformidade de Segurança (AGENTS.md)

@@ -19,12 +19,14 @@ interface QuickConnectProps {
   devices: Device[];
   onConnectDevice: (device: Device, method: 'code' | 'unattended', codeOrPassword?: string) => void;
   onSendNotification: (msg: string, type?: 'success' | 'warning' | 'error') => void;
+  onAddDevice?: (newDev: Device) => void;
 }
 
 export const QuickConnect: React.FC<QuickConnectProps> = ({
   devices,
   onConnectDevice,
   onSendNotification,
+  onAddDevice,
 }) => {
   const [targetId, setTargetId] = useState('');
   const [authMethod, setAuthMethod] = useState<'code' | 'unattended'>('code');
@@ -50,14 +52,28 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
         d.name.toLowerCase().includes(targetId.trim().toLowerCase())
     );
 
-    if (!matched) {
-      onSendNotification(`Dispositivo '${targetId}' não localizado na rede corporativa.`, 'error');
-      return;
-    }
-
-    if (matched.status === 'offline') {
-      onSendNotification(`O dispositivo '${matched.id}' está offline no momento.`, 'error');
-      return;
+    let targetDev = matched;
+    if (!targetDev) {
+      targetDev = {
+        id: targetId.trim().toUpperCase(),
+        name: `Host Remoto (${targetId.trim()})`,
+        store: 'Conexão Direta',
+        status: 'online',
+        ip: targetId.includes('.') ? targetId.trim() : 'Nuvem Azure',
+        os: 'Windows 11 / 10',
+        version: '2.0.0',
+        cpu: 'Intel / AMD',
+        memory: '8.0 GB RAM',
+        disk: 'SSD 240GB',
+        lastSeen: 'Agora mesmo',
+        resolution: '1920x1080 @ 60Hz',
+        monitors: 1,
+        uptime: 'Online agora',
+      };
+      if (onAddDevice) {
+        onAddDevice(targetDev);
+      }
+      onSendNotification(`Dispositivo '${targetDev.id}' cadastrado no diretório de conexões diretas.`, 'success');
     }
 
     if (authMethod === 'code' && (!sessionCode || sessionCode.length !== 8)) {
@@ -69,7 +85,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
     setTimeout(() => {
       setIsVerifying(false);
       onConnectDevice(
-        matched,
+        targetDev,
         authMethod,
         authMethod === 'code' ? sessionCode : unattendedPassword
       );

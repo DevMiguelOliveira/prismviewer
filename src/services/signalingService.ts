@@ -27,8 +27,9 @@ export async function testSignalingHealth(url: string): Promise<TestResult> {
   const cleanUrl = url.replace(/\/+$/, '');
   let healthEndpoint = cleanUrl.endsWith('/health') ? cleanUrl : `${cleanUrl}/health`;
 
-  // Se o browser estiver em HTTPS e o endpoint for HTTP duckdns, utiliza o proxy do Vite para evitar bloqueio de Mixed Content:
-  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && cleanUrl.includes('prysmview.duckdns.org')) {
+  // No navegador (seja HTTP localhost ou HTTPS), se o endpoint for prysmview.duckdns.org,
+  // utiliza o proxy local do Vite (/api/duckdns/health) para evitar bloqueios de CORS e Mixed Content:
+  if (typeof window !== 'undefined' && !(window as any).__TAURI__ && cleanUrl.includes('prysmview.duckdns.org')) {
     healthEndpoint = '/api/duckdns/health';
   }
 

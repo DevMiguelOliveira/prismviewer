@@ -83,6 +83,18 @@ prysmview.duckdns.org {
     header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     header / Server ""
 
+    # CORS para aplicacao Desktop e Web
+    @cors_preflight method OPTIONS
+    handle @cors_preflight {
+        header Access-Control-Allow-Origin "*"
+        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-Session-Code"
+        respond "" 204
+    }
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, X-Session-Code"
+
     reverse_proxy 127.0.0.1:8080 {
         header_up Host {upstream_hostport}
         header_up X-Real-IP {remote}

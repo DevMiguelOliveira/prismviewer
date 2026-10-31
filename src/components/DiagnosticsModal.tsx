@@ -183,23 +183,23 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setCustomUrl('http://prysmview.duckdns.org');
-                      onUpdateEndpoint('http://prysmview.duckdns.org');
+                      setCustomUrl('https://prysmview.duckdns.org');
+                      onUpdateEndpoint('https://prysmview.duckdns.org');
                     }}
-                    className="text-sky-400 underline font-mono font-semibold"
+                    className="text-emerald-400 underline font-mono font-semibold"
                   >
-                    http://prysmview.duckdns.org
+                    https://prysmview.duckdns.org (Produção Azure)
                   </button>
                   <span>•</span>
                   <button
                     type="button"
                     onClick={() => {
-                      setCustomUrl('https://prysmview.duckdns.org');
-                      onUpdateEndpoint('https://prysmview.duckdns.org');
+                      setCustomUrl('http://prysmview.duckdns.org');
+                      onUpdateEndpoint('http://prysmview.duckdns.org');
                     }}
                     className="text-sky-400 underline font-mono"
                   >
-                    https://prysmview.duckdns.org
+                    http://prysmview.duckdns.org
                   </button>
                   <span>•</span>
                   <button

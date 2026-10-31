@@ -24,7 +24,7 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({
   onLoginSuccess,
-  serverUrl = 'http://prysmview.duckdns.org',
+  serverUrl = 'https://prysmview.duckdns.org',
 }) => {
   const [emailOrUser, setEmailOrUser] = useState('admin@prysmview.com');
   const [password, setPassword] = useState('admin123');

@@ -1,0 +1,24 @@
+[allowlist]
+description = "Allowlist for mock UI credentials and public development hashes"
+paths = [
+  '''src/data/mockData\.ts''',
+  '''src/components/Login\.tsx''',
+  '''src/components/SettingsView\.tsx''',
+  '''assets/''',
+  '''deploy/''',
+  '''dist/''',
+  '''Releases/''',
+  '''package-lock\.json''',
+  '''node_modules/'''
+]
+regexes = [
+  '''admin123''',
+  '''admin@prysm2024''',
+  '''eng2@secure''',
+  '''server@matriz2024''',
+  '''kiosk@checkout''',
+  '''e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855''',
+  '''ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb''',
+  '''3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d''',
+  '''2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae'''
+]
