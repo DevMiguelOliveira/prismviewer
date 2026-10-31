@@ -11,48 +11,29 @@
     "version": "2.0.0"
   },
   "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "dialog": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "window": {
-        "all": true
-      }
-    },
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
-      "copyright": "Copyright 2026 PrysmView Team",
       "icon": [
         "icons/icon.ico",
         "icons/icon.png"
       ],
-      "identifier": "com.prysmview.app"
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
+      "identifier": "com.prysmview.app",
+      "windows": {
+        "wix": {
+          "language": "pt-BR"
+        }
+      }
     },
     "windows": [
       {
-        "fullscreen": false,
-        "height": 860,
-        "resizable": true,
         "title": "PrysmView - Acesso Remoto & Gestão de PDVs",
         "width": 1360,
+        "height": 860,
         "minWidth": 1024,
         "minHeight": 700,
         "center": true,
+        "resizable": true,
         "decorations": true
       }
     ]
