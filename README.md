@@ -1,151 +1,72 @@
-# PrysmView
+# PrysmView - Acesso Remoto & Gestão de PDVs (React + Vite + Tailwind)
 
-Software de acesso remoto peer-to-peer open-source inspirado no TeamViewer.
+PrysmView é uma aplicação corporativa de acesso remoto desktop e gestão centralizada para PDVs (caixas de loja) rodando Windows 10 e Windows 11. O sistema foi reescrito em **React 18 + TypeScript + Vite + Tailwind CSS**, integrando a experiência do **Console do Operador (Admin Viewer)** e do **Terminal do Caixa (Host PDV)** em uma única interface fluida, rápida e responsiva.
 
-## 🎯 Missão
+## 🚀 Funcionalidades Portadas
 
-PrysmView é um software de acesso remoto desktop para PDVs (caixas de loja) rodando Windows 10 e Windows 11. Um operador (técnico ou central de suporte) visualiza e controla o PDV de forma remota. O software deve ser:
+### 1. Console do Operador (Admin Viewer)
+- **Painel de Monitoramento (Dashboard)**:
+  - Menu retrátil de Conexão Rápida (TeamViewer Style) com identificação do host local (`127.0.0.1`) e status de porta ativa (`19533`).
+  - Indicadores e métricas de desempenho em tempo real: Total de PDVs, dispositivos Online/Offline e latência RTT em rede interna (18ms).
+  - Catálogo de caixas de loja com filtros de status (Todos, Online, Offline), seletor de lojas/filiais e busca global.
+  - Alternância entre visualização em Cards e visualização em Tabela detalhada.
+  - Gaveta lateral (Drawer) com especificações de hardware (CPU, memória RAM, disco NVMe, resolução, SO e uptime).
+  - Modal de cadastro de novos PDVs.
+- **Conexão Rápida Direta**:
+  - Conexão por ID ou endereço IP com código temporário de 8 dígitos ou senha de acesso desassistido (DPAPI).
+  - Seleção de canais de conexão: Mouse/Teclado, Área de Transferência (Clipboard < 1MB) e Transferência de Arquivos (SHA-256).
+- **Sessão Remota Interativa (In-Session Viewer)**:
+  - Barra de ferramentas flutuante, retrátil e fixável (Pin/Collapse) inspirada no TeamViewer.
+  - Telemetria viva: FPS (30–60), RTT (ms), kbps de vídeo e tempo de sessão decorrido.
+  - Alternância em 1 clique entre **"Controle Total"** e **"Apenas Visualizar"** (suprime comandos remotos de mouse/teclado).
+  - Escala adaptativa: **"Ajustar à Tela (Fit)"** e **"Tamanho Original (1:1)"**.
+  - Envio de Sequência de Atenção Segura (**Ctrl+Alt+Del / SAS**) para desbloqueio ou logon no Windows.
+  - Reinício remoto do PDV com alerta de reconexão automática.
+  - Sincronização bidirecional de área de transferência (Clipboard).
+  - Transferência de arquivos com verificação criptográfica SHA-256 no destino.
+  - Chat de suporte em tempo real integrado entre o técnico e a operadora do caixa.
+  - Simulador interativo de tela de PDV (Frente de Loja / Caixa) com cupom fiscal eletrônico, leitura de código de barras e abertura de gaveta via pulso elétrico serial (ESC/POS).
+- **Grupos & Lojas**:
+  - Gestão de unidades varejistas (Centro, Shopping Sul, Matriz, Filial Norte) com contatos, gerentes e contagem de caixas.
+- **Auditoria E2E**:
+  - Registro de sessões remotas com data/hora, operador, dispositivo, consentimento, volume transferido e assinatura imutável SHA-256.
+  - Exportação de relatório completo em formato CSV.
+- **Técnicos & Controle de Acesso (RBAC)**:
+  - Gestão de equipe técnica (N1 Suporte Balcão, N2 Especialista Remoto, N3 Infraestrutura e Administrador TI).
+- **Configurações Globais**:
+  - Sinalização WebSocket/REST, servidores STUN/TURN (coturn Azure), timeouts e verificação de atualizações atômicas in-app.
 
-- **rápido**: latência percebida baixa, fluidez de vídeo aceitável em rede de loja;
-- **leve**: uso baixo de CPU, memória e disco no PDV, que costuma ter hardware modesto;
-- **seguro**: criptografia fim a fim, consentimento visível no PDV, auditoria de sessões;
-- **de custo zero**: nenhuma ferramenta, biblioteca, serviço, domínio ou certificado pago.
+### 2. Terminal do PDV (Host Mode)
+- **Tela de Permissão de Suporte Remoto**:
+  - "Sua ID" com cópia rápida para o clipboard.
+  - Código temporário de 8 dígitos com temporizador regressivo de expiração (120 segundos) e botão para geração imediata de novo código.
+  - Acesso desassistido com senha fixa configurável e opção de revelar/ocultar.
+  - Travas rápidas de segurança para Área de Transferência e Arquivos.
+- **Janela de Consentimento no PDV**:
+  - Janela modal interativa com contagem regressiva de 60 segundos, exibindo nome do técnico, motivo informado e botões Aceitar/Recusar.
+- **Banner de Sessão Ativa**:
+  - Indicador pulsante e botão de emergência "Encerrar Acesso Imediatamente".
 
-## 🏗️ Arquitetura
+## 🛠️ Tecnologias Utilizadas
 
-PrysmView v2.0 é construído com:
+- **Framework**: React 18 + TypeScript 5
+- **Build Tool**: Vite 5 (porta 3000 em `0.0.0.0`)
+- **Estilização**: Tailwind CSS 3.4
+- **Ícones**: Lucide React
+- **Arquitetura**: Componentes modulares, estado reativo e design system escuro/claro
 
-- **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite
-- **Desktop Framework**: Tauri 2.0 (Rust backend)
-- **Comunicação P2P**: WebRTC (TURN/STUN)
-- **Backend de Sinalização**: Go ou Node.js (Azure VM)
-- **Design System**: Customizado com Tailwind CSS (inspirado no TeamViewer)
+## 💻 Como Executar
 
-### Componentes
+```bash
+# Instalação das dependências
+npm install
 
-- **prysmview-host**: App Tauri que roda no PDV (Host UI + Backend Rust)
-- **prysmview-admin**: App Tauri que roda no computador do operador (Admin Panel + Backend Rust)
-- **@prysmview/ui**: Pacote de componentes compartilhados
-- **prysmview-api**: API de sinalização (Go/Node.js)
-- **prysmview-turn**: Servidor TURN/STRTUN (coturn)
+# Inicialização do servidor de desenvolvimento na porta 3000
+npm run dev
 
-## 🚀 Quick Start
+# Verificação de tipos
+npm run lint
 
-### Pré-requisitos
-
-- Node.js 18+
-- pnpm 8+
-- Rust 1.70+
-- Windows 10/11 (para desenvolvimento e uso)
-
-### Setup Inicial
-
-```powershell
-# Executar o script de setup
-.\setup_prysmview.ps1
+# Build de produção
+npm run build
 ```
-
-Este script vai:
-1. Verificar dependências (Node.js, pnpm, Rust)
-2. Criar estrutura de diretórios (monorepo com pnpm workspace)
-3. Inicializar apps Host e Admin com Tauri
-4. Criar pacote de componentes compartilhados
-5. Instalar todas as dependências
-6. Inicializar repositório Git
-
-### Desenvolvimento
-
-```powershell
-# Executar Host em modo dev
-pnpm --filter prysmview-host dev
-
-# Executar Admin em modo dev
-pnpm --filter prysmview-admin dev
-
-# Executar ambos em modo dev
-pnpm dev
-
-# Linting
-pnpm lint
-
-# Type checking
-pnpm typecheck
-
-# Formatação
-pnpm format
-
-# Testes
-pnpm test
-```
-
-### Build de Produção
-
-```powershell
-# Build de todos os apps
-pnpm build
-
-# Build de instaladores Tauri
-.\build_prysmview.ps1
-```
-
-Os instaladores (.msi e .exe) serão gerados na pasta `Releases/`.
-
-## 📁 Estrutura do Repositório
-
-```
-prysmview/
-├── apps/
-│ ├── host/ (Tauri app - Host UI + Backend)
-│ └── admin/ (Tauri app - Admin Panel + Backend)
-├── packages/
-│ ├── ui/ (Componentes compartilhados)
-│ ├── config/ (Configurações compartilhadas)
-│ └── types/ (Tipos TypeScript compartilhados)
-├── server/ (Backend de sinalização - Go/Node.js)
-├── docs/
-│ ├── PROJETO.md
-│ ├── threat-model.md
-│ ├── protocolo.md
-│ ├── dependencias.md
-│ ├── adr/
-│ └── spikes/
-├── AGENTS.md (Regras para agentes de IA)
-├── setup_prysmview.ps1 (Script de setup)
-├── build_prysmview.ps1 (Script de build)
-└── README.md
-```
-
-## 🔒 Segurança
-
-PrysmView segue um modelo de segurança rigoroso:
-
-- Criptografia fim a fim (WebRTC com DTLS 1.3)
-- Consentimento visível no PDV (nunca acesso sem permissão)
-- Código de sessão de 8 dígitos (HMAC-SHA256)
-- Auditoria completa de sessões
-- Chaves privadas protegidas por DPAPI
-- Nenhum dado sensível em logs
-
-Veja [AGENTS.md](AGENTS.md) para requisitos de segurança detalhados.
-
-## 📚 Documentação
-
-- [AGENTS.md](AGENTS.md) - Regras para desenvolvimento e segurança
-- [docs/PROJETO.md](docs/PROJETO.md) - Visão geral do projeto
-- [docs/threat-model.md](docs/threat-model.md) - Modelo de ameaças
-- [docs/protocolo.md](docs/protocolo.md) - Protocolo de comunicação
-- [docs/dependencias.md](docs/dependencias.md) - Dependências e licenças
-- [deploy/HTTPS-SETUP.md](deploy/HTTPS-SETUP.md) - Configuração HTTPS com Caddy
-- [deploy/AZURE.md](deploy/AZURE.md) - Deploy na Azure VM
-
-## 🤝 Contribuindo
-
-Leia [AGENTS.md](AGENTS.md) antes de contribuir. Este projeto tem regras estritas de segurança e qualidade de código.
-
-## 📄 Licença
-
-MIT OR Apache-2.0
-
-## 🙏 Agradecimentos
-
-Inspirado no TeamViewer e nas melhores práticas de software de acesso remoto open-source.

@@ -2,24 +2,29 @@
   "name": "prysmview",
   "version": "2.0.0",
   "private": true,
-  "description": "PrysmView - Software de acesso remoto peer-to-peer (React + Tailwind + Tauri)",
+  "description": "PrysmView - Software de acesso remoto peer-to-peer para PDVs (React + Tailwind)",
+  "type": "module",
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
-    "clean": "turbo run clean"
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview --port 3000",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.344.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
-    "turbo": "^1.11.0",
-    "typescript": "^5.3.0",
-    "prettier": "^3.1.0",
-    "eslint": "^8.56.0"
-  },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.11",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.2"
+  }
 }
