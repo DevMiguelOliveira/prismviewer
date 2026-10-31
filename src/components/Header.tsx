@@ -29,6 +29,7 @@ interface HeaderProps {
   onToggleAppMode: () => void;
   onSelectTab: (tab: string) => void;
   onOpenDiagnostics: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleAppMode,
   onSelectTab,
   onOpenDiagnostics,
+  onLogout,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -281,6 +283,18 @@ export const Header: React.FC<HeaderProps> = ({
                   <UserCheck className="w-3.5 h-3.5 text-slate-400" />
                   <span>Gerenciar Técnicos & Permissões</span>
                 </button>
+                {onLogout && (
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-red-400 hover:text-red-300 hover:bg-red-950/40 rounded-md transition-colors mt-1"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sair / Trocar Usuário</span>
+                  </button>
+                )}
               </div>
 
               <div className="mt-2 pt-2 border-t border-slate-800">

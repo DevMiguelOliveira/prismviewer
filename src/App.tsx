@@ -25,6 +25,7 @@ import { AuditView } from './components/AuditView';
 import { TechniciansView } from './components/TechniciansView';
 import { SettingsView } from './components/SettingsView';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
+import { Login } from './components/Login';
 import {
   INITIAL_DEVICES,
   INITIAL_STORES,
@@ -46,6 +47,7 @@ export function App() {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Domain Data State
   const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
@@ -133,6 +135,19 @@ export function App() {
     { id: 'settings', label: 'Configurações', icon: Sliders },
   ];
 
+  if (!isAuthenticated) {
+    return (
+      <Login
+        onLoginSuccess={(operator) => {
+          setActiveOperator(operator);
+          setIsAuthenticated(true);
+          addToast(`Bem-vindo ao Console, ${operator.name}!`, 'success');
+        }}
+        serverUrl={settings.apiEndpoint}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col ${theme === 'light' ? 'light-mode' : ''}`}>
       {/* Global Header */}
@@ -152,6 +167,10 @@ export function App() {
         }}
         onSelectTab={setCurrentTab}
         onOpenDiagnostics={() => setShowDiagnostics(true)}
+        onLogout={() => {
+          setIsAuthenticated(false);
+          addToast('Sessão encerrada com sucesso.', 'warning');
+        }}
       />
 
       {/* Main Body */}
