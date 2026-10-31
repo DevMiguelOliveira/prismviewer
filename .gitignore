@@ -33,3 +33,6 @@ $RECYCLE.BIN/
 
 # Test artifacts
 *.proptest-regressions
+
+# Studio uploaded artifacts
+public/assets/

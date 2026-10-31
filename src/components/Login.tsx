@@ -58,12 +58,6 @@ export const Login: React.FC<LoginProps> = ({
     }, 700);
   };
 
-  const handleSelectQuickAccount = (op: Operator) => {
-    setEmailOrUser(op.email);
-    setPassword('admin123');
-    setErrorMessage(null);
-  };
-
   return (
     <div className="min-h-screen w-full bg-[#070b13] text-slate-100 flex flex-col justify-between relative overflow-hidden select-none font-sans">
       {/* Background Ambient Glows & Grid */}
@@ -85,13 +79,6 @@ export const Login: React.FC<LoginProps> = ({
           <span className="font-extrabold tracking-wider text-sm text-white">
             PRYSM<span className="text-sky-400 font-black">VIEW</span>
           </span>
-        </div>
-
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 backdrop-blur-md shadow-sm">
-          <span className="pulse-dot-green"></span>
-          <span className="font-mono text-emerald-400 font-semibold">{serverUrl.replace(/^https?:\/\//, '')}</span>
-          <span className="text-slate-500">•</span>
-          <span className="text-slate-400">Online (18ms)</span>
         </div>
       </header>
 
@@ -120,7 +107,7 @@ export const Login: React.FC<LoginProps> = ({
               </span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Console Corporativo de Acesso Remoto a PDVs
+              Console Corporativo de Acesso e Controle Remoto Desktop
             </p>
           </div>
 
@@ -205,26 +192,6 @@ export const Login: React.FC<LoginProps> = ({
               {!isLoading && <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
             </button>
           </form>
-
-          {/* Quick Demo Credentials */}
-          <div className="mt-6 pt-5 border-t border-slate-800">
-            <span className="text-[11px] font-semibold text-slate-400 block mb-2 text-center">
-              Preenchimento Rápido para Demonstração:
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {INITIAL_OPERATORS.slice(0, 3).map((op) => (
-                <button
-                  key={op.id}
-                  type="button"
-                  onClick={() => handleSelectQuickAccount(op)}
-                  className="p-1.5 rounded-lg bg-slate-950/80 hover:bg-slate-800/90 border border-slate-800 hover:border-sky-500/40 text-left transition-colors text-[10px]"
-                >
-                  <p className="font-bold text-slate-200 truncate">{op.name.split(' ')[0]}</p>
-                  <p className="text-slate-400 text-[9px] truncate">{op.role.split(' ')[0]}</p>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </main>
 

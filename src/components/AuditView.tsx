@@ -31,7 +31,7 @@ export const AuditView: React.FC<AuditViewProps> = ({ sessions, onSendNotificati
   );
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Dispositivo', 'Loja', 'Operador', 'Inicio', 'Fim', 'Duracao_s', 'Bytes', 'Consentimento', 'Motivo', 'SHA256_Auditoria'];
+    const headers = ['ID', 'Dispositivo', 'Grupo_Departamento', 'Operador', 'Inicio', 'Fim', 'Duracao_s', 'Bytes', 'Consentimento', 'Motivo', 'SHA256_Auditoria'];
     const rows = filteredSessions.map((s) => [
       s.id,
       s.deviceId,
@@ -59,7 +59,7 @@ export const AuditView: React.FC<AuditViewProps> = ({ sessions, onSendNotificati
 
   const formatBytes = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
   return (
@@ -80,7 +80,7 @@ export const AuditView: React.FC<AuditViewProps> = ({ sessions, onSendNotificati
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Filtrar por técnico, caixa ou motivo..."
+              placeholder="Filtrar por técnico, dispositivo ou motivo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -105,7 +105,7 @@ export const AuditView: React.FC<AuditViewProps> = ({ sessions, onSendNotificati
               <tr>
                 <th className="py-2.5 px-4">Sessão / Horário</th>
                 <th className="py-2.5 px-4">Dispositivo Alvo</th>
-                <th className="py-2.5 px-4">Operador / Loja</th>
+                <th className="py-2.5 px-4">Operador / Grupo</th>
                 <th className="py-2.5 px-4">Consentimento & Motivo</th>
                 <th className="py-2.5 px-4">Volume Dados</th>
                 <th className="py-2.5 px-4">Integridade SHA-256</th>

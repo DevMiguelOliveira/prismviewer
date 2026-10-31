@@ -42,7 +42,7 @@ interface Toast {
 }
 
 export function App() {
-  // App Mode: 'admin' (Console do Operador) or 'host' (Terminal do PDV Caixa)
+  // App Mode: 'admin' (Console do Operador) or 'host' (Terminal do Host Remoto)
   const [appMode, setAppMode] = useState<'admin' | 'host'>('admin');
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -129,7 +129,7 @@ export function App() {
   const navItems = [
     { id: 'dashboard', label: 'Dispositivos', icon: Monitor, badge: devices.filter((d) => d.status === 'online').length },
     { id: 'direct', label: 'Conexão Rápida', icon: Zap },
-    { id: 'stores', label: 'Grupos & Lojas', icon: Building, badge: stores.length },
+    { id: 'stores', label: 'Grupos & Deptos', icon: Building, badge: stores.length },
     { id: 'audit', label: 'Auditoria E2E', icon: ShieldCheck },
     { id: 'technicians', label: 'Técnicos & RBAC', icon: UserCheck },
     { id: 'settings', label: 'Configurações', icon: Sliders },
@@ -156,14 +156,14 @@ export function App() {
         activeOperator={activeOperator}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onRefresh={() => addToast('Catálogo de PDVs e status de conexão atualizados.', 'success')}
+        onRefresh={() => addToast('Inventário de dispositivos e conexões atualizados.', 'success')}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         appMode={appMode}
         onToggleAppMode={() => {
           const next = appMode === 'admin' ? 'host' : 'admin';
           setAppMode(next);
-          addToast(`Modo alterado para ${next === 'admin' ? 'Console do Operador (Admin)' : 'Terminal do PDV (Host)'}`, 'success');
+          addToast(`Modo alterado para ${next === 'admin' ? 'Console do Operador (Admin)' : 'Terminal do Host Remoto (Cliente)'}`, 'success');
         }}
         onSelectTab={setCurrentTab}
         onOpenDiagnostics={() => setShowDiagnostics(true)}
@@ -183,7 +183,7 @@ export function App() {
           onSendNotification={addToast}
         />
       ) : appMode === 'host' ? (
-        /* Host (PDV Caixa) Mode Simulator */
+        /* Host (Remote Client) Mode Simulator */
         <main className="flex-1 p-4 overflow-y-auto bg-slate-950">
           <HostTerminal onSendNotification={addToast} />
         </main>

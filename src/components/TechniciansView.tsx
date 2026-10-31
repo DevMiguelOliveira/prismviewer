@@ -62,7 +62,7 @@ export const TechniciansView: React.FC<TechniciansViewProps> = ({
             <span>Equipe Técnica & Controle de Acesso (RBAC)</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Gerenciamento de operadores autorizados a abrir sessões remotas nos caixas de loja
+            Gerenciamento de operadores autorizados a abrir sessões remotas nos dispositivos corporativos
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export const TechniciansView: React.FC<TechniciansViewProps> = ({
 
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-                Permissões no PDV:
+                Permissões de Acesso Remoto:
               </span>
               <div className="flex flex-wrap gap-1">
                 {tech.permissions.map((perm, idx) => (

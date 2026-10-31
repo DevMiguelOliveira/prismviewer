@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
     switch (id) {
       case 'dashboard': return 'Painel de Dispositivos';
       case 'direct': return 'Conexão Rápida';
-      case 'stores': return 'Grupos & Lojas';
+      case 'stores': return 'Grupos & Departamentos';
       case 'audit': return 'Auditoria E2E';
       case 'technicians': return 'Técnicos & Operadores';
       case 'settings': return 'Configurações Globais';
@@ -103,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <>
               <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-semibold">Simulador do PDV (Host Caixa)</span>
+              <span className="text-emerald-400 font-semibold">Simulador do Host Remoto (Cliente)</span>
             </>
           )}
         </span>
@@ -116,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar por caixa, loja, IP ou SO (ex: CAIXA-01, 192.168...)"
+              placeholder="Buscar por dispositivo, grupo, IP ou SO (ex: DESKTOP-01, 192.168...)"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full bg-slate-950/80 border border-slate-800 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
@@ -135,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {/* Switch App Mode: Operator Console vs Host PDV */}
+        {/* Switch App Mode: Operator Console vs Host Remoto */}
         <button
           onClick={onToggleAppMode}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -143,13 +143,13 @@ export const Header: React.FC<HeaderProps> = ({
               ? 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700 hover:border-sky-500/50'
               : 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border-emerald-700/80'
           }`}
-          title="Alternar entre Painel do Operador (Admin) e Terminal do Caixa (Host)"
+          title="Alternar entre Painel do Operador (Admin) e Simulador do Cliente (Host)"
         >
           {appMode === 'admin' ? (
             <>
               <Terminal className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden lg:inline">Testar Visão do</span>
-              <span className="text-emerald-400">PDV Host</span>
+              <span className="text-emerald-400">Host Remoto</span>
             </>
           ) : (
             <>
@@ -215,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-slate-200">Sessão Segura Finalizada</p>
-                    <p className="text-[10px] text-slate-400">Caixa 01 (Loja Centro) - Auditoria gravada com SHA-256.</p>
+                    <p className="text-[10px] text-slate-400">DESKTOP-01 (Depto Financeiro) - Auditoria gravada com SHA-256.</p>
                   </div>
                 </div>
                 <div className="p-2 rounded bg-slate-800/60 border border-slate-700/50 flex items-start gap-2">

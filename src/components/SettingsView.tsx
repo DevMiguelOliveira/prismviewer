@@ -146,7 +146,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
               <div>
                 <span className="font-semibold text-slate-200 block">Sincronização de Área de Transferência (Clipboard)</span>
-                <span className="text-[11px] text-slate-400">Permite copiar e colar texto puro entre operador e PDV com limite estrito de 1 MB.</span>
+                <span className="text-[11px] text-slate-400">Permite copiar e colar texto puro entre operador e host remoto com limite estrito de 1 MB.</span>
               </div>
               <input
                 type="checkbox"

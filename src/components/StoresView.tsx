@@ -36,15 +36,15 @@ export const StoresView: React.FC<StoresViewProps> = ({
   const handleCreateStore = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStoreName.trim() || !newStoreCode.trim()) {
-      onSendNotification('Preencha os campos obrigatórios da loja.', 'warning');
+      onSendNotification('Preencha os campos obrigatórios do departamento.', 'warning');
       return;
     }
     const created: Store = {
       id: `store-${Date.now()}`,
       name: newStoreName.trim(),
       code: newStoreCode.trim().toUpperCase(),
-      location: newStoreLocation.trim() || 'São Paulo, SP',
-      manager: newStoreManager.trim() || 'Gerente Geral',
+      location: newStoreLocation.trim() || 'Edifício Sede, SP',
+      manager: newStoreManager.trim() || 'Coordenador de TI',
       phone: newStorePhone.trim() || '(11) 3000-0000',
       deviceCount: 0,
       onlineCount: 0,
@@ -53,7 +53,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
     setShowAddModal(false);
     setNewStoreName('');
     setNewStoreCode('');
-    onSendNotification(`Loja ${created.name} (${created.code}) cadastrada com sucesso!`, 'success');
+    onSendNotification(`Grupo ${created.name} (${created.code}) cadastrado com sucesso!`, 'success');
   };
 
   return (
@@ -62,10 +62,10 @@ export const StoresView: React.FC<StoresViewProps> = ({
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Building className="w-5 h-5 text-sky-400" />
-            <span>Grupos de Lojas & Filiais</span>
+            <span>Grupos & Departamentos Corporativos</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Organização hierárquica dos caixas e servidores locais por unidade varejista
+            Organização lógica dos computadores, estações de trabalho e servidores por departamento ou setor
           </p>
         </div>
 
@@ -74,7 +74,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm shadow-sky-600/30"
         >
           <Plus className="w-4 h-4" />
-          <span>Cadastrar Nova Loja</span>
+          <span>Cadastrar Novo Grupo</span>
         </button>
       </div>
 
@@ -105,7 +105,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
                 <div className="text-right">
                   <div className="text-xs font-bold text-slate-200">
                     <span className="text-emerald-400 font-mono">{onlineDevs}</span> /{' '}
-                    <span className="font-mono text-slate-400">{storeDevs.length} PDVs</span>
+                    <span className="font-mono text-slate-400">{storeDevs.length} Dispositivos</span>
                   </div>
                   <span className="text-[10px] text-slate-500">online agora</span>
                 </div>
@@ -113,18 +113,18 @@ export const StoresView: React.FC<StoresViewProps> = ({
 
               <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/80 space-y-1 text-[11px] text-slate-400">
                 <div className="flex justify-between">
-                  <span>Gerente da Unidade:</span>
+                  <span>Responsável do Setor:</span>
                   <span className="text-slate-200 font-medium">{store.manager}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Telefone Contato:</span>
+                  <span>Ramal / Telefone:</span>
                   <span className="text-slate-200 font-mono">{store.phone}</span>
                 </div>
               </div>
 
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
-                  Caixas Vinculados:
+                  Dispositivos Vinculados:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {storeDevs.length > 0 ? (
@@ -146,7 +146,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
                       </span>
                     ))
                   ) : (
-                    <span className="text-[11px] text-slate-500 italic">Nenhum PDV cadastrado nesta loja</span>
+                    <span className="text-[11px] text-slate-500 italic">Nenhum dispositivo cadastrado neste grupo</span>
                   )}
                 </div>
               </div>
@@ -159,14 +159,14 @@ export const StoresView: React.FC<StoresViewProps> = ({
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl p-5 text-xs text-slate-200">
-            <h3 className="font-bold text-sm text-white mb-3">Cadastrar Nova Loja</h3>
+            <h3 className="font-bold text-sm text-white mb-3">Cadastrar Novo Grupo / Departamento</h3>
             <form onSubmit={handleCreateStore} className="space-y-3">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Nome da Loja:</label>
+                <label className="block text-slate-400 font-medium mb-1">Nome do Grupo / Departamento:</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Loja Morumbi"
+                  placeholder="Ex: Departamento de Engenharia"
                   value={newStoreName}
                   onChange={(e) => setNewStoreName(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -178,7 +178,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Ex: LJ-05"
+                  placeholder="Ex: ENG-01"
                   value={newStoreCode}
                   onChange={(e) => setNewStoreCode(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
@@ -186,10 +186,10 @@ export const StoresView: React.FC<StoresViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Endereço / Localização:</label>
+                <label className="block text-slate-400 font-medium mb-1">Localização / Prédio / Andar:</label>
                 <input
                   type="text"
-                  placeholder="Av. Giovanni Gronchi, 3000"
+                  placeholder="Edifício Central, Bloco B - 4º Andar"
                   value={newStoreLocation}
                   onChange={(e) => setNewStoreLocation(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -197,10 +197,10 @@ export const StoresView: React.FC<StoresViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Gerente Responsável:</label>
+                <label className="block text-slate-400 font-medium mb-1">Responsável / Coordenador:</label>
                 <input
                   type="text"
-                  placeholder="Nome do gerente"
+                  placeholder="Nome do responsável"
                   value={newStoreManager}
                   onChange={(e) => setNewStoreManager(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -208,7 +208,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Telefone da Loja:</label>
+                <label className="block text-slate-400 font-medium mb-1">Ramal / Telefone:</label>
                 <input
                   type="text"
                   placeholder="(11) 3740-0000"
@@ -230,7 +230,7 @@ export const StoresView: React.FC<StoresViewProps> = ({
                   type="submit"
                   className="flex-1 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg shadow-md"
                 >
-                  Salvar Loja
+                  Salvar Grupo
                 </button>
               </div>
             </form>

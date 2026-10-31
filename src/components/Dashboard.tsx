@@ -86,7 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       return;
     }
     if (quickMethod === 'code' && (!quickCode || quickCode.length !== 8)) {
-      onSendNotification('Informe o código temporário de 8 dígitos gerado no PDV.', 'warning');
+      onSendNotification('Informe o código temporário de 8 dígitos gerado no dispositivo remoto.', 'warning');
       return;
     }
     onConnectDevice(matched, quickMethod, quickMethod === 'code' ? quickCode : quickPassword);
@@ -174,7 +174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: PDV-CAIXA-01 ou 192.168.1.101"
+                  placeholder="Ex: DESKTOP-01 ou 192.168.1.101"
                   value={quickTargetId}
                   onChange={(e) => setQuickTargetId(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
@@ -242,7 +242,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-medium">Total de PDVs</span>
+            <span className="text-xs font-medium">Total de Dispositivos</span>
             <Monitor className="w-4 h-4 text-sky-400" />
           </div>
           <div className="text-2xl font-black text-white">{devices.length}</div>
@@ -251,7 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-medium">PDVs Online</span>
+            <span className="text-xs font-medium">Dispositivos Online</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{onlineCount}</div>
@@ -260,11 +260,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-medium">PDVs Offline</span>
+            <span className="text-xs font-medium">Dispositivos Offline</span>
             <XCircle className="w-4 h-4 text-slate-500" />
           </div>
           <div className="text-2xl font-black text-slate-400">{offlineCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Caixas fechados</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Desconectados</div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80">
@@ -273,7 +273,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <Activity className="w-4 h-4 text-sky-400" />
           </div>
           <div className="text-2xl font-black text-sky-400 font-mono">18 ms</div>
-          <div className="text-[10px] text-sky-400/80 mt-0.5">Rede interna de lojas</div>
+          <div className="text-[10px] text-sky-400/80 mt-0.5">Rede corporativa</div>
         </div>
       </div>
 
@@ -310,13 +310,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </button>
           </div>
 
-          {/* Store Selector */}
+          {/* Group / Dept Selector */}
           <select
             value={selectedStore}
             onChange={(e) => setSelectedStore(e.target.value)}
             className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 text-xs text-slate-300 focus:outline-none focus:border-sky-500"
           >
-            <option value="all">Todas as Lojas</option>
+            <option value="all">Todos os Grupos</option>
             {stores.map((s) => (
               <option key={s.id} value={s.name}>
                 {s.name} ({s.code})
@@ -350,7 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm shadow-sky-600/30"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Cadastrar PDV</span>
+            <span>Cadastrar Dispositivo</span>
           </button>
         </div>
       </div>
@@ -436,7 +436,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <button
                   onClick={() => setDrawerDevice(dev)}
                   className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition-colors"
-                  title="Ver especificações e diagnósticos do PDV"
+                  title="Ver especificações e diagnósticos do dispositivo"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -452,7 +452,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <tr>
                 <th className="py-2.5 px-4">Status</th>
                 <th className="py-2.5 px-4">ID Dispositivo</th>
-                <th className="py-2.5 px-4">Nome & Loja</th>
+                <th className="py-2.5 px-4">Nome & Grupo</th>
                 <th className="py-2.5 px-4">IP & SO</th>
                 <th className="py-2.5 px-4">Hardware</th>
                 <th className="py-2.5 px-4 text-right">Ações</th>
@@ -581,7 +581,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div>
                   <h5 className="font-bold text-slate-200 text-xs mb-1.5 flex items-center gap-1.5">
                     <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Hardware do PDV</span>
+                    <span>Hardware do Dispositivo</span>
                   </h5>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1.5 text-[11px]">
                     <div className="flex justify-between">
@@ -642,7 +642,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {/* =========================================================================
-          MODAL: CADASTRO DE NOVO PDV
+          MODAL: CADASTRO DE NOVO DISPOSITIVO
           ========================================================================= */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
@@ -650,7 +650,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
               <div className="flex items-center gap-2">
                 <Plus className="w-4 h-4 text-sky-400" />
-                <h3 className="font-bold text-sm text-white">Cadastrar Novo PDV / Caixa</h3>
+                <h3 className="font-bold text-sm text-white">Cadastrar Novo Dispositivo</h3>
               </div>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
@@ -663,7 +663,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Ex: PDV-CAIXA-05"
+                  placeholder="Ex: DESKTOP-ADM-05"
                   value={newDevId}
                   onChange={(e) => setNewDevId(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase font-mono focus:outline-none focus:border-sky-500"
@@ -677,7 +677,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Caixa 05 - Saída Estacionamento"
+                  placeholder="Ex: Workstation 05 - Estação Contábil"
                   value={newDevName}
                   onChange={(e) => setNewDevName(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -686,7 +686,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               <div>
                 <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                  Loja Pertencente:
+                  Grupo / Departamento:
                 </label>
                 <select
                   value={newDevStore}
@@ -703,7 +703,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               <div>
                 <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                  Endereço IP Local na Loja:
+                  Endereço IP na Rede Local:
                 </label>
                 <input
                   type="text"

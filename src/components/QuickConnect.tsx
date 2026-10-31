@@ -30,7 +30,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
   const [authMethod, setAuthMethod] = useState<'code' | 'unattended'>('code');
   const [sessionCode, setSessionCode] = useState('');
   const [unattendedPassword, setUnattendedPassword] = useState('');
-  const [reason, setReason] = useState('Suporte técnico emergencial no caixa');
+  const [reason, setReason] = useState('Suporte técnico e manutenção remota');
   const [allowMouse, setAllowMouse] = useState(true);
   const [allowClipboard, setAllowClipboard] = useState(true);
   const [allowFiles, setAllowFiles] = useState(true);
@@ -51,7 +51,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
     );
 
     if (!matched) {
-      onSendNotification(`Dispositivo '${targetId}' não localizado na rede de lojas.`, 'error');
+      onSendNotification(`Dispositivo '${targetId}' não localizado na rede corporativa.`, 'error');
       return;
     }
 
@@ -86,7 +86,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
               <Zap className="w-5 h-5 fill-sky-400/20" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Conexão Rápida ao PDV</h2>
+              <h2 className="text-base font-bold text-white">Conexão Rápida ao Host</h2>
               <p className="text-slate-400 text-xs">
                 Controle remoto direto inspirado no TeamViewer com criptografia E2E (DTLS 1.3)
               </p>
@@ -102,7 +102,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Ex: PDV-CAIXA-01 ou 192.168.1.101"
+                  placeholder="Ex: DESKTOP-01 ou 192.168.1.101"
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 font-mono focus:outline-none focus:border-sky-500 transition-colors"
@@ -162,7 +162,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
             {authMethod === 'code' ? (
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">
-                  Código Temporário de 8 Dígitos gerado no PDV:
+                  Código Temporário de 8 Dígitos gerado no Host:
                 </label>
                 <input
                   type="text"
@@ -189,7 +189,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                 />
                 <p className="text-[10px] text-slate-500 mt-1">
-                  Protegida no disco do PDV via DPAPI do Windows (escopo de máquina LocalSystem).
+                  Protegida no disco do host via DPAPI do Windows (escopo de máquina LocalSystem).
                 </p>
               </div>
             )}
@@ -265,13 +265,13 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
 
             <ol className="list-decimal list-inside space-y-2 text-slate-400 text-[11px] leading-relaxed">
               <li>
-                <strong className="text-slate-200">Consentimento no PDV:</strong> O operador na loja visualiza o nome do técnico e motivo informado.
+                <strong className="text-slate-200">Consentimento no Host:</strong> O usuário local visualiza o nome do técnico e o motivo informado.
               </li>
               <li>
                 <strong className="text-slate-200">Criptografia E2E:</strong> Conexão P2P com DTLS 1.3 e verificação Ed25519; o servidor de sinalização nunca vê dados de tela.
               </li>
               <li>
-                <strong className="text-slate-200">Encerramento Imediato:</strong> O usuário local do caixa pode interromper a sessão a qualquer segundo com o botão de emergência.
+                <strong className="text-slate-200">Encerramento Imediato:</strong> O usuário local da máquina pode interromper a sessão a qualquer segundo com o botão de emergência.
               </li>
               <li>
                 <strong className="text-slate-200">Auditoria Completa:</strong> Início, fim, bytes trafegados e hash SHA-256 de auditoria são imutavelmente registrados.
@@ -285,7 +285,7 @@ export const QuickConnect: React.FC<QuickConnectProps> = ({
               <span>Como solicitar o código?</span>
             </h4>
             <p className="text-slate-400">
-              Peça ao colaborador no caixa para abrir o aplicativo <strong>PrysmView Host</strong> na barra de tarefas do Windows e clicar em <span className="text-sky-400 font-semibold">"Gerar Novo Código"</span>.
+              Peça ao colaborador na máquina remota para abrir o aplicativo <strong>PrysmView Host</strong> na barra de tarefas do Windows e informar a <strong>ID</strong> e o <span className="text-sky-400 font-semibold">"Código Temporário"</span>.
             </p>
           </div>
         </div>

@@ -22,7 +22,7 @@ interface HostTerminalProps {
 
 export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }) => {
   // Device Identity
-  const [pdvId, setPdvId] = useState('PDV-CAIXA-01');
+  const [hostDeviceId, setHostDeviceId] = useState('DESKTOP-CORP-01');
   const [localIp, setLocalIp] = useState('192.168.1.101');
   const [copiedId, setCopiedId] = useState(false);
 
@@ -49,7 +49,7 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
   const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [consentCountdown, setConsentCountdown] = useState(60);
   const [requestingOperator, setRequestingOperator] = useState('Carlos Eduardo Silva (N2 - Suporte)');
-  const [requestReason, setRequestReason] = useState('Verificação do pulso serial da gaveta de dinheiro');
+  const [requestReason, setRequestReason] = useState('Diagnóstico de performance e manutenção preventiva de sistema');
 
   // Timer loop for 8-digit code expiry (120s)
   useEffect(() => {
@@ -84,10 +84,10 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
   }, [showConsentDialog, onSendNotification]);
 
   const handleCopyId = () => {
-    navigator.clipboard?.writeText(pdvId);
+    navigator.clipboard?.writeText(hostDeviceId);
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2000);
-    onSendNotification(`ID ${pdvId} copiada para a área de transferência!`, 'success');
+    onSendNotification(`ID ${hostDeviceId} copiada para a área de transferência!`, 'success');
   };
 
   const handleCopyCode = () => {
@@ -113,12 +113,12 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
 
   const handleRejectConsent = () => {
     setShowConsentDialog(false);
-    onSendNotification('Acesso remoto recusado pelo operador local do PDV.', 'warning');
+    onSendNotification('Acesso remoto recusado pelo operador local.', 'warning');
   };
 
   const handleTerminateSession = () => {
     setIsSessionActive(false);
-    onSendNotification('Sessão remota encerrada imediatamente pelo caixa da loja.', 'warning');
+    onSendNotification('Sessão remota encerrada imediatamente pelo usuário local.', 'warning');
   };
 
   return (
@@ -153,7 +153,7 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
             </div>
             <div>
               <h1 className="text-base font-extrabold text-white tracking-wide">PrysmView Host</h1>
-              <p className="text-[11px] text-sky-200">Agente de Suporte Remoto para PDVs (Windows 11)</p>
+              <p className="text-[11px] text-sky-200">Agente de Suporte Remoto Desktop (Windows 10/11)</p>
             </div>
           </div>
 
@@ -211,7 +211,7 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
                   SUA ID
                 </span>
                 <div className="text-base font-extrabold font-mono text-white mt-0.5">
-                  {pdvId}
+                  {hostDeviceId}
                 </div>
               </div>
               <button
@@ -344,7 +344,7 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
               Solicitação de Suporte Remoto
             </h3>
             <p className="text-[11px] text-slate-400 mb-4">
-              Um operador técnico solicitou acesso à tela deste PDV:
+              Um operador técnico solicitou acesso à tela deste computador:
             </p>
 
             <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-left space-y-1.5 mb-4 text-[11px]">
@@ -388,7 +388,7 @@ export const HostTerminal: React.FC<HostTerminalProps> = ({ onSendNotification }
           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm shadow-2xl p-5 text-xs text-slate-200">
             <h3 className="font-bold text-sm text-white mb-2">Configurar Senha Desassistida</h3>
             <p className="text-[11px] text-slate-400 mb-3">
-              Defina a senha fixa para acessos sem necessidade de intervenção do caixa da loja:
+              Defina a senha fixa para acessos remotos sem necessidade de intervenção do usuário local:
             </p>
             <input
               type="text"

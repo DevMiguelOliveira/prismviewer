@@ -23,6 +23,7 @@ import {
   Copy,
   Clock,
   Sparkles,
+  Terminal,
 } from 'lucide-react';
 import { Device, FileTransferItem, ChatMessage } from '../types';
 
@@ -60,32 +61,30 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
   const [showClipboard, setShowClipboard] = useState(false);
   const [showSasModal, setShowSasModal] = useState(false);
   const [showRebootModal, setShowRebootModal] = useState(false);
-  const [clipboardText, setClipboardText] = useState('https://nfce.fazenda.sp.gov.br/consulta?chave=35241000000000000000');
+  const [clipboardText, setClipboardText] = useState('https://portal.empresa.com/diagnostics/session-491');
 
-  // Interactive POS Simulator Data
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'Refrigerante Cola 2L', code: '7891000315507', qty: 2, price: 9.99 },
-    { id: 2, name: 'Pão de Queijo Minas 500g Cong.', code: '7898901234567', qty: 1, price: 18.50 },
-    { id: 3, name: 'Café Torrado e Moído 500g', code: '7896001200100', qty: 1, price: 16.90 },
+  // Interactive Workstation Simulator Data
+  const [systemLogs, setSystemLogs] = useState<string[]>([
+    '[SYSTEM] Windows 11 Pro build 22631.3447 inicializado.',
+    '[SERVICES] PrysmView Host Service executando como LocalSystem (PID: 3120).',
+    '[NETWORK] Adaptador Ethernet 1Gbps link ativo (192.168.1.101).',
+    '[SECURITY] Criptografia de canal DTLS 1.3 ativa com handshake Ed25519.',
   ]);
-  const [lastScanned, setLastScanned] = useState('7896001200100');
-  const [posStatus, setPosStatus] = useState<'venda' | 'pagamento' | 'finalizada'>('venda');
-  const [posDrawerOpen, setPosDrawerOpen] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       sender: 'host',
-      senderName: 'Operadora Juliana (Caixa)',
-      text: 'Olá técnico, a gaveta automática não abriu na última venda com dinheiro.',
+      senderName: 'Colaborador Local (Usuário)',
+      text: 'Olá técnico, meu computador estava com lentidão ao abrir relatórios corporativos.',
       timestamp: '14:10',
     },
     {
       id: '2',
       sender: 'operator',
       senderName: operatorName,
-      text: 'Boa tarde Juliana! Estou conectado via PrysmView. Vou testar o pulso elétrico da porta serial COM1.',
+      text: 'Boa tarde! Estou conectado via PrysmView com controle total. Vou verificar os serviços e processos em segundo plano.',
       timestamp: '14:11',
     },
   ]);
@@ -141,15 +140,15 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
     setChatMessages((prev) => [...prev, msg]);
     setNewMessageText('');
 
-    // Simulate cashier reply after 2.5s
+    // Simulate user reply after 2.5s
     setTimeout(() => {
       setChatMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           sender: 'host',
-          senderName: 'Operadora Juliana (Caixa)',
-          text: 'Recebido! Estou acompanhando sua tela aqui no monitor.',
+          senderName: 'Colaborador Local (Usuário)',
+          text: 'Recebido! Estou acompanhando suas ações pela tela.',
           timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -161,36 +160,31 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
     onSendNotification('Comando Ctrl+Alt+Del (SAS) enviado com sucesso para a sessão segura do Windows.', 'success');
   };
 
-  const handleSimulateAddProduct = () => {
+  const handleRunDiagnostics = () => {
     if (controlMode === 'viewOnly') {
       onSendNotification('Modo Apenas Visualizar ativo: eventos de entrada remota estão suprimidos.', 'warning');
       return;
     }
-    const demoItems = [
-      { name: 'Chocolate Barra 90g', price: 7.50, code: '7891234567890' },
-      { name: 'Sabonete Líquido 250ml', price: 11.20, code: '7899876543210' },
-      { name: 'Biscoito Recheado 140g', price: 4.80, code: '7895555444333' },
-    ];
-    const picked = demoItems[Math.floor(Math.random() * demoItems.length)];
-    setCartItems((prev) => [
+    const timestamp = new Date().toLocaleTimeString();
+    setSystemLogs((prev) => [
       ...prev,
-      { id: Date.now(), name: picked.name, code: picked.code, qty: 1, price: picked.price },
+      `[${timestamp}] DIAG: Integridade DISM & SFC verificada. Todos os serviços saudáveis.`,
     ]);
-    setLastScanned(picked.code);
-    onSendNotification(`Item registrado no PDV: ${picked.name} (R$ ${picked.price.toFixed(2)})`, 'success');
+    onSendNotification('Diagnóstico do sistema operacional executado remotamente com sucesso!', 'success');
   };
 
-  const handleOpenCashDrawer = () => {
+  const handleClearCache = () => {
     if (controlMode === 'viewOnly') {
       onSendNotification('Modo Apenas Visualizar ativo: eventos de entrada remota estão suprimidos.', 'warning');
       return;
     }
-    setPosDrawerOpen(true);
-    onSendNotification('Comando ESC/POS (Pulso 24V COM1) acionado: Gaveta de dinheiro aberta!', 'success');
-    setTimeout(() => setPosDrawerOpen(false), 4000);
+    const timestamp = new Date().toLocaleTimeString();
+    setSystemLogs((prev) => [
+      ...prev,
+      `[${timestamp}] CLEAN: 1.4 GB de arquivos temporários e cache liberados em C:\\Windows\\Temp.`,
+    ]);
+    onSendNotification('Limpeza de cache e temporários concluída no dispositivo remoto.', 'success');
   };
-
-  const totalCart = cartItems.reduce((acc, it) => acc + it.price * it.qty, 0);
 
   return (
     <div className="relative w-full h-[calc(100vh-3.5rem)] bg-slate-950 flex flex-col overflow-hidden select-none">
@@ -246,7 +240,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                     ? 'bg-sky-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title="Controle total sobre o PDV remoto"
+                title="Controle total sobre o computador remoto"
               >
                 <MousePointer2 className="w-3 h-3" />
                 <span>Controle</span>
@@ -261,7 +255,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                     ? 'bg-amber-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title="Apenas visualizar sem interferir no caixa da loja"
+                title="Apenas visualizar sem interferir no usuário local"
               >
                 <Eye className="w-3 h-3" />
                 <span>Visualizar</span>
@@ -310,7 +304,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                 className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-[11px] relative ${
                   showChat ? 'bg-sky-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
                 }`}
-                title="Chat de suporte em tempo real com a operadora de caixa"
+                title="Chat de suporte em tempo real com o usuário local"
               >
                 <MessageSquare className="w-3 h-3 text-amber-400" />
                 <span className="hidden md:inline">Chat</span>
@@ -319,7 +313,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
               <button
                 onClick={() => setShowRebootModal(true)}
                 className="p-1.5 hover:bg-slate-800 rounded text-slate-300 hover:text-amber-400"
-                title="Reiniciar PDV com reconexão automática"
+                title="Reiniciar dispositivo remoto com reconexão automática"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -363,7 +357,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
       </div>
 
       {/* =========================================================================
-          REMOTE DESKTOP CANVAS (VIRTUAL PDV WINDOWS 11 / CASHIER SCREEN)
+          REMOTE DESKTOP CANVAS (VIRTUAL WORKSTATION WINDOWS 11 SCREEN)
           ========================================================================= */}
       <div className="flex-1 w-full h-full overflow-auto flex items-center justify-center p-2 sm:p-4 bg-slate-950">
         <div
@@ -371,81 +365,69 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
             screenScale === 'fit' ? 'w-full max-w-5xl aspect-[16/10] max-h-[85vh]' : 'w-[1280px] h-[800px] shrink-0'
           }`}
         >
-          {/* Windows Window Titlebar for POS Software */}
+          {/* Windows Window Titlebar for Remote Workstation */}
           <div className="h-7 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-3 text-[11px] text-slate-300">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
               <span className="font-semibold text-slate-200">
-                PrysmPOS Pro v4.8 • {device.name} [{device.store}]
+                Área de Trabalho Remota • {device.name} [{device.store}]
               </span>
-              <span className="text-slate-400 hidden sm:inline">• Operador Local: Juliana Santos</span>
+              <span className="text-slate-400 hidden sm:inline">• Usuário Local Ativo</span>
             </div>
             <div className="flex items-center gap-2 font-mono text-[10px] text-slate-400">
-              <span>SAT Fiscal: CFe-SAT Conectado</span>
+              <span>Windows 11 Pro 64-bit</span>
               <span className="text-slate-600">|</span>
-              <span>COM1: Bematech MP-4200 TH</span>
+              <span>Host IP: {device.ip}</span>
             </div>
           </div>
 
-          {/* POS Application UI Interface */}
-          <div className="h-[calc(100%-48px)] bg-slate-900 text-slate-100 flex flex-col sm:flex-row p-3 gap-3 overflow-hidden">
-            {/* Left: Product Basket / Cupom Fiscal */}
-            <div className="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+          {/* Desktop Interface */}
+          <div className="h-[calc(100%-48px)] bg-[#0c1220] text-slate-100 flex flex-col sm:flex-row p-3 gap-3 overflow-hidden">
+            {/* Left: Terminal Console / System Activity */}
+            <div className="flex-1 bg-slate-950/90 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-                  <div className="text-xs font-bold text-sky-400 uppercase tracking-wide">
-                    Cupom Fiscal Eletrônico (NFC-e / SAT)
+                  <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-wide">
+                    <Terminal className="w-3.5 h-3.5" />
+                    <span>Console de Diagnóstico & Eventos do Host</span>
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono">
-                    Caixa: 01 • Turno: Manhã • Venda #10492
+                    Sessão Segura • DTLS 1.3
                   </div>
                 </div>
 
-                {/* Items List */}
-                <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-                  {cartItems.map((item, idx) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-xs py-1 px-2 rounded bg-slate-900/60 border border-slate-800/40"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-mono">#{idx + 1}</span>
-                        <div>
-                          <p className="font-medium text-slate-200">{item.name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono">EAN: {item.code}</p>
-                        </div>
-                      </div>
-                      <div className="text-right font-mono">
-                        <p className="text-slate-200">R$ {(item.price * item.qty).toFixed(2)}</p>
-                        <p className="text-[10px] text-slate-400">
-                          {item.qty} un x R$ {item.price.toFixed(2)}
-                        </p>
-                      </div>
+                {/* System Logs Terminal Screen */}
+                <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 font-mono text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/60">
+                  {systemLogs.map((log, idx) => (
+                    <div key={idx} className="flex items-start gap-1.5 leading-relaxed">
+                      <span className="text-sky-400 font-bold shrink-0">&gt;</span>
+                      <span className="text-slate-300">{log}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Cash Register Total */}
+              {/* Resource Summary Bar */}
               <div className="mt-3 pt-3 border-t border-slate-800 bg-slate-900/40 -mx-3 -mb-3 p-3 rounded-b-lg">
                 <div className="flex items-baseline justify-between mb-2">
-                  <span className="text-xs text-slate-400 font-semibold uppercase">Total da Venda</span>
-                  <span className="text-2xl font-black text-emerald-400 font-mono">
-                    R$ {totalCart.toFixed(2)}
+                  <span className="text-xs text-slate-400 font-semibold uppercase">Status Geral do Dispositivo</span>
+                  <span className="text-lg font-bold text-emerald-400 font-mono flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    Operacional & Conectado
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-500 flex items-center justify-between">
-                  <span>Itens: {cartItems.reduce((acc, i) => acc + i.qty, 0)} volumes</span>
-                  <span className="text-sky-400 font-mono">Último código lido: {lastScanned}</span>
+                  <span>Processos ativos: 142 • Tempo de atividade: {device.uptime}</span>
+                  <span className="text-sky-400 font-mono">ID Host: {device.id}</span>
                 </div>
               </div>
             </div>
 
-            {/* Right: POS Action Commands & Hardware Diagnostics */}
+            {/* Right: IT Action Commands & Hardware Diagnostics */}
             <div className="w-full sm:w-80 flex flex-col gap-2.5">
               <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-3">
                 <div className="text-xs font-bold text-slate-300 mb-2 flex items-center justify-between">
-                  <span>Ações de Caixa & Testes</span>
+                  <span>Ferramentas de Suporte Rápido</span>
                   {controlMode === 'viewOnly' && (
                     <span className="text-[10px] text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800">
                       Entrada Bloqueada
@@ -455,55 +437,48 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <button
-                    onClick={handleSimulateAddProduct}
+                    onClick={handleRunDiagnostics}
                     disabled={controlMode === 'viewOnly'}
                     className="flex flex-col items-center justify-center p-2.5 rounded-lg bg-sky-950/50 hover:bg-sky-900/60 border border-sky-800/60 text-sky-200 transition-colors disabled:opacity-50"
                   >
                     <Sparkles className="w-4 h-4 text-sky-400 mb-1" />
-                    <span className="font-semibold text-[11px]">Bipar Produto</span>
-                    <span className="text-[9px] text-sky-400/80">Simular Scanner</span>
+                    <span className="font-semibold text-[11px]">Diagnóstico</span>
+                    <span className="text-[9px] text-sky-400/80">Verificar SO</span>
                   </button>
 
                   <button
-                    onClick={handleOpenCashDrawer}
+                    onClick={handleClearCache}
                     disabled={controlMode === 'viewOnly'}
                     className="flex flex-col items-center justify-center p-2.5 rounded-lg bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/60 text-emerald-200 transition-colors disabled:opacity-50"
                   >
-                    <Laptop className="w-4 h-4 text-emerald-400 mb-1" />
-                    <span className="font-semibold text-[11px]">Abrir Gaveta</span>
-                    <span className="text-[9px] text-emerald-400/80">Pulso ESC/POS</span>
+                    <FolderSync className="w-4 h-4 text-emerald-400 mb-1" />
+                    <span className="font-semibold text-[11px]">Limpar Cache</span>
+                    <span className="text-[9px] text-emerald-400/80">Liberar Espaço</span>
                   </button>
                 </div>
-
-                {posDrawerOpen && (
-                  <div className="mt-2.5 p-2 bg-emerald-950/80 border border-emerald-700 rounded text-emerald-300 text-[11px] flex items-center gap-1.5 animate-bounce">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Gaveta física aberta! Sinal enviado via COM1.</span>
-                  </div>
-                )}
               </div>
 
               {/* Hardware Diagnostic Card */}
               <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-3 text-[11px] space-y-1.5">
                 <div className="text-xs font-bold text-slate-300 pb-1 border-b border-slate-800 flex items-center justify-between">
-                  <span>Hardware & Periféricos</span>
-                  <span className="text-[10px] text-emerald-400 font-mono">100% OK</span>
+                  <span>Hardware & Telemetria</span>
+                  <span className="text-[10px] text-emerald-400 font-mono">100% Saudável</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>CPU PDV:</span>
-                  <span className="text-slate-200 font-mono">14% (38°C)</span>
+                  <span>CPU Remota:</span>
+                  <span className="text-slate-200 font-mono">{device.cpu}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>RAM Utilizada:</span>
-                  <span className="text-slate-200 font-mono">3.4 GB / 8 GB</span>
+                  <span>Memória RAM:</span>
+                  <span className="text-slate-200 font-mono">{device.memory}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Pinpad TEF:</span>
-                  <span className="text-emerald-400 font-mono">Ingenico IPP320 (USB)</span>
+                  <span>Armazenamento:</span>
+                  <span className="text-slate-200 font-mono">{device.disk}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Impressora Térmica:</span>
-                  <span className="text-emerald-400 font-mono">Bematech MP-4200 TH</span>
+                  <span>Monitores:</span>
+                  <span className="text-emerald-400 font-mono">{device.monitors} tela(s) • {device.resolution}</span>
                 </div>
               </div>
             </div>
@@ -516,10 +491,10 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                 ⊞
               </div>
               <div className="px-2 py-0.5 rounded bg-slate-800 text-sky-300 text-[10px] font-medium border border-slate-700">
-                PrysmPOS Pro
+                PrysmHost Service
               </div>
               <div className="px-2 py-0.5 rounded bg-slate-900 text-slate-400 text-[10px]">
-                Cmd Prompt
+                Terminal
               </div>
             </div>
 
@@ -581,7 +556,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
           <div className="p-2 border-t border-slate-800 flex items-center gap-2">
             <input
               type="text"
-              placeholder="Digite uma mensagem para a operadora..."
+              placeholder="Digite uma mensagem para o usuário local..."
               value={newMessageText}
               onChange={(e) => setNewMessageText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -644,7 +619,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                 onClick={() => {
                   const newF: FileTransferItem = {
                     id: Date.now().toString(),
-                    name: 'cert_nfce_2024.pfx',
+                    name: 'diagnostico_sistema.zip',
                     size: 24500,
                     direction: 'upload',
                     sha256: '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a',
@@ -653,12 +628,12 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
                     timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                   };
                   setTransfers((prev) => [...prev, newF]);
-                  onSendNotification('Arquivo cert_nfce_2024.pfx enviado e verificado por SHA-256 no PDV.', 'success');
+                  onSendNotification('Arquivo diagnostico_sistema.zip enviado e verificado por SHA-256 no dispositivo remoto.', 'success');
                 }}
                 className="flex-1 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5"
               >
                 <FolderSync className="w-3.5 h-3.5" />
-                <span>Enviar Arquivo ao PDV</span>
+                <span>Enviar Arquivo ao Host</span>
               </button>
               <button
                 onClick={() => setShowFileTransfer(false)}
@@ -685,7 +660,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
               <button onClick={() => setShowClipboard(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             <p className="text-[11px] text-slate-400 mb-2">
-              Sincronize texto entre a sua máquina e a área de transferência do Windows do PDV (limite máximo de 1 MB).
+              Sincronize texto entre a sua máquina e a área de transferência do Windows do dispositivo remoto (limite máximo de 1 MB).
             </p>
             <textarea
               rows={4}
@@ -696,12 +671,12 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  onSendNotification('Texto enviado para o clipboard do PDV com sucesso!', 'success');
+                  onSendNotification('Texto enviado para o clipboard remoto com sucesso!', 'success');
                   setShowClipboard(false);
                 }}
                 className="flex-1 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-semibold transition-colors"
               >
-                Colar no PDV
+                Colar no Dispositivo Remoto
               </button>
               <button
                 onClick={() => setShowClipboard(false)}
@@ -746,7 +721,7 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
       )}
 
       {/* =========================================================================
-          REBOOT PDV CONFIRMATION MODAL
+          REBOOT DISPOSITIVO CONFIRMATION MODAL
           ========================================================================= */}
       {showRebootModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
@@ -754,9 +729,9 @@ export const RemoteSession: React.FC<RemoteSessionProps> = ({
             <div className="w-10 h-10 rounded-full bg-amber-950 border border-amber-800 text-amber-400 flex items-center justify-center mx-auto mb-3">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-sm text-white mb-1">Reiniciar PDV Remoto</h3>
+            <h3 className="font-bold text-sm text-white mb-1">Reiniciar Dispositivo Remoto</h3>
             <p className="text-[11px] text-slate-400 mb-4">
-              O sistema operacional do caixa ({device.id}) será reiniciado. O serviço do PrysmView Host subirá automaticamente em menos de 10s após o boot.
+              O sistema operacional da máquina ({device.id}) será reiniciado. O serviço do PrysmView Host subirá automaticamente em menos de 10s após o boot.
             </p>
             <div className="flex items-center gap-2">
               <button

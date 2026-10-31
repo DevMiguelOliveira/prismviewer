@@ -138,7 +138,7 @@ export async function testWebRTCStun(): Promise<TestResult> {
             latencyMs: 5000,
             message: 'Timeout ao obter candidatos STUN públicos',
             details: 'Apenas candidatos locais (host) ou timeout. O tráfego UDP pode estar restrito pelo roteador.',
-            suggestedFix: 'Habilite o servidor TURN relay (coturn) para atravessar firewalls simétricos de loja.',
+            suggestedFix: 'Habilite o servidor TURN relay (coturn) para atravessar firewalls corporativos restritivos.',
           });
         }
       }
